@@ -1,0 +1,29 @@
+#!/bin/bash
+
+num_workers=6
+node_num=9
+
+explore_model_name=Phi-3
+exp_name=Phi-3-exploration
+
+
+for ((j=0;j<${num_workers};j=j+1)); do
+    part_idx=$((j))
+    python run.py \
+    --backend ${explore_model_name}-${j} \
+    --data_split train \
+    --part_num ${num_workers} \
+    --part_idx ${part_idx} \
+    --n_generate_sample 5 \
+    --temperature 1.0 \
+    --iterations 30 \
+    --log logs/collect_trajectories_part-${j}.log \
+    --save_path trajectories \
+    --max_depth 10 \
+    --rollout_width 1 \
+    --algorithm mcts \
+    --enable_fastchat_conv \
+    --enable_seq_mode \
+    --conv_template phi3 &
+    echo $! >> logs/${exp_name}-eval_pid.txt
+done
