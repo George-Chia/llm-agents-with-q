@@ -103,7 +103,7 @@ bash fastchat/start_multiple_vllm_server_from0_Phi3.sh
 
 
 ## 🚀 Training
-We use the HotPotQA task as an example, which can be directly transferred to the webshop task
+We use the HotPotQA task as an example, which can be directly transferred to the webshop task.
 1. Collect trajectories with MCTS
 
 ```bash
@@ -122,7 +122,7 @@ python hotpot/scripts/construct_preference_data.py
 3. Train Q-value models
 
 ```bash
-bash run-DPO-hotpot-Q-phi15.sh
+bash run-hotpot-Q-value-model.sh
 ```
 
 
