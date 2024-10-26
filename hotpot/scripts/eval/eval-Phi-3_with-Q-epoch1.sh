@@ -16,5 +16,5 @@ python run.py \
     --enable_seq_mode \
     --conv_template phi3 \
     --policy_model_name_or_path checkpoints-hotpot-Phi-1_5-StepLevelVerifier-Phi3-iteration1/epoch1 \
-    --reference_model_name_or_path PATH_TO_YOUR_LLM/phi-1_5 \
+    --reference_model_name_or_path /home/zhaiyuanzhao/llm/phi-1_5 \
     ${@}

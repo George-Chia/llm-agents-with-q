@@ -7,3 +7,13 @@ dist/
 .venv/
 .vscode/
 
+webshop/trajectories*
+webshop/mcts_pm_data.json
+Mistral-7B-Instruct-v0.3/
+hotpot/trajectories*
+webshop/webshop-mcts_pm_data-round1.json
+hotpot/data/
+programming/trajectories*
+hotpot/hotpot-mcts_pm_data*
+hotpot/hotpot-mcts_RFT_data*
+hotpot/results_for_submission

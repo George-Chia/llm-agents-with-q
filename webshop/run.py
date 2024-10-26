@@ -4,7 +4,7 @@ import argparse
 import logging
 
 from models import gpt_usage
-from mcts import mcts_search, simple_search, fschat_simple_search, fschat_mcts_search, fschat_beam_search
+from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search
 from webshop import WebShopTask
 from typing import List, Tuple, Any
 from tqdm import tqdm

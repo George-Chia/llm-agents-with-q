@@ -6,7 +6,7 @@ from models_fastchat import phi3_instruct, fschat_instruct_conv, gpt_instruct_co
 
 completion_tokens = prompt_tokens = 0
 MAX_TOKENS = 15000
-tokenizer = GPT2Tokenizer.from_pretrained('PATH_TO_YOUR_LLM/gpt2-medium')
+tokenizer = GPT2Tokenizer.from_pretrained('/home/zhaiyuanzhao/llm/gpt2-medium')
 
 
 # api_key = os.getenv("OPENAI_API_KEY", "")

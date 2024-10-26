@@ -3,7 +3,7 @@
 num_workers=4
 node_num=9
 
-model_path=PATH_TO_YOUR_LLM/Meta-Llama-3.1-8B-Instruct
+model_path=/home/zhaiyuanzhao/llm/Meta-Llama-3.1-8B-Instruct
 explore_model_name=llama31
 exp_name=llama31-collect-MCTS
 

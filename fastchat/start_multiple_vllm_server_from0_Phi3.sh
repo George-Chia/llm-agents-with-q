@@ -3,7 +3,7 @@
 num_workers=4
 node_num=9
 
-model_path=PATH_TO_YOUR_LLM/Phi-3-mini-4k-instruct
+model_path=/home/zhaiyuanzhao/llm/Phi-3-mini-4k-instruct
 explore_model_name=Phi-3
 exp_name=Phi-3-collect-MCTS
 

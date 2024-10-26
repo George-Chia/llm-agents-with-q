@@ -8,7 +8,7 @@ from models_fastchat import fschat_instruct_conv
 
 completion_tokens = prompt_tokens = 0
 MAX_TOKENS = 4000
-tokenizer = GPT2Tokenizer.from_pretrained('PATH_TO_YOUR_LLM/gpt2-medium')
+tokenizer = GPT2Tokenizer.from_pretrained('/home/zhaiyuanzhao/llm/gpt2-medium')
 
 def tokens_in_text(text):
     """
@@ -19,7 +19,7 @@ def tokens_in_text(text):
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
-        tokenizer = GPT2Tokenizer.from_pretrained("PATH_TO_YOUR_LLM/gpt2-medium")
+        tokenizer = GPT2Tokenizer.from_pretrained("/home/zhaiyuanzhao/llm/gpt2-medium")
         tokens = tokenizer.encode(text)
     return len(tokens)
 
