@@ -55,7 +55,7 @@ pip install -r requirements.txt
 ```
 #### HotPotQA
 
-1. Clone this repo and move to the HotPotQA directory:
+1. Move to the HotPotQA directory:
 ```bash
 git clone https://github.com/andyz245/LLM-Agents-with-Q && cd LLM-Agents-with-Q/hotpot
 ```
@@ -103,7 +103,7 @@ bash fastchat/start_multiple_vllm_server_from0_Phi3.sh
 
 
 ## 🚀 Training
-We use the HotPotQA task as an example, which can be directly transferred to the webshop task.
+We use the HotPotQA task as an example, which can be directly transferred to the webshop task.    
 1. Collect trajectories with MCTS
 
 ```bash
@@ -135,4 +135,4 @@ Finally, evaluate the agent
 cd hotpot
 bash scripts/eval/eval-Phi-3_with-Q-epoch1.sh
 ```
-
+- ``--algorithm``: "simple" refers to Greedy Decision-making, while "beam" refers to Guiding Action Selection with Q-value model.

@@ -26,8 +26,8 @@ from fschat_templates import prompt_with_icl
  
 completion_tokens = prompt_tokens = 0
 # openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_base = "https://api.huiyan-ai.cn/v1"
-openai.api_key = "sk-sWtiCQni9ZuDezwF863aC4C42b6a461884Fe54B9Ee8dD3Fa"
+openai.api_base = ""
+openai.api_key = ""
 
 global reflection_map
 global failed_trajectories
@@ -41,114 +41,6 @@ from node import *
 env = webshopEnv()
 
 
-
-
-def mcts_search(args, task, idx, iterations=50, to_print=True):
-    global gpt
-    global failed_trajectories
-    global reflection_map
-    action = 'reset'
-    gpt = partial(gpt, model=args.backend, temperature=args.temperature)
-
-    logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
-    #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
-    x = env.step(idx, action, args.enable_seq_mode)[0]
-    if to_print:
-        print(idx, x)
-    
-    root = Node(state=None, question=x)
-    root.env_state = copy.deepcopy(env.sessions)
-    if to_print:
-        print(f"{idx}: {x}")
-
-    cur_task = x
-    instruction_path = "prompt/instructions/webshop_inst.txt"
-    icl_path = "prompt/icl_examples/webshop_icl.json"
-    with open(instruction_path) as f:
-        instruction = f.read()
-    raw_icl = json.load(open(icl_path))
-    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 1)
-    root.messages = messages
-
-    # #################
-    # root = Node(state=None, question=x)
-    # root.env_state = copy.deepcopy(env.sessions)
-    # #print("ROOTSTATE", root.env_state)
-    all_nodes = []
-    failed_trajectories = []
-    reflection_map = []
-    terminal_nodes = []
-
-    for i in range(iterations):
-        logging.info(f"Iteration {i + 1}...")
-        node = select_node(root, args.using_puct, dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coef)
-
-        while node is None or (node.is_terminal and node.reward != 1):
-            logging.info(f"Need to backtrack or terminal node with reward 0 found at iteration {i + 1}, reselecting...")
-            node = select_node(root, args.using_puct, dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coef)
-        
-        if node is None:
-            logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
-            break
-
-        if node.is_terminal and node.reward == 1:
-            logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            return node.state, node.value, all_nodes, node.reward, node.em
-        
-        expand_node(node, args, task, idx, max_depth=args.max_depth)
-
-        while node.is_terminal:
-            logging.info(f"Depth limit node found at iteration {i + 1}, reselecting...")
-            node = select_node(root, args.using_puct, dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coef)
-            expand_node(node, args, task, idx)
-
-        if args.enable_value_evaluation:
-            val = evaluate_node(node, args, task, idx)
-
-        # Simulation or rollout
-        terminal_node = rollout(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
-        terminal_nodes.append(terminal_node)
-
-        if terminal_node.reward == 1:
-            logging.info("Successful trajectory found")
-            logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
-        # Backpropagate reward
-        backpropagate(terminal_node, terminal_node.reward)
-        
-        #all_nodes.extend(collect_all_nodes(root))
-        #value = evaluate_node(node, args, task, idx)
-        #backpropagate(node, value)
-        all_nodes = [(node, node.reward) for node in collect_all_nodes(root)]
-        logging.info("searching all nodes...")
-        # Check for terminal nodes with a reward of 1
-        terminal_nodes_with_reward_1 = [node for node, reward in all_nodes if node.is_terminal and node.reward == 1]
-
-        if terminal_nodes_with_reward_1:
-            logging.info("Successful trajectory found")
-            logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.reward)
-            return best_node.state, best_node.value, best_node.reward, best_node.em
-    
-        for j, (node, value) in enumerate(all_nodes):
-            logging.info(f"Node {j+1}: {str(node)}")
-
-        node_strings = '\n'.join(str(node[0]) for node in all_nodes)
-        logging.info(f"State of all_nodes after iteration {i + 1}:\n{node_strings}")
-
-
-
-    #best_child = max(root.children, key=lambda x: x.reward)
-    all_nodes_list = collect_all_nodes(root)
-    all_nodes_list.extend(terminal_nodes)
-    best_child = max(all_nodes_list, key=lambda x: x.reward)
-    failed_trajectories = []
-    print("best value found", best_child.reward)
-    if best_child.reward == 1:
-        logging.info("Successful trajectory found")
-    else:
-        logging.info("Unsuccessful/Partially Successful trajectory found")
-    return best_child.state, best_child.value, best_child.reward, best_child.em
 
 
 def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None,
@@ -427,65 +319,6 @@ def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=No
         task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
     
-    # Post-process: select the best trajectory
-    if successful_trajectories:
-        best_node = max(successful_trajectories, key=lambda x: x.reward)
-        return best_node.state, best_node.value, best_node.reward, best_node.em
-    elif unsuccessful_trajectories:
-        best_node = max(unsuccessful_trajectories, key=lambda x: x.reward)
-        return best_node.state, best_node.value, best_node.reward, best_node.em
-    elif not_finished_trajectories:
-        return 0,0,0,0
-
-
-def simple_search(args, task, idx, iterations=8, to_print=True):
-    global gpt
-    global failed_trajectories
-    global reflection_map
-    action = 'reset'
-    gpt = partial(gpt, model=args.backend, temperature=args.temperature)
-
-    x = env.step(idx, action, args.enable_seq_mode)[0]
-    root = Node(state=None, question=x)
-    root.env_state = copy.deepcopy(env.sessions)
-    successful_trajectories = []
-    unsuccessful_trajectories = []
-    not_finished_trajectories = []
-    failed_trajectories = []
-    reflection_map = []
-
-    if to_print:
-        print(f"{idx}: {x}")
-
-    # Main Loop
-    for i in range(iterations):
-        logging.info(f"Iteration {i + 1}")
-        node = root  # Always start from the root node
-        depth = 0
-
-        # Perform a simulation from the root
-        while not node.is_terminal and depth < args.max_depth:
-            expand_node(node, args, task, idx, max_depth=args.max_depth)  # Expand current node
-            if not node.children:
-                break  # If no child can be generated, break
-            node = random.choice(node.children)  # Randomly select a child node
-            depth += 1
-
-        # Check the terminal condition
-        if node.is_terminal and node.reward == 1:
-            logging.info(f"Successful trajectory found in iteration {i + 1}")
-            successful_trajectories.append(node)
-            break
-        elif node.is_terminal and node.reward < 1:
-            logging.info(f"Unsuccessful trajectory found in iteration {i + 1}")
-            unsuccessful_trajectories.append(node)
-        elif not node.is_terminal:
-            logging.info(f"Not finished trajectory found in iteration {i + 1}")
-            not_finished_trajectories.append(node)
-
-        # Reset the tree (optional)
-        root.children = []
-
     # Post-process: select the best trajectory
     if successful_trajectories:
         best_node = max(successful_trajectories, key=lambda x: x.reward)

@@ -125,8 +125,8 @@ def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> 
         ),
     )
 def gpt_instruct_conv(messages, model, temperature, max_new_tokens, n, stop)  -> list :
-    openai.api_base = "https://api.huiyan-ai.cn/v1"
-    openai.api_key = "sk-sWtiCQni9ZuDezwF863aC4C42b6a461884Fe54B9Ee8dD3Fa"
+    openai.api_base = ""
+    openai.api_key = ""
     response_list = []
     for _ in range(n):
         response = openai.ChatCompletion.create(
