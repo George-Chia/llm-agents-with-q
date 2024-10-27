@@ -106,20 +106,15 @@ def run(args):
             idx = f'fixed_{i}'
         else:
             idx = i
-        if args.enable_fastchat_conv:
-            if args.algorithm == 'simple':
-                state, value, reward, em = fschat_simple_search(args, task, idx, args.iterations, True, trajectories_save_path)
-            elif args.algorithm == 'beam':
-                state, value, reward, em = fschat_beam_search(args, task, idx, True, trajectories_save_path,
-                                                              dpo_policy_model, dpo_reference_model, tokenizer)
-            elif args.algorithm == 'mcts':
-                state, value, reward, em = fschat_mcts_search(args, task, idx, args.iterations, True, trajectories_save_path,
-                                                              dpo_policy_model, dpo_reference_model, tokenizer)
-        else:
-            if args.algorithm == 'mcts':
-                state, value, reward, em = mcts_search(args, task, idx, args.iterations, True)
-            elif args.algorithm == 'simple':
-                state, value, reward, em = simple_search(args, task, idx, args.iterations, True)
+
+        if args.algorithm == 'simple':
+            state, value, reward, em = fschat_simple_search(args, task, idx, args.iterations, True, trajectories_save_path)
+        elif args.algorithm == 'beam':
+            state, value, reward, em = fschat_beam_search(args, task, idx, True, trajectories_save_path,
+                                                            dpo_policy_model, dpo_reference_model, tokenizer)
+        elif args.algorithm == 'mcts':
+            state, value, reward, em = fschat_mcts_search(args, task, idx, args.iterations, True, trajectories_save_path,
+                                                            dpo_policy_model, dpo_reference_model, tokenizer)
            
          # log main metric
         # task_accs.append(em)
