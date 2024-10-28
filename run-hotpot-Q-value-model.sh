@@ -1,4 +1,4 @@
-model_name_or_path=/home/zhaiyuanzhao/llm/phi-1_5
+model_name_or_path=$LOCAL_LLM_PATH/phi-1_5
 output_dir=checkpoints-hotpot-Phi-1_5-StepLevelVerifier-Phi3-iteration1
 beta=0.05
 lr=1e-6

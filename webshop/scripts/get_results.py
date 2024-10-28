@@ -31,6 +31,8 @@ trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts
 # trajectories_save_path = "webshop/trajectories_test_Phi-3-3_simple_1iterations" # average best child reward:  0.10441666666666666
 
 
+trajectories_save_path = 'webshop/trajectories_backup/trajectories_train_llama31-0_mcts_30iterations'
+
 done_task_id = []
 
 best_reward = []

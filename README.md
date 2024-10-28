@@ -90,14 +90,13 @@ python -m fastchat.serve.controller
 
 3. Launch the model worker of FastChat
 ```bash
-bash fastchat/start_multiple_vllm_server_from0_Phi3.sh
+bash start_multiple_vllm_server_from0_Phi3.sh
+bash start_multiple_vllm_server_from0_Llama31.sh
 ```
 
-
-
-
-
-
+```bash
+kill -9 $(cat logs/llama31-collect-MCTS-worker_pid.txt)
+```
 
 
 
@@ -110,6 +109,7 @@ We use the HotPotQA task as an example, which can be directly transferred to the
 cd hotpot
 bash scripts/data_collection/collect_trajectories-phi3.sh
 ```
+
 
 
 2. Construct step-level preference data

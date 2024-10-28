@@ -6,7 +6,8 @@ import logging
 from transformers import GPT2Tokenizer
 import random
 
-tokenizer = GPT2Tokenizer.from_pretrained("/home/zhaiyuanzhao/llm/gpt2-medium")
+LOCAL_LLM_PATH = os.environ.get('LOCAL_LLM_PATH')
+tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
 
 def get_token_length(text):
     return len(tokenizer.encode(text))

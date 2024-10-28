@@ -14,9 +14,9 @@ import math
 # Modified from ETO by 
 def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
     if split == 'train':
-        idxs = json.load(open("webshop/data_split/train_indices.json"))
+        idxs = json.load(open("data_split/train_indices.json"))
     else:
-        idxs = json.load(open("webshop/data_split/test_indices.json"))
+        idxs = json.load(open("data_split/test_indices.json"))
     if part_num == 1:
         idxs = idxs
     else:

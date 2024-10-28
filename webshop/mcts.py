@@ -60,8 +60,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     root = Node(state=None, question=x)
     root.env_state = copy.deepcopy(env.sessions)
     cur_task = x
-    instruction_path = "prompt/instructions/webshop_inst.txt"
-    icl_path = "prompt/icl_examples/webshop_icl.json"
+    instruction_path = "../prompt/instructions/webshop_inst.txt"
+    icl_path = "../prompt/icl_examples/webshop_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
     raw_icl = json.load(open(icl_path))
@@ -193,8 +193,8 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
         print(f"{idx}: {x}")
 
     cur_task = x
-    instruction_path = "prompt/instructions/webshop_inst.txt"
-    icl_path = "prompt/icl_examples/webshop_icl.json"
+    instruction_path = "../prompt/instructions/webshop_inst.txt"
+    icl_path = "../prompt/icl_examples/webshop_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
     raw_icl = json.load(open(icl_path))
@@ -473,9 +473,9 @@ def parse_action(llm_output: str) -> str:
     try:
         pattern = re.compile(r"Action: (.*)", re.DOTALL)
         action = re.findall(pattern, llm_output)[0]
-        pattern = re.search(r"(search\[.*?\])", action)
-        if pattern:
-            action = pattern.group(1)
+        # pattern = re.search(r"(search\[.*?\])", action)
+        # if pattern:
+        #     action = pattern.group(1)
     except:
         logging.info("Action Not Found in llm_output: ", llm_output)
         action = 'nothing'

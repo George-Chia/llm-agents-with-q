@@ -223,6 +223,8 @@ class webshopEnv:
     else:
       assert False
     observation, info = webshop_text(enable_seq_mode=enable_seq_mode, **self.sessions[session])
+    if 'Thank you for shopping with us!' in observation:
+      done = True
     if observation_:
       observation = observation_
     self.sessions[session].update(info)
