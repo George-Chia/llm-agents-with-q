@@ -156,7 +156,6 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         
         if node is None:
             logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
             break
 
         if node.is_terminal and node.reward == 1:
@@ -176,7 +175,6 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         # Find the child with the highest value or UCT? A: similar effect.
         reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=4)
-        # reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.uct()), args, task, idx, max_depth=4)
 
         terminal_nodes.append(terminal_node)
 

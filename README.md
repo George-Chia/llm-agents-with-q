@@ -92,7 +92,7 @@ python -m fastchat.serve.controller
 ```bash
 bash start_multiple_vllm_server_from0_Phi3.sh
 bash start_multiple_vllm_server_from0_Llama31.sh
-```
+`
 
 ```bash
 kill -9 $(cat logs/llama31-collect-MCTS-worker_pid.txt)
@@ -108,6 +108,11 @@ We use the HotPotQA task as an example, which can be directly transferred to the
 ```bash
 cd hotpot
 bash scripts/data_collection/collect_trajectories-phi3.sh
+```
+
+
+```bash
+kill -9 $(cat logs/llama31-exploration-eval_pid.txt)
 ```
 
 

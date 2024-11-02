@@ -231,8 +231,9 @@ class webshopEnv:
     reward = info.get('reward', 0.0)
     if reward != 0.0:
         #print(f"Current Session State: {self.sessions[session]}")
-        #print(f"Action being processed: {action}")
-        print(f"Resulting Observation: {observation}")
+        # print(f"Action being processed: {action}")
+        # print(f"Resulting Observation: {observation}")
+        pass
     if reward == 1.0:
         done = True
         print("done")

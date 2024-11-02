@@ -2,10 +2,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Setup
-
-# In[1]:
-
 import os
 import openai
 import backoff
@@ -20,6 +16,7 @@ import logging
 import random
 import json
 import re
+import time
 
 from fschat_templates import prompt_with_icl
 
@@ -40,7 +37,39 @@ from node import *
 
 env = webshopEnv()
 
+def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
+    all_tree_nodes_list = collect_all_nodes(node)
+    best_tree_child = max(all_tree_nodes_list, key=lambda x: x.reward)
+    best_trajectory_index_list = collect_trajectory_index(best_tree_child)
 
+    # all_tree_terminal_nodes_list = [child for child in all_tree_nodes_list if child.is_terminal==True]
+    # rejected_child = min(all_tree_terminal_nodes_list, key=lambda x: x.reward)
+    # rejected_trajectory_index_list = collect_trajectory_index(rejected_child)
+
+    task_dict = node.to_dict()
+    all_tree_nodes_list.extend(terminal_nodes)
+    best_child = max(all_tree_nodes_list, key=lambda x: x.reward)
+    task_dict['best reward'] = best_child.reward # contain nodes during rollout
+    task_dict['best em'] = best_child.em
+    task_dict['best child reward'] = best_tree_child.reward
+    task_dict['best child em'] = best_tree_child.em
+    task_dict['best_trajectory_index_list'] = best_trajectory_index_list
+    task_id = idx
+    json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
+
+
+    # all_tree_nodes_list = collect_all_nodes(root)
+    # best_tree_child = max(all_tree_nodes_list, key=lambda x: x.reward)
+    # best_trajectory_index_list = collect_trajectory_index(best_tree_child)
+    # task_dict = root.to_dict()
+    # task_dict['best reward'] = best_child.reward # contain nodes during rollout
+    # task_dict['best child reward'] = best_tree_child.reward
+    # task_dict['best_trajectory_index_list'] = best_trajectory_index_list
+    # if args.add_fixed_prefix:
+    #     task_id = idx.replace("fixed_","")
+    # else:
+    #     task_id = idx
+    # json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
 
 def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None,
@@ -72,7 +101,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     all_nodes = []
     failed_trajectories = []
     reflection_map = []
-    terminal_nodes = []
+    terminal_nodes = [] # containing terminal nodes during rollout
 
     for i in range(iterations):
         logging.info(f"Iteration {i + 1}...")
@@ -88,6 +117,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         if node.is_terminal and node.reward == 1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
+            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
             return node.state, node.value, all_nodes, node.reward, node.em
         
         expand_node(node, args, task, idx, max_depth=args.max_depth)
@@ -118,6 +148,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if terminal_node.reward == 1:
             logging.info("Successful trajectory found")
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
+            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
             return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
         # Backpropagate reward
         backpropagate(terminal_node, terminal_node.reward)
@@ -144,7 +175,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
 
 
-    #best_child = max(root.children, key=lambda x: x.reward)
+    save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
     all_nodes_list = collect_all_nodes(root)
     all_nodes_list.extend(terminal_nodes)
@@ -155,19 +186,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         logging.info("Successful trajectory found")
     else:
         logging.info("Unsuccessful/Partially Successful trajectory found")
-
-    all_tree_nodes_list = collect_all_nodes(root)
-    best_tree_child = max(all_tree_nodes_list, key=lambda x: x.reward)
-    best_trajectory_index_list = collect_trajectory_index(best_tree_child)
-    task_dict = root.to_dict()
-    task_dict['best reward'] = best_child.reward # contain nodes during rollout
-    task_dict['best child reward'] = best_tree_child.reward
-    task_dict['best_trajectory_index_list'] = best_trajectory_index_list
-    if args.add_fixed_prefix:
-        task_id = idx.replace("fixed_","")
-    else:
-        task_id = idx
-    json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
+    if best_child is None:
+        best_child = root
     
 
     return best_child.state, best_child.value, best_child.reward, best_child.em
@@ -180,7 +200,11 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     action = 'reset'
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    # start_time = time.time()
     x = env.step(idx, action, args.enable_seq_mode)[0]
+    # end_time = time.time()
+    # print("env.step initial 执行时间: {:.4f} 秒".format(end_time - start_time))
+
     root = Node(state=None, question=x)
     root.env_state = copy.deepcopy(env.sessions)
     successful_trajectories = []
@@ -200,7 +224,6 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     raw_icl = json.load(open(icl_path))
     observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 1)
     root.messages = messages
-
 
     # Main Loop
     for i in range(iterations):
@@ -228,8 +251,6 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
             logging.info(f"Not finished trajectory found in iteration {i + 1}")
             not_finished_trajectories.append(node)
 
-        # # Reset the tree (optional)
-        # root.children = []
 
     best_tree_child = node
     # best_trajectory_index_list = collect_trajectory_index(best_tree_child)
@@ -241,6 +262,8 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     else:
         task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
+
+    end_time = time.time()
     
     # Post-process: select the best trajectory
     if successful_trajectories:
@@ -590,8 +613,11 @@ def generate_new_states_fastchat_conv(node, args, task, idx, n):
 
         if action_line:
             try:
+                # buy now action cost very long time
+                # start_time = time.time()
                 res = env.step(idx, action_line, args.enable_seq_mode)
-                #print("res", res)
+                # end_time = time.time()
+                # print("env.step action_line 执行时间: {:.4f} 秒".format(end_time - start_time))
                 obs = res[0]
                 r = res[1]
                 done = res[2]
