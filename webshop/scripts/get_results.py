@@ -30,8 +30,15 @@ trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts
 # phi-3-iteration0_allow-double-search
 # trajectories_save_path = "webshop/trajectories_test_Phi-3-3_simple_1iterations" # average best child reward:  0.10441666666666666
 
+trajectories_save_path = 'webshop/trajectories_test_llama31-T0_simple_1iterations'  # average best child reward:  0.4815750000000002
+trajectories_save_path = 'webshop/trajectories_test_llama31-T1_simple_1iterations'  # average best child reward:  0.42213333333333336
 
-trajectories_save_path = 'webshop/trajectories_test_llama31-2_T0.4_simple_1iterations'
+
+trajectories_save_path = 'webshop/trajectories_test_llama31-0_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-n3MCTS_test_llama31-1_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-n3MCTS-conditional_test_llama31-2_T1.0_mcts_30iterations'
+
+
 
 done_task_id = []
 
@@ -42,9 +49,9 @@ for file in os.listdir(trajectories_save_path):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
-    # best_reward.append(result['best reward'])
+    best_reward.append(result['best reward'])
     # best_child_reward.append(result['best child reward'])
     best_child_reward.append(0 if result['best child reward']==-1 else result['best child reward'])
 print("Sample number: ", len(best_child_reward))
-# print("average best reward: ", sum(best_reward)/len(best_reward))
+print("average best reward: ", sum(best_reward)/len(best_reward))
 print("average best child reward: ", sum(best_child_reward)/len(best_child_reward))

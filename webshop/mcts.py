@@ -165,6 +165,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             logging.info("Successful trajectory found")
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.reward)
+            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
             return best_node.state, best_node.value, best_node.reward, best_node.em
     
         for j, (node, value) in enumerate(all_nodes):
@@ -485,7 +486,10 @@ def expand_node(node, args, task, idx, max_depth):
     # if node.depth == 0:  
     #     n *= 2
     if args.enable_fastchat_conv:
-        new_nodes = generate_new_states_fastchat_conv(node, args, task, idx, n)
+        if args.enable_conditional_sampling:
+            new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, idx, n)
+        else:
+            new_nodes = generate_new_states_fastchat_conv(node, args, task, idx, n)
     else:
         new_nodes = generate_new_states(node, args, task, idx, n)
     node.children.extend(new_nodes)
@@ -575,20 +579,25 @@ def generate_new_states(node, args, task, idx, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
+def get_context(node, args):
+    if "gpt-" in args.backend:
+        messages = get_messages_from_bottom(node)
+        context =  messages
+    elif "Phi-3" in args.backend or "llama31" in args.backend:
+        conv = get_conv_from_bottom(node, args.conv_template)
+        conv.append_message(conv.roles[1], None)
+        context =  conv
+    else:
+        raise NotImplementedError
+    return context
+
 
 def generate_new_states_fastchat_conv(node, args, task, idx, n):
     global failed_trajectories
     assert args.enable_fastchat_conv
-    if "gpt-" in args.backend:
-        messages = get_messages_from_bottom(node)
-        response_list = gpt(messages, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
-    elif "Phi-3" in args.backend or "llama31" in args.backend:
-        conv = get_conv_from_bottom(node, args.conv_template)
-        conv.append_message(conv.roles[1], None)
-        response_list = gpt(conv, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
-    else:
-        raise NotImplementedError
-    
+
+    context = get_context(node, args)
+    response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     sampled_actions = ["\nAction: "+parse_action(response) for response in copy.deepcopy(response_list)]
 
 
@@ -633,6 +642,98 @@ def generate_new_states_fastchat_conv(node, args, task, idx, n):
       
             # Update the new state dictionary
             new_state['action'] = response_list[index]
+            new_state['observation'] = f"Observation: \n{obs}"
+            
+            env_state_clone = env.clone_state()  # Clone current environment state
+            new_node = Node(state=new_state, question=node.question, env_state=env_state_clone, parent=node)
+            new_node.env_state = local_sessions
+            if r > 0 or done:
+                logging.info(f"reward:{r}")
+                new_node.is_terminal = True
+                #print("rew", r)
+            new_node.reward = r
+            new_node.value = r
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+
+            if new_node.is_terminal and r < 1.0 and r > 0.0 and added == False:
+                trajectory = collect_trajectory_from_bottom(new_node)
+
+                # Check if there is already a failed trajectory with the same reward
+                existing_rewards = [t['r'] for t in failed_trajectories]
+
+                if r not in existing_rewards:
+                    print("adding to failed")
+                    added = True
+                    failed_trajectories.append({'trajectory': trajectory, 'final_answer': f"{action_line}", 'r': r})
+    if len(list(unique_states.values())) == 0:
+        print('sss')
+    return list(unique_states.values())  # Return unique nodes as a list
+
+
+def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
+    global failed_trajectories
+    assert args.enable_fastchat_conv
+
+    sampled_response_list = []
+    sampled_obs_list = []
+
+    unique_states = {}  # Store unique states here
+    added = False
+
+    for sampling_index in range(n):
+        context = get_context(node, args)
+        # TODO: conditional generation
+        if len(sampled_response_list) > 0:
+            original_observation = context.messages[-2][1]
+            conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
+            for sampled_response,sampled_obs in zip(sampled_response_list, sampled_obs_list):
+                conditional_context += sampled_response + "\n"
+                conditional_context += 'Observation:'+'\n'+sampled_obs + "\n\n"
+            conditional_context += 'Please summarize insights from the potential actions and feedback, and generate a new response with as much distinctiveness as possible for the Observation: \n'
+            conditional_context += original_observation
+            context.messages[-2][1] += conditional_context + "\n"
+        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+        sampled_response_list.append(response)
+        action = "\nAction: "+parse_action(response)
+    
+
+        local_sessions = copy.deepcopy(node.env_state) # : for roll back
+        env.sessions = local_sessions
+        logging.info(env.sessions)
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+        action_line = next((line.split(":")[1].strip() for line in action.split("\n") if line.startswith("Action") and ":" in line), None)
+
+        # Use thought and action to form a unique key
+        unique_key = f"{action_line}"
+        
+        # if unique_key in unique_states:
+        #     continue  # Skip if this state already exists
+
+        if action_line:
+            try:
+                # buy now action cost very long time
+                # start_time = time.time()
+                res = env.step(idx, action_line, args.enable_seq_mode)
+                # end_time = time.time()
+                # print("env.step action_line 执行时间: {:.4f} 秒".format(end_time - start_time))
+                obs = res[0]
+                r = res[1]
+                done = res[2]
+            except AssertionError:
+                obs = 'Invalid action!'
+                # res = env.step(idx, action_line, args.enable_seq_mode)
+                # print("err")
+                r = -1
+                done = False
+
+            sampled_obs_list.append(obs)
+            
+            if action_line.startswith('think'):
+                observation = 'OK.'
+      
+            # Update the new state dictionary
+            new_state['action'] = response
             new_state['observation'] = f"Observation: \n{obs}"
             
             env_state_clone = env.clone_state()  # Clone current environment state

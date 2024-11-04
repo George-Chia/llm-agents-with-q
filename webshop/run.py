@@ -98,7 +98,7 @@ def run(args):
 
 
     n=0
-    # idx=[485]
+    idx=[314]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -204,6 +204,9 @@ def parse_args():
     args.add_argument('--using_puct', action='store_true')
     args.add_argument('--puct_coeff', type=float, default=0.)
     args.add_argument('--enable_rollout_with_q', action='store_true')
+
+    # for conditional action sampling
+    args.add_argument('--enable_conditional_sampling', action='store_true')
 
     # webshop env
     args.add_argument('--add_fixed_prefix', action='store_true')
