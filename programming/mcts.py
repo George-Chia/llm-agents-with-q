@@ -237,8 +237,8 @@ def run_mcts(
                         break
 
 
-                if is_solved:
-                    break
+                # if is_solved:
+                #     break
                 print(reward_internal)
                 print(reward_real)
                 reward = reward_internal + reward_real
@@ -250,14 +250,14 @@ def run_mcts(
                     temp = temp.parent
                     temp.update(reward)
 
-            if is_solved:
-                break
+            # if is_solved:
+            #     break
         # Choose the best solution after all iterations
-        if is_solved:
-            best_solution = item["solution"]
-        else:
-            best_solution = root.best_child_value().solution
-            item["solution"] = best_solution
+        # if is_solved:
+        #     best_solution = item["solution"]
+        # else:
+        best_solution = root.best_child_value().solution
+        item["solution"] = best_solution
 
         is_passing, cur_feedback, _ = exe.execute(new_solution, tests_i)
         test_feedback.append(cur_feedback)
@@ -276,9 +276,3 @@ def run_mcts(
         write_jsonl(log_path, [item], append=True)
         
         print_v(f'completed {idx+1}/{num_items}: acc = {round(num_success/(idx+1), 2)}')
-# conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
-# for sampled_response, sampled_obs in zip(sampled_response_list, sampled_obs_list):
-#     conditional_context += sampled_response + "\n"
-#     conditional_context += 'Observation:' + '\n' + sampled_obs + "\n\n"
-# conditional_context += 'Please summarize insights from the potential actions and feedback, and generate a new response with as much distinctiveness as possible for the Observation: \n'
-# conditional_context += original_observation
