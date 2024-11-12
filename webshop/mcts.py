@@ -145,11 +145,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             terminal_node.reward == -0.5
         terminal_nodes.append(terminal_node)
 
-        if terminal_node.reward == 1:
-            logging.info("Successful trajectory found")
-            logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
+        if args.enable_rollout_early_stop:
+            if terminal_node.reward == 1:
+                logging.info("Successful trajectory found")
+                logging.info(f"Terminal node including rollouts with reward 1 found at iteration {i + 1}")
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
         # Backpropagate reward
         backpropagate(terminal_node, terminal_node.reward)
         
