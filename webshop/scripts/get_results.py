@@ -1,10 +1,13 @@
 import os
 import json
 
+# phi-3-mcts-unfintuned
+trajectories_save_path = "trajectories_test_exp-sft-Phi-3-0_mcts_30iterations" #
+
 
 # phi-3-iteration0
 # trajectories_save_path = "webshop/trajectories_forbid-double-search/trajectories_test_phi3_1iterations" # average best child reward:  0.10441666666666666
-trajectories_save_path = "webshop/trajectories_fixed/trajectories_forbid-double-search/trajectories_train_phi3_mcts_30iterations" # average best child reward:  0.42721501272264745
+# trajectories_save_path = "webshop/trajectories_fixed/trajectories_forbid-double-search/trajectories_train_phi3_mcts_30iterations" # average best child reward:  0.42721501272264745
 
 # phi-3-iteration0-test-with-q-model
 # trajectories_save_path = "webshop/trajectories_forbid-double-search/trajectories_epoch1_test_phi3_beam_1iterations" # average best child reward:  0.14464166666666667
@@ -18,7 +21,7 @@ trajectories_save_path = "webshop/trajectories_fixed/trajectories_forbid-double-
 
 # gpt-4o-mini-iteration0
 # trajectories_save_path = "webshop/trajectories_forbid-double-search/trajectories_test_gpt-4o-mini_simple_1iterations" # average best child reward:  0.13184079601990048
-trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts_30iterations"
+# trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts_30iterations"
 # trajectories_save_path = 'webshop/trajectories_train_Phi-3_mcts_10iterations'
 
 
@@ -30,13 +33,13 @@ trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts
 # phi-3-iteration0_allow-double-search
 # trajectories_save_path = "webshop/trajectories_test_Phi-3-3_simple_1iterations" # average best child reward:  0.10441666666666666
 
-trajectories_save_path = 'webshop/trajectories_test_llama31-T0_simple_1iterations'  # average best child reward:  0.4815750000000002
-trajectories_save_path = 'webshop/trajectories_test_llama31-T1_simple_1iterations'  # average best child reward:  0.42213333333333336
-
-
-trajectories_save_path = 'webshop/trajectories_test_llama31-0_T1.0_mcts_30iterations'
-trajectories_save_path = 'webshop/trajectories-n3MCTS_test_llama31-1_T1.0_mcts_30iterations'
-trajectories_save_path = 'webshop/trajectories-n3MCTS-conditional_test_llama31-2_T1.0_mcts_30iterations'
+# trajectories_save_path = 'webshop/trajectories_test_llama31-T0_simple_1iterations'  # average best child reward:  0.4815750000000002
+# trajectories_save_path = 'webshop/trajectories_test_llama31-T1_simple_1iterations'  # average best child reward:  0.42213333333333336
+#
+#
+# trajectories_save_path = 'webshop/trajectories_test_llama31-0_T1.0_mcts_30iterations'
+# trajectories_save_path = 'webshop/trajectories-n3MCTS_test_llama31-1_T1.0_mcts_30iterations'
+# trajectories_save_path = 'webshop/trajectories-n3MCTS-conditional_test_llama31-2_T1.0_mcts_30iterations'
 
 
 

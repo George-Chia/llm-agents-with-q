@@ -185,7 +185,7 @@ class webshopEnv:
       if button == 'Buy Now':
         assert self.sessions[session]['page_type'] == 'item'
         self.sessions[session]['page_type'] = 'end'
-        #done = True
+        done = True
       elif button == 'Back to Search':
         assert self.sessions[session]['page_type'] in ['search', 'item_sub', 'item']
         self.sessions[session] = {'session': session, 'page_type': 'init'}
@@ -223,8 +223,6 @@ class webshopEnv:
     else:
       assert False
     observation, info = webshop_text(enable_seq_mode=enable_seq_mode, **self.sessions[session])
-    if 'Thank you for shopping with us!' in observation:
-      done = True
     if observation_:
       observation = observation_
     self.sessions[session].update(info)
