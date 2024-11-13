@@ -236,9 +236,8 @@ def run_mcts(
                             reward_real = 1
                         break
 
-
-                # if is_solved:
-                #     break
+                if is_solved:
+                    break
                 print(reward_internal)
                 print(reward_real)
                 reward = reward_internal + reward_real
@@ -250,14 +249,14 @@ def run_mcts(
                     temp = temp.parent
                     temp.update(reward)
 
-            # if is_solved:
-            #     break
+            if is_solved:
+                break
         # Choose the best solution after all iterations
-        # if is_solved:
-        #     best_solution = item["solution"]
-        # else:
-        best_solution = root.best_child_value().solution
-        item["solution"] = best_solution
+        if is_solved:
+            best_solution = item["solution"]
+        else:
+            best_solution = root.best_child_value().solution
+            item["solution"] = best_solution
 
         is_passing, cur_feedback, _ = exe.execute(new_solution, tests_i)
         test_feedback.append(cur_feedback)

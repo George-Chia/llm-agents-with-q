@@ -312,6 +312,15 @@ class PyGenerator(Generator):
     def internal_tests(self, func_sig: str, model: ModelBase, max_num_tests: int = 12) -> List[str]:
         def parse_tests(tests: str) -> List[str]:
             return [test.strip() for test in tests.splitlines() if "assert" in test]
+
+        pattern = r'.*?def\s+(\w+)\s*\('
+        match = re.search(pattern, func_sig)
+        if match:
+            function_name = match.group(1)
+        else:
+            function_name = ''
+        def parse_tests_with_func(tests: str) -> List[str]:
+            return [test.strip() for test in tests.splitlines() if "assert" in test and function_name in test]
         """
         Generates tests for a function.
         """
@@ -322,7 +331,7 @@ class PyGenerator(Generator):
             test_generation_few_shot=PY_TEST_GENERATION_FEW_SHOT,
             test_generation_chat_instruction=PY_TEST_GENERATION_CHAT_INSTRUCTION,
             test_generation_completion_instruction=PY_TEST_GENERATION_COMPLETION_INSTRUCTION,
-            parse_tests=parse_tests,
+            parse_tests=parse_tests_with_func,
             is_syntax_valid=py_is_syntax_valid,
         )
 

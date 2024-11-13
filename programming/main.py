@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append('/home/works/llm-agents-with-q')
 import argparse
 from immediate_refinement import run_immediate_refinement
 from immediate_reflexion import run_immediate_reflexion
