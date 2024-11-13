@@ -14,7 +14,10 @@ def parse_action(llm_output: str) -> str:
 
 
 # 加载JSON文件
-with open('webshop/trajectories-n3MCTS-conditional_test_llama31-2_T1.0_mcts_30iterations/1642.json', 'r') as f:
+with open('webshop/trajectories-n3MCTS_test_llama31-1_T1.0_mcts_30iterations/1143.json', 'r') as f:
+    root = json.load(f)
+
+with open('webshop/trajectories-n3MCTS-conditional_test_llama31-2_T1.0_mcts_30iterations/1143.json', 'r') as f:
     root = json.load(f)
 
 node = copy.deepcopy(root)

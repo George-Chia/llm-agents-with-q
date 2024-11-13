@@ -98,7 +98,7 @@ def run(args):
 
 
     n=0
-    idx=[314]
+    # idx=[314]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -170,6 +170,9 @@ def parse_args():
     args.add_argument('--conv_template', type=str)
     args.add_argument('--q_model_conv_template', type=str)
     # args.add_argument('--agent_config_path', type=str)
+
+    # for MCTS
+    args.add_argument('--enable_rollout_early_stop', action='store_true')
 
     # for calculating DPO logits
     args.add_argument(
