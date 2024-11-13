@@ -128,11 +128,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     root = Node(state=None, question=x)
     cur_task = x
     if enable_reflection:
-        instruction_path = "prompt/instructions/hotpot_inst_reflection.txt"
-        icl_path = "prompt/icl_examples/hotpot_icl_reflection.json"    
+        instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
+        icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"    
     else:  
-        instruction_path = "prompt/instructions/hotpot_inst.txt"
-        icl_path = "prompt/icl_examples/hotpot_icl.json"
+        instruction_path = "../prompt/instructions/hotpot_inst.txt"
+        icl_path = "../prompt/icl_examples/hotpot_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
     raw_icl = json.load(open(icl_path))
