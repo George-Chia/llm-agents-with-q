@@ -51,7 +51,7 @@ class Node:
             'visits': self.visits,
             'value': self.value,
             'depth': self.depth,
-            'reflection': self.reflection
+            'reflection': self.reflection,
             'test_feedback': self.test_feedback,
         }
 
