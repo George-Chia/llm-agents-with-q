@@ -14,13 +14,13 @@ import math
 import random
 
 # Modified from ETO by 
-def load_idxs(split: str, part_num: int, part_idx: int = -1, training_indices_path="hotpot/data_split/train_indices.json") -> Tuple[int]:
+def load_idxs(split: str, part_num: int, part_idx: int = -1, training_indices_path="data_split/train_indices.json") -> Tuple[int]:
     if split == 'train':
         idxs = json.load(open(training_indices_path))
     elif split == 'valid':
-        idxs = json.load(open("hotpot/data_split/valid_indices.json"))
+        idxs = json.load(open("data_split/valid_indices.json"))
     elif split == 'test':
-        idxs = json.load(open("hotpot/data_split/test_indices.json"))
+        idxs = json.load(open("data_split/test_indices.json"))
     random.shuffle(idxs)
     if part_num == 1:
         idxs = idxs
@@ -176,6 +176,9 @@ def parse_args():
     args.add_argument('--conv_template', type=str)
     args.add_argument('--q_model_conv_template', type=str)
     args.add_argument('--enable_reflection', action='store_true')
+
+    # for MCTS
+    args.add_argument('--enable_rollout_early_stop', action='store_true')
 
     # for calculating DPO logits
     args.add_argument(
