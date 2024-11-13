@@ -42,7 +42,18 @@ class Node:
     def update(self, reward: float):
         self.visits += 1
         self.value += reward
-    
+
+    def to_dict(self):
+        return {
+            'solution': self.solution,
+            # 'parent': self.parent.to_dict() if self.parent else None,
+            'children': [child.to_dict() for child in self.children] if len(self.children)>0 else None,
+            'visits': self.visits,
+            'value': self.value,
+            'depth': self.depth,
+            'reflection': self.reflection
+            'test_feedback': self.test_feedback,
+        }
 
 def prune_context_blocks(context: str, max_length: int) -> str:
     """Prune the context to fit within the specified max_length by removing entire blocks of content using 'trial' as a delimiter."""
@@ -94,6 +105,8 @@ def run_mcts(
     is_leetcode: bool = False,
     n: int = 5,
     number_of_tests: int = 2,
+    part_num: int = 1,
+    part_idx: int = 0,
     use_condition: bool = False
 ) -> None:
     exe = executor_factory(language, is_leet=is_leetcode)
@@ -106,7 +119,13 @@ def run_mcts(
     num_items = len(dataset)
     num_success = 0  # Counter for successful solutions
     cur_func_impl = None
-
+    if part_num > 1:
+        assert part_idx >= 0
+        data_part_num = len(dataset)/part_num
+        if part_idx == part_num - 1:
+            dataset = dataset[data_part_num * part_idx:]
+        else:
+            dataset = dataset[data_part_num * part_idx: data_part_num * (part_idx+1)]
     for idx, item in enumerate(dataset):
         
         cur_func_impl = None
@@ -132,7 +151,7 @@ def run_mcts(
         assert isinstance(cur_func_impl, str)
         is_passing, feedback, _ = exe.execute(cur_func_impl, tests_i)
         test_feedback.append(feedback)
-
+        root.test_feedback = feedback
         # if solved, exit early
         if is_passing:
             is_passing = exe.evaluate(
@@ -140,14 +159,13 @@ def run_mcts(
             is_solved = is_passing
             num_success += int(is_passing)
             item["acc"] = round(num_success/(idx+1), 2)
-            write_jsonl(log_path, [item], append=True)
+            write_jsonl(log_path, [root.to_dict()], append=True)
             print(num_success)
             print_v(f'completed {idx+1}/{num_items}: acc = {round(num_success/(idx+1), 2)}')
             continue
 
         reflection = gen.self_reflection(cur_func_impl, feedback, model)
         reflections += [reflection]
-        root.test_feedback = feedback
         root.reflection = reflection
         
         for cur_iter in range(max_iters):
@@ -272,6 +290,6 @@ def run_mcts(
         item["implementations"] = implementations
         item["test_feedback"] = test_feedback
         item["acc"] = round(num_success/(idx+1), 2)
-        write_jsonl(log_path, [item], append=True)
+        write_jsonl(log_path, [root.to_dict()], append=True)
         
         print_v(f'completed {idx+1}/{num_items}: acc = {round(num_success/(idx+1), 2)}')

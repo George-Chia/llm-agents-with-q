@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append('/home/works/llm-agents-with-q')
 import argparse
 from immediate_refinement import run_immediate_refinement
@@ -22,6 +23,8 @@ def get_args():
                         help="The path to the benchmark dataset", default="root")
     parser.add_argument("--strategy", type=str,
                         help="Strategy: `simple`, `reflexion`")
+    parser.add_argument("--part_num", type=int, default=1, help="")
+    parser.add_argument("--part_idx", type=int, default=0, help="")
     parser.add_argument("--language", type=str, help="Strategy: `py` or `rs`")
     parser.add_argument(
         "--model", type=str, help="OpenAI models only for now. For best results, use GPT-4")
@@ -123,7 +126,10 @@ pass@k: {args.pass_at_k}
         verbose=args.verbose,
         expansion_factor=args.expansion_factor,
         number_of_tests=args.number_of_tests,
-        is_leetcode=args.is_leetcode
+        is_leetcode=args.is_leetcode,
+        part_num=args.part_num,
+        part_idx=args.part_idx,
+        use_condition=args.use_condition
     )
 
     print(f"Done! Check out the logs in `{log_path}`")
