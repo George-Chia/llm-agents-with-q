@@ -102,7 +102,7 @@ def run(args):
     task_accs = []
     info = []
 
-    # idx = [12732]
+    idx = [14028]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -167,7 +167,7 @@ def parse_args():
     args.add_argument('--algorithm', type=str, choices=['mcts', 'rap', 'tot', 'simple', 'beam'])
 
     args.add_argument('--max_depth', type=int, default=7)
-    args.add_argument('--rollout_width', type=int, default=5)
+    args.add_argument('--rollout_width', type=int, default=1)
     args.add_argument('--save_path', type=str)
     args.add_argument('--enable_value_evaluation', action='store_true')
 
@@ -179,6 +179,8 @@ def parse_args():
 
     # for MCTS
     args.add_argument('--enable_rollout_early_stop', action='store_true')
+    # for MCTS conditional action sampling
+    args.add_argument('--enable_conditional_sampling', action='store_true')
 
     # for calculating DPO logits
     args.add_argument(

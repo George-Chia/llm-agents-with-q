@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'hotpot/trajectories_800samples_test_Phi-3_beam_1iterations'
+trajectories_save_path = 'hotpot/trajectories-T06_test_llama31-5_simple_1iterations'
 
 
 done_task_id = []

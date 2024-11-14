@@ -235,11 +235,11 @@ def fschat_simple_search(args, task, idx, iterations=30, to_print=True, trajecto
     
     cur_task = x
     if enable_reflection:
-        instruction_path = "prompt/instructions/hotpot_inst_reflection.txt"
-        icl_path = "prompt/icl_examples/hotpot_icl_reflection.json"    
+        instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
+        icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"    
     else:  
-        instruction_path = "prompt/instructions/hotpot_inst.txt"
-        icl_path = "prompt/icl_examples/hotpot_icl.json"
+        instruction_path = "../prompt/instructions/hotpot_inst.txt"
+        icl_path = "../prompt/icl_examples/hotpot_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
     raw_icl = json.load(open(icl_path))
@@ -430,9 +430,13 @@ def expand_node(node, args, task, max_depth):
         print("Depth limit reached")
         node.is_terminal = True
         return
-    
+
+
     if args.enable_fastchat_conv:
-        new_nodes = generate_new_states_fastchat_conv(node, args, task, n)
+        if args.enable_conditional_sampling:
+            new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, n)
+        else:
+            new_nodes = generate_new_states_fastchat_conv(node, args, task, n)
     else:
         new_nodes = generate_new_states(node, args, task, n)
     # new_nodes = generate_new_states(node, args, task, args.n_generate_sample)
@@ -578,21 +582,24 @@ def generate_new_states(node, args, task, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
+def get_context(node, args):
+    if "gpt-" in args.backend:
+        messages = get_messages_from_bottom(node)
+        context =  messages
+    elif "Phi-3" in args.backend or "llama31" in args.backend:
+        conv = get_conv_from_bottom(node, args.conv_template)
+        conv.append_message(conv.roles[1], None)
+        context =  conv
+    else:
+        raise NotImplementedError
+    return context
 
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
-    # prompt = generate_prompt(node)
-    # sampled_actions = get_samples(task, prompt, f"Thought {node.depth + 1}: ", n, prompt_sample=args.prompt_sample, stop="Observation")
-    assert args.enable_fastchat_conv
-    if "gpt-" in args.backend:
-        messages = get_messages_from_bottom(node)
-        response_list = gpt(messages, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
-    elif "Phi-" in args.backend or "llama31" in args.backend:
-        conv = get_conv_from_bottom(node, args.conv_template)
-        conv.append_message(conv.roles[1], None)
-        response_list = gpt(conv, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
-    else:
-        raise NotImplementedError
+
+    context = get_context(node, args)
+    response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
+
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
     action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
     # sampled_actions = response_list
@@ -622,6 +629,77 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
             new_state['observation'] = obs
+
+            new_node = Node(state=new_state, question=node.question, parent=node)
+            new_node.is_terminal = r == 1 or done
+            new_node.reward = r
+            new_node.depth = node.depth + 1
+            if r == 1:
+                new_node.em = info.get('em')
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+            logging.info(f"Feedback: {info}")
+
+            if new_node.is_terminal and r == 0:
+                trajectory = collect_trajectory_from_bottom(new_node)
+                #print(trajectory)
+                #if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
+                failed_trajectories.append({'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+
+    return list(unique_states.values())  # Return unique nodes as a list
+
+
+def generate_new_states_conditional_fastchat_conv(node, args, task, n):
+    global failed_trajectories
+    assert args.enable_fastchat_conv
+
+    sampled_response_list = []
+    sampled_obs_list = []
+
+    unique_states = {}  # Store unique states here
+
+    for sampling_index in range(n):
+        context = get_context(node, args)
+        if len(sampled_response_list) > 0:
+            original_observation = context.messages[-2][1]
+            conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
+            for sampled_response,sampled_obs in zip(sampled_response_list, sampled_obs_list):
+                conditional_context += sampled_response + "\n"
+                conditional_context += 'Observation:'+'\n'+sampled_obs + "\n\n"
+            conditional_context += 'Please summarize insights from the potential actions and feedback, and generate a new response with as much distinctiveness as possible for the Observation: \n'
+            conditional_context += original_observation
+            context.messages[-2][1] += conditional_context + "\n"
+        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+        sampled_response_list.append(response)
+
+        thought_line = parse_thought(response) 
+        action_line = parse_action(response)
+        # Use thought and action to form a unique key
+        unique_key = f"{thought_line}::{action_line}"
+
+
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+
+        # Use thought and action to form a unique key
+        unique_key = f"{thought_line}::{action_line}"
+        
+        if unique_key in unique_states:
+            continue  # Skip if this state already exists
+
+        # tried_actions.append(action_line)
+        
+        if action_line:
+            action_type = action_line.split('[')[0] if '[' in action_line else action_line
+            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+
+            obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+
+            # Update the new state dictionary
+            # new_state['thought'] = thought_line
+            new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+            new_state['observation'] = obs
+
+            sampled_obs_list.append(obs)
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done

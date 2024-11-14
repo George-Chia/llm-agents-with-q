@@ -18,3 +18,4 @@ hotpot/hotpot-mcts_pm_data*
 hotpot/hotpot-mcts_RFT_data*
 hotpot/results_for_submission
 fastchat/model_worker_*
+programming/mcts_llama31/

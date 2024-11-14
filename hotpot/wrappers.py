@@ -95,13 +95,13 @@ class HotPotQAWrapper(gym.Wrapper):
     self.env.reset(seed=seed, return_info=return_info, options=options)
     self.data_idx = int(np.random.randint(len(self.data))) if idx is None else idx
     observation = f"Question: {self.data[self.data_idx][0]}"
-    info = self._get_info()
+    info = self._get_info(answer=None)
     return (observation, info) if return_info else observation
 
-  def _get_info(self):
+  def _get_info(self,answer):
     return {
       "steps": self.steps, 
-      "answer": self.answer,
+      "answer": answer,
       "question": self.data[self.data_idx][0], 
       "hotpot_split": self.split
     }

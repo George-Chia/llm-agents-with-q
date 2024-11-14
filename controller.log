@@ -1,0 +1,12 @@
+2024-11-14 01:30:25 | INFO | controller | args: Namespace(host='localhost', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:30:25 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m70704[0m]
+2024-11-14 01:30:25 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:30:25 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:30:25 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21001, 0, 0): cannot assign requested address
+2024-11-14 01:30:25 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:30:25 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:30:50 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:30:50 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:30:50 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:30:50 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:30:50 | ERROR | stderr | KeyboardInterrupt:

@@ -45,8 +45,8 @@ class WikiEnv(gym.Env):
   def _get_obs(self):
     return self.obs
 
-  def _get_info(self):
-    return {"steps": self.steps, "answer": self.answer}
+  def _get_info(self, answer):
+    return {"steps": self.steps, "answer": answer}
 
   def reset(self, seed=None, return_info=False, options=None):
     # We need the following line to seed self.np_random
@@ -60,7 +60,7 @@ class WikiEnv(gym.Env):
     self.steps = 0
     self.answer = None
     observation = self._get_obs()
-    info = self._get_info()
+    info = self._get_info(answer=None)
     return (observation, info) if return_info else observation
 
   def construct_lookup_list(self, keyword):
@@ -140,6 +140,7 @@ class WikiEnv(gym.Env):
     reward = 0
     done = False
     action = action.strip()
+    answer = None
     # if self.answer is not None:  # already finished
     #   done = True
     #   return self.obs, reward, done, self._get_info()
@@ -162,7 +163,7 @@ class WikiEnv(gym.Env):
         self.lookup_cnt += 1
     elif action.startswith("finish[") and action.endswith("]"):
       answer = action[len("finish["):-1]
-      self.answer = answer
+      # self.answer = answer
       done = True
       self.obs = f"Episode finished, reward = {reward}\n"
     elif action.startswith("think[") and action.endswith("]"):
@@ -172,7 +173,7 @@ class WikiEnv(gym.Env):
 
     self.steps += 1
 
-    return self.obs, reward, done, self._get_info()
+    return self.obs, reward, done, self._get_info(answer)
   
   def get_time_info(self):
     speed = self.search_time / self.num_searches if self.num_searches else 0

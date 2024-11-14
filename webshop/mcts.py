@@ -684,7 +684,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
 
     for sampling_index in range(n):
         context = get_context(node, args)
-        # TODO: conditional generation
+        # conditional generation
         if len(sampled_response_list) > 0:
             original_observation = context.messages[-2][1]
             conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'

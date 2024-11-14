@@ -1,14 +1,14 @@
 #!/bin/bash
 
 python run.py \
-    --backend llama31-1 \
+    --backend llama31-4 \
     --data_split test \
     --n_generate_sample 1 \
     --n_evaluate_sample 1 \
     --prompt_sample cot \
-    --temperature 0 \
+    --temperature 1 \
     --iterations 1 \
-    --save_path trajectories-T0 \
+    --save_path trajectories-T1 \
     --log logs/llama31.log \
     --max_depth 7 \
     --algorithm simple \

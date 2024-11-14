@@ -1,0 +1,437 @@
+2024-11-14 01:27:00 | INFO | controller | args: Namespace(host='localhost', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:27:00 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m66512[0m]
+2024-11-14 01:27:00 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:27:00 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:27:00 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21001, 0, 0): cannot assign requested address
+2024-11-14 01:27:00 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:27:00 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:27:53 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:27:53 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:27:53 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:27:53 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:27:53 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 01:27:56 | INFO | controller | args: Namespace(host='localhost', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:27:56 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m67398[0m]
+2024-11-14 01:27:56 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:27:56 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:27:56 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21001, 0, 0): cannot assign requested address
+2024-11-14 01:27:56 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:27:56 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:27:59 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:27:59 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:27:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:27:59 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:27:59 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 01:29:07 | INFO | controller | args: Namespace(host='localhost', port=21002, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:29:07 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m68812[0m]
+2024-11-14 01:29:07 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:29:07 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:29:07 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21002, 0, 0): cannot assign requested address
+2024-11-14 01:29:07 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:29:07 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:29:13 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:29:13 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:29:13 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:29:13 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:29:13 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 01:29:29 | INFO | controller | args: Namespace(host='localhost', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:29:30 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m69168[0m]
+2024-11-14 01:29:30 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:29:30 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:29:30 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21001, 0, 0): cannot assign requested address
+2024-11-14 01:29:30 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:29:30 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:29:37 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:29:37 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:29:37 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:29:37 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:29:37 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 01:30:57 | INFO | controller | args: Namespace(host='localhost', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:30:57 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m71175[0m]
+2024-11-14 01:30:57 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:30:57 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:30:57 | ERROR | stderr | [31mERROR[0m:    [Errno 99] error while attempting to bind on address ('::1', 21001, 0, 0): cannot assign requested address
+2024-11-14 01:30:57 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 01:30:57 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 01:31:00 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 01:31:00 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 01:31:00 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 01:31:00 | ERROR | stderr |     lock.acquire()
+2024-11-14 01:31:00 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 01:31:22 | INFO | controller | args: Namespace(host='0.0.0.0', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 01:31:22 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m72049[0m]
+2024-11-14 01:31:22 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 01:31:22 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 01:31:22 | ERROR | stderr | [32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:21001[0m (Press CTRL+C to quit)
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45402 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45420 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45440 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45456 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45474 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:03:59 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:45498 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21011, HTTPConnectionPool(host='0.0.0.0', port=21011): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71ebef3ed0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21011
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21012, HTTPConnectionPool(host='0.0.0.0', port=21012): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71ebf027d0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21012
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21013, HTTPConnectionPool(host='0.0.0.0', port=21013): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71e9355190>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21013
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21014, HTTPConnectionPool(host='0.0.0.0', port=21014): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71e9357a10>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21014
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21015, HTTPConnectionPool(host='0.0.0.0', port=21015): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71e935de50>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21015
+2024-11-14 02:03:59 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:03:59 | ERROR | controller | Get status fails: http://0.0.0.0:21016, HTTPConnectionPool(host='0.0.0.0', port=21016): Max retries exceeded with url: /worker_get_status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f71e9356250>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2024-11-14 02:03:59 | INFO | controller | Remove stale worker: http://0.0.0.0:21016
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:46948 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47024 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47270 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:03:59 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47412 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:04:17 | ERROR | stderr | [32mINFO[0m:     Shutting down
+2024-11-14 02:04:17 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 02:04:17 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 02:04:17 | ERROR | stderr | [32mINFO[0m:     Finished server process [[36m72049[0m]
+2024-11-14 02:04:17 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:17 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 118, in run
+2024-11-14 02:04:17 | ERROR | stderr |     return self._loop.run_until_complete(task)
+2024-11-14 02:04:17 | ERROR | stderr |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2024-11-14 02:04:17 | ERROR | stderr |   File "uvloop/loop.pyx", line 1517, in uvloop.loop.Loop.run_until_complete
+2024-11-14 02:04:17 | ERROR | stderr | asyncio.exceptions.CancelledError
+2024-11-14 02:04:17 | ERROR | stderr | 
+2024-11-14 02:04:17 | ERROR | stderr | During handling of the above exception, another exception occurred:
+2024-11-14 02:04:17 | ERROR | stderr | 
+2024-11-14 02:04:17 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:17 | ERROR | stderr |   File "<frozen runpy>", line 198, in _run_module_as_main
+2024-11-14 02:04:17 | ERROR | stderr |   File "<frozen runpy>", line 88, in _run_code
+2024-11-14 02:04:17 | ERROR | stderr |   File "/home/zhaiyuanzhao/FastChat/fastchat/serve/controller.py", line 389, in <module>
+2024-11-14 02:04:17 | ERROR | stderr |     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+2024-11-14 02:04:17 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/site-packages/uvicorn/main.py", line 577, in run
+2024-11-14 02:04:17 | ERROR | stderr |     server.run()
+2024-11-14 02:04:17 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
+2024-11-14 02:04:17 | ERROR | stderr |     return asyncio.run(self.serve(sockets=sockets))
+2024-11-14 02:04:17 | ERROR | stderr |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2024-11-14 02:04:17 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 190, in run
+2024-11-14 02:04:17 | ERROR | stderr |     return runner.run(main)
+2024-11-14 02:04:17 | ERROR | stderr |            ^^^^^^^^^^^^^^^^
+2024-11-14 02:04:17 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 123, in run
+2024-11-14 02:04:17 | ERROR | stderr |     raise KeyboardInterrupt()
+2024-11-14 02:04:17 | ERROR | stderr | KeyboardInterrupt
+2024-11-14 02:04:18 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 02:04:18 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:18 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 02:04:18 | ERROR | stderr |     lock.acquire()
+2024-11-14 02:04:18 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 02:04:55 | INFO | controller | args: Namespace(host='0.0.0.0', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 02:04:55 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m22003[0m]
+2024-11-14 02:04:55 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 02:04:55 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 02:04:55 | ERROR | stderr | [32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:21001[0m (Press CTRL+C to quit)
+2024-11-14 02:04:59 | ERROR | stderr | [32mINFO[0m:     Shutting down
+2024-11-14 02:04:59 | ERROR | stderr | [32mINFO[0m:     Waiting for application shutdown.
+2024-11-14 02:04:59 | ERROR | stderr | [32mINFO[0m:     Application shutdown complete.
+2024-11-14 02:04:59 | ERROR | stderr | [32mINFO[0m:     Finished server process [[36m22003[0m]
+2024-11-14 02:04:59 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 118, in run
+2024-11-14 02:04:59 | ERROR | stderr |     return self._loop.run_until_complete(task)
+2024-11-14 02:04:59 | ERROR | stderr |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2024-11-14 02:04:59 | ERROR | stderr |   File "uvloop/loop.pyx", line 1517, in uvloop.loop.Loop.run_until_complete
+2024-11-14 02:04:59 | ERROR | stderr | asyncio.exceptions.CancelledError
+2024-11-14 02:04:59 | ERROR | stderr | 
+2024-11-14 02:04:59 | ERROR | stderr | During handling of the above exception, another exception occurred:
+2024-11-14 02:04:59 | ERROR | stderr | 
+2024-11-14 02:04:59 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:59 | ERROR | stderr |   File "<frozen runpy>", line 198, in _run_module_as_main
+2024-11-14 02:04:59 | ERROR | stderr |   File "<frozen runpy>", line 88, in _run_code
+2024-11-14 02:04:59 | ERROR | stderr |   File "/home/zhaiyuanzhao/FastChat/fastchat/serve/controller.py", line 389, in <module>
+2024-11-14 02:04:59 | ERROR | stderr |     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/site-packages/uvicorn/main.py", line 577, in run
+2024-11-14 02:04:59 | ERROR | stderr |     server.run()
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
+2024-11-14 02:04:59 | ERROR | stderr |     return asyncio.run(self.serve(sockets=sockets))
+2024-11-14 02:04:59 | ERROR | stderr |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 190, in run
+2024-11-14 02:04:59 | ERROR | stderr |     return runner.run(main)
+2024-11-14 02:04:59 | ERROR | stderr |            ^^^^^^^^^^^^^^^^
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/asyncio/runners.py", line 123, in run
+2024-11-14 02:04:59 | ERROR | stderr |     raise KeyboardInterrupt()
+2024-11-14 02:04:59 | ERROR | stderr | KeyboardInterrupt
+2024-11-14 02:04:59 | ERROR | stderr | Exception ignored in: <module 'threading' from '/opt/conda/envs/py311/lib/python3.11/threading.py'>
+2024-11-14 02:04:59 | ERROR | stderr | Traceback (most recent call last):
+2024-11-14 02:04:59 | ERROR | stderr |   File "/opt/conda/envs/py311/lib/python3.11/threading.py", line 1583, in _shutdown
+2024-11-14 02:04:59 | ERROR | stderr |     lock.acquire()
+2024-11-14 02:04:59 | ERROR | stderr | KeyboardInterrupt:
+2024-11-14 02:05:12 | INFO | controller | args: Namespace(host='0.0.0.0', port=21001, dispatch_method='shortest_queue', ssl=False)
+2024-11-14 02:05:12 | ERROR | stderr | [32mINFO[0m:     Started server process [[36m22833[0m]
+2024-11-14 02:05:12 | ERROR | stderr | [32mINFO[0m:     Waiting for application startup.
+2024-11-14 02:05:12 | ERROR | stderr | [32mINFO[0m:     Application startup complete.
+2024-11-14 02:05:12 | ERROR | stderr | [32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:21001[0m (Press CTRL+C to quit)
+2024-11-14 02:05:45 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:05:45 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:05:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47560 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:01 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:06:01 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47588 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:15 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:06:15 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:15 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47612 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:30 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:06:30 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47638 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:31 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:06:31 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47640 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:46 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:06:46 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47666 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:46 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:06:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47668 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:48 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:06:48 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:48 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:06:48 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:48 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:06:48 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:48 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:06:48 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:48 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:06:48 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:06:48 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47672 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:48 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47684 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:06:48 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:06:48 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47686 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:00 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:07:00 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47704 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:02 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:07:02 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:02 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47710 - "[1mPOST /register_worker HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:15 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:07:15 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47724 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:07:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47728 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:07:22 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:07:22 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47742 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:22 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47756 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:22 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:07:22 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47758 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:07:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47782 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:07:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47784 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:45 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:07:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47804 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:07:47 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:07:47 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47806 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:00 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:08:00 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47818 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:08:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47820 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:08:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47834 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:08:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47836 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:27 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:27 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47856 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:27 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47870 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:27 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:27 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47872 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:30 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:08:30 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47888 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:32 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:08:32 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47894 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:33 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:33 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47900 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:33 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47914 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:33 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:33 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47916 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:35 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:35 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47926 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:35 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47940 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:35 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:35 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47942 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:37 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:37 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47946 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:37 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47960 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:37 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:37 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47962 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:44 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:44 | INFO | stdout | [32mINFO[0m:     127.0.0.1:47988 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:44 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48002 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:44 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:44 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48004 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:45 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48010 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:45 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:08:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48024 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48026 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:45 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48028 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:46 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:08:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48032 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21011
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21011, {'model_names': ['llama31-0'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21012
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21012, {'model_names': ['llama31-1'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21013
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21013, {'model_names': ['llama31-2'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21014
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21014, {'model_names': ['llama31-3'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21015
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21015, {'model_names': ['llama31-4'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | controller | Register a new worker: http://0.0.0.0:21016
+2024-11-14 02:08:51 | INFO | controller | Register done: http://0.0.0.0:21016, {'model_names': ['llama31-5'], 'speed': 1, 'queue_length': 0}
+2024-11-14 02:08:51 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48052 - "[1mPOST /refresh_all_workers HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:51 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48066 - "[1mPOST /list_models HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:08:51 | INFO | controller | names: ['http://0.0.0.0:21011'], queue_lens: [0.0], ret: http://0.0.0.0:21011
+2024-11-14 02:08:51 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48068 - "[1mPOST /get_worker_address HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:09:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48112 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:09:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48114 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:15 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:09:15 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48130 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:17 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:09:17 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48132 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:30 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:09:30 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48146 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:09:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48148 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:46 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:09:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48166 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:09:46 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:09:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48170 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:00 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:10:00 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48192 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:02 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:10:02 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48194 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:15 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:10:15 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48212 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:10:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48214 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:10:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48232 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:10:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48234 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:45 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:10:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48244 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:10:47 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:10:47 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48246 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:00 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:11:00 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48260 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:11:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48262 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:11:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48278 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:16 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:11:16 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48280 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:30 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:11:30 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48296 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:32 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:11:32 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48302 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:45 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:11:45 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48316 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:11:46 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:11:46 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48318 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21015
+2024-11-14 02:12:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48330 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:01 | INFO | controller | Receive heart beat. http://0.0.0.0:21012
+2024-11-14 02:12:01 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48332 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:15 | INFO | controller | Receive heart beat. http://0.0.0.0:21013
+2024-11-14 02:12:15 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48350 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:17 | INFO | controller | Receive heart beat. http://0.0.0.0:21016
+2024-11-14 02:12:17 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48354 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:30 | INFO | controller | Receive heart beat. http://0.0.0.0:21011
+2024-11-14 02:12:30 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48372 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
+2024-11-14 02:12:31 | INFO | controller | Receive heart beat. http://0.0.0.0:21014
+2024-11-14 02:12:31 | INFO | stdout | [32mINFO[0m:     127.0.0.1:48374 - "[1mPOST /receive_heart_beat HTTP/1.1[0m" [32m200 OK[0m
