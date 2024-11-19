@@ -14,10 +14,10 @@ def parse_action(llm_output: str) -> str:
 
 
 # 加载JSON文件
-with open('hotpot/trajectories-backup-MCTS_test_llama31-2_mcts_30iterations/39209.json', 'r') as f:
+with open('hotpot/trajectories-MCTS_test_llama31-2_mcts_30iterations/5706.json', 'r') as f:
     root = json.load(f)
 
-with open('hotpot/trajectories-backup-MCTS-conditional_test_llama31-3_mcts_30iterations/39209.json', 'r') as f:
+with open('hotpot/trajectories-MCTS-critique_test_llama31-3_mcts_30iterations/5706.json', 'r') as f:
     root = json.load(f)
 
 node = copy.deepcopy(root)

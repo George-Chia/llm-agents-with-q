@@ -179,8 +179,9 @@ def parse_args():
 
     # for MCTS
     args.add_argument('--enable_rollout_early_stop', action='store_true')
-    # for MCTS conditional action sampling
-    args.add_argument('--enable_conditional_sampling', action='store_true')
+
+    # various expansion_sampling_method for MCTS
+    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
 
     # for calculating DPO logits
     args.add_argument(
