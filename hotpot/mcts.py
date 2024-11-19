@@ -565,7 +565,7 @@ def generate_new_states(node, args, task, n):
             # Update the new state dictionary
             new_state['thought'] = thought_line
             new_state['action'] = action_line
-            new_state['observation'] = obs
+            new_state['observation'] = f"Observation: {obs}"
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done
@@ -631,7 +631,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # Update the new state dictionary
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-            new_state['observation'] = obs
+            new_state['observation'] = f"Observation: {obs}"
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done
@@ -700,7 +700,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
             # Update the new state dictionary
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-            new_state['observation'] = obs
+            new_state['observation'] = f"Observation: {obs}"
 
             sampled_obs_list.append(obs)
 
