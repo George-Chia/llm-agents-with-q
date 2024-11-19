@@ -15,7 +15,7 @@ def get_worker_address(model_name, controller_address="http://localhost:21001"):
     ret = requests.post(controller_addr + "/list_models")
     models = ret.json()["models"]
     models.sort()
-    print(f"Use {model_name} from Models: {models}")
+    # print(f"Use {model_name} from Models: {models}")
 
     ret = requests.post(
         controller_addr + "/get_worker_address", json={"model": model_name}

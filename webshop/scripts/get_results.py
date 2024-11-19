@@ -2,7 +2,7 @@ import os
 import json
 
 # phi-3-mcts-unfintuned
-trajectories_save_path = "trajectories_test_exp-sft-Phi-3-0_mcts_30iterations" #
+# trajectories_save_path = "trajectories_test_exp-sft-Phi-3-0_mcts_30iterations" #
 
 
 # phi-3-iteration0
@@ -52,6 +52,13 @@ trajectories_save_path = "trajectories_test_exp-sft-Phi-3-0_mcts_30iterations" #
 # Sample number:  200
 # average best reward:  0.7077083333333338
 # average best child reward:  0.4426833333333334
+
+
+with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as file:
+    # 加载JSON文件内容
+    dataset_idx_list = json.load(file)
+
+trajectories_save_path = 'webshop/trajectories_train_llama31-0_T1.0_mcts_30iterations'
 
 
 done_task_id = []

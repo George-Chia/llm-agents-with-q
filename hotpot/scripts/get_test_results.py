@@ -1,7 +1,11 @@
 import os
 import json
 
-trajectories_save_path = 'hotpot/trajectories-T06_test_llama31-5_simple_1iterations'
+trajectories_save_path = 'hotpot/trajectories-T1_test_llama31-4_simple_1iterations'
+
+# T06: 0.36
+# T06: 0.37
+# T1: 0.36
 
 
 done_task_id = []

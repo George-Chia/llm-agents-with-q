@@ -45,7 +45,7 @@ abalation of iterations
 # average best child em:  0.212
 # trajectories_save_path = "hotpot/trajectories_train_gpt-4o_mcts_30iterations_1000samples"
 
-trajectories_save_path = "hotpot/trajectories-MCTS_test_llama31-2_mcts_30iterations"
+trajectories_save_path = "hotpot/trajectories_train_llama31-0_mcts_30iterations"
 # Sample number:  100
 # average best reward:  0.71
 # average best em:  0.28

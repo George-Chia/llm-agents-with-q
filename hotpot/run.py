@@ -102,7 +102,7 @@ def run(args):
     task_accs = []
     info = []
 
-    idx = [14028]
+    # idx = [14028]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve

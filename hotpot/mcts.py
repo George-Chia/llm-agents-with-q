@@ -449,7 +449,7 @@ def parse_action(llm_output: str) -> str:
         pattern = re.compile(r"Action: (.*)", re.DOTALL)
         action = re.findall(pattern, llm_output)[0]
     except:
-        logging.info("Action Not Found in llm_output: ", llm_output)
+        # logging.info("Action Not Found in llm_output: ", llm_output)
         action = 'nothing'
     assert action is not None
     return action
@@ -461,7 +461,7 @@ def parse_thought(llm_output: str) -> str:
         pattern = re.compile(r"Thought: (.*)(?= Action:)", re.DOTALL)
         action = re.findall(pattern, llm_output)[0]
     except:
-        logging.info("Thought Not Found in llm_output: ", llm_output)
+        # logging.info("Thought Not Found in llm_output: ", llm_output)
         action = 'nothing'
     assert action is not None
     return action

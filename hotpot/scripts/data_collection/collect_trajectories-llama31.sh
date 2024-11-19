@@ -10,7 +10,7 @@ python run.py \
     --temperature 1.0 \
     --iterations 30 \
     --save_path trajectories \
-    --log logs/collect_trajectories_part-${j}.log \
+    --log logs/collect_trajectories_part.log \
     --max_depth 7 \
     --algorithm mcts \
     --enable_fastchat_conv \
