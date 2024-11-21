@@ -2,7 +2,15 @@ import os
 import json
 import glob
 
-trajectories_save_path = 'webshop/trajectories_train_llama31-'
+trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31-'
+# Sample number:  100
+# average best reward:  0.7414166666666664
+# average best child reward:  0.6717499999999998
+
+trajectories_save_path = 'webshop/trajectories-MCTS-critique_test_llama31-'
+# Sample number:  100
+# average best reward:  0.7220277777777778
+# average best child reward:  0.6873444444444445
 
 done_task_id = []
 

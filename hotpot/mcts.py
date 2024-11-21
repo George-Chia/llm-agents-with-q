@@ -119,6 +119,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     global reflection_map
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.critique_backend:
+        critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.temperature)
+    else:
+        critique_gpt = gpt
+
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
     x = env.reset(idx=idx)
@@ -147,7 +153,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     terminal_nodes = []
 
     for i in range(iterations):
-        print(f"Iteration {i + 1}...")
+        # print(f"Iteration {i + 1}...")
         node = select_node(root)
 
         while node is None or (node.is_terminal and node.reward != 1):
@@ -174,7 +180,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             value = evaluate_node(node, args, task)
 
         # Find the child with the highest value or UCT? A: similar effect.
-        reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=4)
+        reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
 
         terminal_nodes.append(terminal_node)
 
@@ -469,7 +475,7 @@ def parse_thought(llm_output: str) -> str:
     assert action is not None
     return action
 
-def rollout(node, args, task, idx, max_depth=4):
+def rollout(node, args, task, idx, max_depth=7):
     logging.info("ROLLING OUT")
     depth = node.depth
     # n = 5
@@ -502,7 +508,7 @@ def rollout(node, args, task, idx, max_depth=4):
     return sum(rewards) / len(rewards), node
 
 
-def rollout_random(node, args, task, idx, max_depth=15):
+def rollout_random(node, args, task, idx, max_depth=7):
     depth = node.depth
     n = args.rollout_width
     assert n==1, "large rollout_width is meanless for rollout_random"
@@ -585,11 +591,11 @@ def generate_new_states(node, args, task, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
-def get_context(node, args):
-    if "gpt-" in args.backend:
+def get_context(node, args, backend):
+    if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in args.backend or "llama31" in args.backend:
+    elif "Phi-3" in backend or "llama31" in backend:
         conv = get_conv_from_bottom(node, args.conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
@@ -600,7 +606,7 @@ def get_context(node, args):
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
 
-    context = get_context(node, args)
+    context = get_context(node, args, args.backend)
     response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
 
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
@@ -702,7 +708,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
             new_state['observation'] = f"Observation: {obs}"
 
-            sampled_obs_list.append(obs)
+            sampled_obs_list.append(f"Observation: {obs}")
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done
@@ -733,27 +739,36 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
     unique_states = {}  # Store unique states here
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = copy.deepcopy(get_context(node, args, args.backend))
         critique = None
+        regenerate_prompt = None
         if previous_response:
-            original_observation = context.messages[-2][1]
             # generating critique
             critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
             critique_prompt += previous_response + "\n"
-            critique_prompt += 'Observation:'+previous_obs + "\n\n"
+            critique_prompt += previous_obs + "\n\n"
             # critique_prompt += 'After reviewing the previous Thought, Action, and Observation:\n - Briefly provide specific and constructive feedback for refining the previous Thought and Action.\n - Conclude with the determination using the format "The action is <effective/ineffective>."'
-            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective. If ineffective, provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\nThe action is <effective/ineffective>.\nFeedback:[[Feedback]]'
+            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
             # critique_prompt += 'Given the previous Thought, Action, and Observation, your role is to provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\n### Feedback\n[Your feedback]'
-            critique_context = copy.deepcopy(context)
-            critique_context.messages[-2][1] += critique_prompt + "\n"
-            critique = gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+            
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
+            if isinstance(critique_context, list):  # for openai GPT
+                original_observation = critique_context[-1]['content']
+                critique_context[-1]['content'] += critique_prompt + "\n"
+            else: # for fastchat
+                original_observation = critique_context.messages[-2][1]
+                critique_context.messages[-2][1] += critique_prompt + "\n"
+
+            critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
 
             # generating thought and action
             regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            regenerate_prompt += previous_response + "\n\n"
-            regenerate_prompt += 'Observation:'+previous_obs + "\n"
-            regenerate_prompt += '\n'+"Critique of the previous Thought and Action: "+critique + "\n\n"
-            regenerate_prompt += 'Based on the critique and feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
+            regenerate_prompt += previous_response + "\n"
+            regenerate_prompt += previous_obs + "\n"
+            regenerate_prompt += 'Critique: '+critique + "\n\n"
+            regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
             context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
 
         response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
@@ -799,8 +814,9 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
             new_state['observation'] = f"Observation: {obs}"
             if critique:
                 new_state['critique'] = critique
+                new_state['regenerate_prompt'] = regenerate_prompt
 
-            previous_obs = obs
+            previous_obs = f"Observation: {obs}"
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done

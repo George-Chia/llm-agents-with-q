@@ -183,7 +183,15 @@ def get_conv_from_bottom(node, conv_template):
     messages = []
     while node.parent:
         messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
-        messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        # messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        
+        if 'regenerate_prompt' in node.state.keys():
+            critique = f"{node.state['regenerate_prompt']}"
+            action = f"{node.state['action']}"
+            messages.insert(0, [conv.roles[1], critique+node.state['observation']+"\n\n"+action])
+        else:
+            messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        
         node = node.parent
     # root node
     for j, sentence in enumerate(node.messages):
@@ -199,7 +207,13 @@ def get_messages_from_bottom(node):
     messages = []
     while node.parent:
         messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"})
-        messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        if 'regenerate_prompt' in node.state.keys():
+            critique = f"{node.state['regenerate_prompt']}"
+            action = f"{node.state['action']}"
+            messages.insert(0,{'role':'assistant', 'content': critique+"\n"+action})
+        else:
+            messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
         # messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
         # messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
         node = node.parent

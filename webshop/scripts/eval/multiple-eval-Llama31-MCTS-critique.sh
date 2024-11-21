@@ -18,12 +18,13 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --temperature 1 \
     --iterations 30 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories-MCTS \
+    --save_path trajectories-MCTS-critique \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
     --enable_fastchat_conv \
     --enable_seq_mode \
-    --conv_template llama-3 &
+    --conv_template llama-3 \
+    --expansion_sampling_method critique &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

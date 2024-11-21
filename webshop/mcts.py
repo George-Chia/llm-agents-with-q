@@ -80,6 +80,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     action = 'reset'
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.critique_backend:
+        critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.temperature)
+    else:
+        critique_gpt = gpt
+
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
     x = env.step(idx, action, args.enable_seq_mode)[0]
@@ -487,9 +493,11 @@ def expand_node(node, args, task, idx, max_depth):
     # if node.depth == 0:  
     #     n *= 2
     if args.enable_fastchat_conv:
-        if args.enable_conditional_sampling:
+        if args.expansion_sampling_method == 'conditional':
             new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, idx, n)
-        else:
+        elif args.expansion_sampling_method == 'critique':
+            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, idx, n)
+        elif args.expansion_sampling_method == 'vanilla':
             new_nodes = generate_new_states_fastchat_conv(node, args, task, idx, n)
     else:
         new_nodes = generate_new_states(node, args, task, idx, n)
@@ -580,11 +588,11 @@ def generate_new_states(node, args, task, idx, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
-def get_context(node, args):
-    if "gpt-" in args.backend:
+def get_context(node, args, backend):
+    if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in args.backend or "llama31" in args.backend:
+    elif "Phi-3" in backend or "llama31" in backend:
         conv = get_conv_from_bottom(node, args.conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
@@ -597,7 +605,7 @@ def generate_new_states_fastchat_conv(node, args, task, idx, n):
     global failed_trajectories
     assert args.enable_fastchat_conv
 
-    context = get_context(node, args)
+    context = get_context(node, args, args.backend)
     response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     sampled_actions = ["\nAction: "+parse_action(response) for response in copy.deepcopy(response_list)]
 
@@ -683,7 +691,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
     added = False
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = copy.deepcopy(get_context(node, args))
         # conditional generation
         if len(sampled_response_list) > 0:
             original_observation = context.messages[-2][1]
@@ -736,6 +744,122 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
             # Update the new state dictionary
             new_state['action'] = response
             new_state['observation'] = f"Observation: \n{obs}"
+            
+            env_state_clone = env.clone_state()  # Clone current environment state
+            new_node = Node(state=new_state, question=node.question, env_state=env_state_clone, parent=node)
+            new_node.env_state = local_sessions
+            if r > 0 or done:
+                logging.info(f"reward:{r}")
+                new_node.is_terminal = True
+                #print("rew", r)
+            new_node.reward = r
+            new_node.value = r
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+
+            if new_node.is_terminal and r < 1.0 and r > 0.0 and added == False:
+                trajectory = collect_trajectory_from_bottom(new_node)
+
+                # Check if there is already a failed trajectory with the same reward
+                existing_rewards = [t['r'] for t in failed_trajectories]
+
+                if r not in existing_rewards:
+                    print("adding to failed")
+                    added = True
+                    failed_trajectories.append({'trajectory': trajectory, 'final_answer': f"{action_line}", 'r': r})
+    if len(list(unique_states.values())) == 0:
+        print('sss')
+    return list(unique_states.values())  # Return unique nodes as a list
+
+
+def generate_new_states_critique_fastchat_conv(node, args, task, idx, n):
+    global failed_trajectories
+    assert args.enable_fastchat_conv
+
+    previous_response = None
+    previous_obs = None
+
+    unique_states = {}  # Store unique states here
+    added = False
+
+    for sampling_index in range(n):
+        context = copy.deepcopy(get_context(node, args, args.backend))
+        critique = None
+        regenerate_prompt = None
+        if previous_response:
+            # generating critique
+            critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            critique_prompt += previous_response + "\n"
+            critique_prompt += previous_obs + "\n\n"
+            # critique_prompt += 'After reviewing the previous Thought, Action, and Observation:\n - Briefly provide specific and constructive feedback for refining the previous Thought and Action.\n - Conclude with the determination using the format "The action is <effective/ineffective>."'
+            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
+            # critique_prompt += 'Given the previous Thought, Action, and Observation, your role is to provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\n### Feedback\n[Your feedback]'
+            
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
+            if isinstance(critique_context, list):  # for openai GPT
+                original_observation = critique_context[-1]['content']
+                critique_context[-1]['content'] += critique_prompt + "\n"
+            else: # for fastchat
+                original_observation = critique_context.messages[-2][1]
+                critique_context.messages[-2][1] += critique_prompt + "\n"
+
+            critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+
+            # generating thought and action
+            regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            regenerate_prompt += previous_response + "\n"
+            regenerate_prompt += previous_obs + "\n"
+            regenerate_prompt += 'Critique: '+critique + "\n\n"
+            regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
+            context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+
+        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+        previous_response = response
+        action = "\nAction: "+parse_action(response)
+    
+
+        local_sessions = copy.deepcopy(node.env_state) # : for roll back
+        env.sessions = local_sessions
+        logging.info(env.sessions)
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+        action_line = next((line.split(":")[1].strip() for line in action.split("\n") if line.startswith("Action") and ":" in line), None)
+
+        # Use thought and action to form a unique key
+        unique_key = f"{action_line}"
+        
+        # if unique_key in unique_states:
+        #     continue  # Skip if this state already exists
+
+        if action_line:
+            try:
+                # buy now action cost very long time
+                # start_time = time.time()
+                res = env.step(idx, action_line, args.enable_seq_mode)
+                # end_time = time.time()
+                # print("env.step action_line 执行时间: {:.4f} 秒".format(end_time - start_time))
+                obs = res[0]
+                r = res[1]
+                done = res[2]
+            except AssertionError:
+                obs = 'Invalid action!'
+                # res = env.step(idx, action_line, args.enable_seq_mode)
+                # print("err")
+                r = -1
+                done = False
+
+            previous_obs = f"Observation: \n{obs}"
+            
+            if action_line.startswith('think'):
+                observation = 'OK.'
+      
+            # Update the new state dictionary
+            new_state['action'] = response
+            new_state['observation'] = f"Observation: \n{obs}"
+            if critique:
+                new_state['critique'] = critique
+                new_state['regenerate_prompt'] = regenerate_prompt
             
             env_state_clone = env.clone_state()  # Clone current environment state
             new_node = Node(state=new_state, question=node.question, env_state=env_state_clone, parent=node)

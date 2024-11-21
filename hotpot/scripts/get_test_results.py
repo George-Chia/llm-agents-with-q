@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'hotpot/trajectories-T1_test_llama31-4_simple_1iterations'
+trajectories_save_path = 'hotpot/trajectories_backup_NO_Observation/trajectories-T1_test_llama31-4_simple_1iterations'
 
 # T06: 0.36
 # T06: 0.37

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 python run.py \
-    --backend llama31-4 \
+    --backend llama31-3 \
     --data_split test \
     --n_generate_sample 1 \
     --n_evaluate_sample 1 \
