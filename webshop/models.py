@@ -11,16 +11,16 @@ LOCAL_LLM_PATH = os.environ.get('LOCAL_LLM_PATH')
 tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
 
 
-# api_key = os.getenv("OPENAI_API_KEY", "")
-# if api_key != "":
-#     openai.api_key = api_key
-# else:
-#     print("Warning: OPENAI_API_KEY is not set")
+api_key = os.getenv("OPENAI_API_KEY", "")
+if api_key != "":
+    openai.api_key = api_key
+else:
+    print("Warning: OPENAI_API_KEY is not set")
     
-# api_base = os.getenv("OPENAI_API_BASE", "")
-# if api_base != "":
-#     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
-#     openai.api_base = api_base
+api_base = os.getenv("OPENAI_API_BASE", "")
+if api_base != "":
+    print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
+    openai.api_base = api_base
 
 @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):

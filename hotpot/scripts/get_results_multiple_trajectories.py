@@ -31,13 +31,20 @@ trajectories_save_path = 'hotpot/trajectories-MCTS-critique_test_llama31-'
 # average best child em:  0.54
 
 
-# trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31-' (without direct feedback)
-# Sample number:  100
+trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31-'  
+# Sample number:  100 #(without direct feedback)
 # average success length:  2.242857142857143
 # average best reward:  0.75
 # average best em:  0.75
 # average best child reward:  0.7
 # average best child em:  0.7
+
+# Sample number:  100 (direct feedback)
+# average success length:  2.1944444444444446
+# average best reward:  0.75
+# average best em:  0.75
+# average best child reward:  0.72
+# average best child em:  0.72
 
 
 done_task_id = []

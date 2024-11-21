@@ -44,7 +44,7 @@ def run(args):
     if "Phi-3" in args.backend:
         trajectories_save_path = args.save_path+'_'+args.data_split+'_'+"Phi-3"+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     else:
-        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
+        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend.split('-')[0]+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     done_task_id = []
     if not os.path.exists(trajectories_save_path):
         os.makedirs(trajectories_save_path)

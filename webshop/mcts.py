@@ -23,8 +23,6 @@ from fschat_templates import prompt_with_icl
  
 completion_tokens = prompt_tokens = 0
 # openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_base = ""
-openai.api_key = ""
 
 global reflection_map
 global failed_trajectories
