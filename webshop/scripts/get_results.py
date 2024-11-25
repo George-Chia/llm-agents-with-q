@@ -58,7 +58,8 @@ with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as fil
     # 加载JSON文件内容
     dataset_idx_list = json.load(file)
 
-trajectories_save_path = 'webshop/trajectories_train_llama31-0_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_30iterations'
+# trajectories_save_path = 'webshop/trajectories-MCTS-gpt4o_critique_test_llama31_T1.0_mcts_30iterations'
 
 
 done_task_id = []

@@ -34,30 +34,38 @@ abalation of iterations
 # average best child em:  0.423
 '''
 
-# version2: rollout with UCT
-# trajectories_save_path = "hotpot/trajectories-reflection_train_gpt-4o-mini_mcts_30iterations"
 
 
+# trajectories_save_path = "hotpot/trajectories-MCTS_test_llama31_mcts_30iterations"
+# Sample number:  100
+# average best reward:  0.71
+# average best em:  0.71
+# average best child reward:  0.62
+# average best child em:  0.62
+
+# trajectories_save_path = 'hotpot/trajectories-MCTS-critique_test_llama31_no-backpro'
+# Sample number:  100
+# average best reward:  0.64
+# average best em:  0.64
+# average best child reward:  0.54
+# average best child em:  0.54
+
+trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31-0_mcts_30iterations'
+
+
+# trajectories_save_path = "hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations"
+# Sample number:  950
+# average best reward:  0.6936842105263158
+# average best em:  0.6936842105263158
+# average best child reward:  0.6157894736842106
+# average best child em:  0.6157894736842106
+
+# trajectories_save_path = "hotpot/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations"
 # Sample number:  1000
-# average best reward:  0.672
-# average best em:  0.213
-# average best child reward:  0.671
-# average best child em:  0.212
-# trajectories_save_path = "hotpot/trajectories_train_gpt-4o_mcts_30iterations_1000samples"
-
-trajectories_save_path = "hotpot/trajectories_backup_NO_Observation/trajectories-MCTS_test_llama31-2_mcts_30iterations"
-# Sample number:  55
-# average best reward:  0.6909090909090909
-# average best em:  0.6909090909090909
-# average best child reward:  0.6545454545454545
-# average best child em:  0.6545454545454545
-
-# trajectories_save_path = "hotpot/trajectories_backup_NO_Observation/trajectories-MCTS-critique_test_llama31-3_mcts_30iterations"
-# Sample number:  8
-# average best reward:  0.75
-# average best em:  0.75
-# average best child reward:  0.75
-# average best child em:  0.75
+# average best reward:  0.66
+# average best em:  0.66
+# average best child reward:  0.558
+# average best child em:  0.558
 
 done_task_id = []
 

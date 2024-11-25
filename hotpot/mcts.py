@@ -167,8 +167,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if node.is_terminal and node.reward == 1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             backpropagate(node, node.reward)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return node.state, node.value, all_nodes, node.reward, node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return node.state, node.value, all_nodes, node.reward, node.em
         
         expand_node(node, args, task, args.max_depth)
 
@@ -204,17 +207,24 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if terminal_nodes_with_reward_1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.value)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return best_node.state, best_node.value, best_node.reward, best_node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return best_node.state, best_node.value, best_node.reward, best_node.em
     
         for j, (node, value) in enumerate(all_nodes):
             logging.info(f"Node {j+1}: {str(node)}")
 
         logging.info(f"State of all_nodes after iteration {i + 1}: {all_nodes}")
     
+    all_nodes_list = collect_all_nodes(root)
+    for node in all_nodes_list:
+        if node.is_terminal and node.value==0:
+            backpropagate(node, node.reward)
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
-    all_nodes_list = collect_all_nodes(root)
+    
     all_nodes_list.extend(terminal_nodes)
     best_child = max(all_nodes_list, key=lambda x: x.reward)
     failed_trajectories = []

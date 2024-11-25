@@ -179,6 +179,7 @@ def parse_args():
     args.add_argument('--enable_reflection', action='store_true')
 
     # for MCTS
+    args.add_argument('--disable_early_stop', action='store_true')
     args.add_argument('--enable_rollout_early_stop', action='store_true')
 
     # various expansion_sampling_method for MCTS
@@ -209,11 +210,6 @@ def parse_args():
     )
     args.add_argument(
         "--trust_remote_code",
-        type=bool,
-        default=False,
-    )
-    args.add_argument(
-        "--disable_early_stop",
         type=bool,
         default=False,
     )

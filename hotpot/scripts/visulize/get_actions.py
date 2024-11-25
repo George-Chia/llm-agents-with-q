@@ -14,14 +14,13 @@ def parse_action(llm_output: str) -> str:
 
 
 # 加载JSON文件
-with open('hotpot/trajectories-MCTS-critique_test_llama31-0_mcts_30iterations/4759.json', 'r') as f:
+with open('hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations/89.json', 'r') as f:
     root = json.load(f)
 
-# with open('hotpot/trajectories-MCTS-critique_test_llama31-0_mcts_30iterations/5706.json', 'r') as f:
-#     root = json.load(f)
+with open('hotpot/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations/89.json', 'r') as f:
+    root = json.load(f)
 
-# with open('hotpot/trajectories-MCTS-gpt4o_critique_test_llama31-0_mcts_30iterations/5706.json', 'r') as f:
-#     root = json.load(f)
+
 
 node = copy.deepcopy(root)
 
@@ -33,5 +32,6 @@ while node["is_terminal"]== False and node["children"] is not None:
     for index,child in enumerate(node['children']):
         # print(parse_action(child['state']["action"]), 'value: ', child['value'])
         print(child['state'])
+        print('value: ', child['value'])
     node = node['children'][best_trajectory_index_list[depth]]
     
