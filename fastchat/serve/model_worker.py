@@ -89,6 +89,12 @@ class ModelWorker(BaseModelWorker):
             xft_config=xft_config,
             debug=debug,
         )
+        if kwargs['adapter_path'] != None:
+            from peft import PeftModel
+            self.model = PeftModel.from_pretrained(
+                self.model,
+                kwargs['adapter_path'],
+            )
         self.device = device
         if self.tokenizer.pad_token == None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -342,6 +348,11 @@ def create_model_worker():
         default=False,
         help="Enable SSL. Requires OS Environment variables 'SSL_KEYFILE' and 'SSL_CERTFILE'.",
     )
+    parser.add_argument(
+        "--adapter-path",
+        type=str,
+        default=None,
+    )
     args = parser.parse_args()
     logger.info(f"args: {args}")
 
@@ -406,6 +417,7 @@ def create_model_worker():
         embed_in_truncate=args.embed_in_truncate,
         seed=args.seed,
         debug=args.debug,
+        adapter_path=args.adapter_path
     )
     return args, worker
 
