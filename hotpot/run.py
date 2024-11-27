@@ -175,6 +175,7 @@ def parse_args():
     args.add_argument('--enable_fastchat_conv', action='store_true')
     args.add_argument('--enable_seq_mode', action='store_true')
     args.add_argument('--conv_template', type=str)
+    args.add_argument('--critique_conv_template', type=str)
     args.add_argument('--q_model_conv_template', type=str)
     args.add_argument('--enable_reflection', action='store_true')
 

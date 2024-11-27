@@ -20,6 +20,8 @@ import time
 
 from fschat_templates import prompt_with_icl
 
+from ..critique_templates import auto_j_single_template, critique_prompt_template
+
  
 completion_tokens = prompt_tokens = 0
 # openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -122,8 +124,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if node.is_terminal and node.reward == 1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             backpropagate(node, node.reward)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return node.state, node.value, all_nodes, node.reward, node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return node.state, node.value, all_nodes, node.reward, node.em
         
         expand_node(node, args, task, idx, max_depth=args.max_depth)
 
@@ -172,8 +177,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             logging.info("Successful trajectory found")
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.reward)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return best_node.state, best_node.value, best_node.reward, best_node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return best_node.state, best_node.value, best_node.reward, best_node.em
     
         for j, (node, value) in enumerate(all_nodes):
             logging.info(f"Node {j+1}: {str(node)}")
@@ -181,11 +189,16 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         node_strings = '\n'.join(str(node[0]) for node in all_nodes)
         logging.info(f"State of all_nodes after iteration {i + 1}:\n{node_strings}")
 
+        
+    all_nodes_list = collect_all_nodes(root)
+    for node in all_nodes_list:
+        if node.is_terminal and node.value==0:
+            backpropagate(node, node.reward)
+    save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
 
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
-    all_nodes_list = collect_all_nodes(root)
     all_nodes_list.extend(terminal_nodes)
     best_child = max(all_nodes_list, key=lambda x: x.reward)
     failed_trajectories = []
@@ -788,13 +801,11 @@ def generate_new_states_critique_fastchat_conv(node, args, task, idx, n):
         regenerate_prompt = None
         if previous_response:
             # generating critique
-            critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            critique_prompt += previous_response + "\n"
-            critique_prompt += previous_obs + "\n\n"
-            # critique_prompt += 'After reviewing the previous Thought, Action, and Observation:\n - Briefly provide specific and constructive feedback for refining the previous Thought and Action.\n - Conclude with the determination using the format "The action is <effective/ineffective>."'
-            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
-            # critique_prompt += 'Given the previous Thought, Action, and Observation, your role is to provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\n### Feedback\n[Your feedback]'
-            
+            if 'auto-j' in args.critique_backend:
+                critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
+            else:
+                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+
             if not args.critique_backend:
                 args.critique_backend = args.backend
             critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))

@@ -84,7 +84,11 @@ def phi3_instruct(prompt, model, temperature, max_new_tokens, n, stop)  -> list 
 
 
 def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> list :
-    worker_addr = get_worker_address(model)
+    try:
+        worker_addr = get_worker_address(model)
+    except Exception as e:
+        print('model: ', model)
+        print(e)
     # conv = get_conv_template('phi3')
     # conv.append_message(conv.roles[0], prompt)
     # conv.append_message(conv.roles[1], None)

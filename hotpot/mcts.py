@@ -14,6 +14,8 @@ from fschat_templates import prompt_with_icl
 import re
 from node import *
 
+from critique_templates import auto_j_single_template, critique_prompt_template
+
 
 env = wikienv.WikiEnv()
 env = wrappers.HotPotQAWrapper(env, split="train")
@@ -603,12 +605,12 @@ def generate_new_states(node, args, task, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
-def get_context(node, args, backend):
+def get_context(node, conv_template, backend):
     if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in backend or "llama31" in backend:
-        conv = get_conv_from_bottom(node, args.conv_template)
+    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend:
+        conv = get_conv_from_bottom(node, conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
     else:
@@ -618,7 +620,7 @@ def get_context(node, args, backend):
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
 
-    context = get_context(node, args, args.backend)
+    context = get_context(node, args.conv_template, args.backend)
     response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
 
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
@@ -680,7 +682,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     unique_states = {}  # Store unique states here
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = get_context(node, args.conv_template, args.backend)
         if len(sampled_response_list) > 0:
             original_observation = context.messages[-2][1]
             conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
@@ -751,21 +753,25 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
     unique_states = {}  # Store unique states here
 
     for sampling_index in range(n):
-        context = copy.deepcopy(get_context(node, args, args.backend))
+        context = copy.deepcopy(get_context(node, args.conv_template, args.backend))
         critique = None
         regenerate_prompt = None
         if previous_response:
             # generating critique
-            critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            critique_prompt += previous_response + "\n"
-            critique_prompt += previous_obs + "\n\n"
-            # critique_prompt += 'After reviewing the previous Thought, Action, and Observation:\n - Briefly provide specific and constructive feedback for refining the previous Thought and Action.\n - Conclude with the determination using the format "The action is <effective/ineffective>."'
-            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
-            # critique_prompt += 'Given the previous Thought, Action, and Observation, your role is to provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\n### Feedback\n[Your feedback]'
+
+            # critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            # critique_prompt += previous_response + "\n"
+            # critique_prompt += previous_obs + "\n\n"
+            # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
             
+            if 'auto-j' in args.critique_backend:
+                critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
+            else:
+                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+
             if not args.critique_backend:
                 args.critique_backend = args.backend
-            critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
+            critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
             if isinstance(critique_context, list):  # for openai GPT
                 original_observation = critique_context[-1]['content']
                 critique_context[-1]['content'] += critique_prompt + "\n"

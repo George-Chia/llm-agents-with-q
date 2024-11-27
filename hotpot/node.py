@@ -196,7 +196,8 @@ def get_conv_from_bottom(node, conv_template):
     # root node
     for j, sentence in enumerate(node.messages):
         role = sentence['role']
-        assert role in conv.roles[j % 2]
+        if not conv.roles == ('[INST]', '[/INST]'):
+            assert role in conv.roles[j % 2]
         conv.append_message(conv.roles[j % 2], sentence["content"])
     if len(messages)>0:
         conv.messages.extend(messages)
