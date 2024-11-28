@@ -763,14 +763,16 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
             # critique_prompt += previous_response + "\n"
             # critique_prompt += previous_obs + "\n\n"
             # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
-            
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            if not args.critique_conv_template:
+                args.critique_conv_template = args.conv_template
+
             if 'auto-j' in args.critique_backend:
                 critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
             else:
                 critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
 
-            if not args.critique_backend:
-                args.critique_backend = args.backend
             critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
             if isinstance(critique_context, list):  # for openai GPT
                 original_observation = critique_context[-1]['content']

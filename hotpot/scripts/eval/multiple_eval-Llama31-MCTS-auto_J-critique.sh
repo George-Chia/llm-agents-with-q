@@ -24,7 +24,6 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --enable_seq_mode \
         --conv_template llama-3 \
         --expansion_sampling_method critique \
-        --disable_early_stop \
         --critique_backend auto-j-$((j % 2)) \
         --critique_conv_template llama-2 &
     echo $! >> logs/${exp_name}-eval_pid.txt
