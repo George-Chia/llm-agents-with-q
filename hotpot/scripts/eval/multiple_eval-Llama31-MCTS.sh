@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=8
+num_workers=4
 
 explore_model_name=llama31
 exp_name=llama31-collection

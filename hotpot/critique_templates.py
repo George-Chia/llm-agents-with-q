@@ -26,3 +26,17 @@ Below are the previous Thought and Action you generated along with their corresp
 Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. 
 Format
 Feedback:[[Feedback]]"""
+
+
+critique_prompt_template_v2 = """
+
+Below are the previous Thought and Action you generated along with their corresponding Observation: 
+
+<previous Thought, Action, and Observation>
+{previous_response}
+{previous_obs}
+</previous Thought, Action, and Observation>
+
+Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. 
+Format
+Feedback:[[Feedback]]"""
