@@ -40,12 +40,12 @@ if api_base != "":
 def completions_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
-def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=128, n=1, stop=None, enable_fastchat_conv=False) -> list:
+def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=128, n=1, stop=None, enable_fastchat_conv=False, critique=None) -> list:
     if enable_fastchat_conv:
         if "gpt-" in model:
             return chatgpt(prompt, model, temperature, max_tokens, n, stop)
         else:
-            return fschat_instruct_conv(prompt, model, temperature, max_tokens, n, stop) # max_tokens=100 already means max_new_tokens
+            return fschat_instruct_conv(prompt, model, temperature, max_tokens, n, stop, critique) # max_tokens=100 already means max_new_tokens
 
     else:
         if model == "test-davinci-002":
