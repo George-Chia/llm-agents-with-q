@@ -781,7 +781,7 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
                 original_observation = critique_context.messages[-2][1]
                 critique_context.messages[-2][1] += critique_prompt + "\n"
 
-            critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+            critique = critique_gpt(critique_context, n=1, stop="Observation", critique=previous_response!=None, enable_fastchat_conv=args.enable_fastchat_conv)[0]
 
             # generating thought and action
             regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'

@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import time
 import requests
 
@@ -25,6 +26,7 @@ def get_worker_address(model_name, controller_address="http://localhost:21001"):
     if worker_addr == "":
         print(f"No available workers for {model_name}")
         raise ValueError
+    # worker_addr = "http://localhost:21011"
     return worker_addr
 
 def get_response(worker_addr, gen_params):
@@ -83,7 +85,8 @@ def phi3_instruct(prompt, model, temperature, max_new_tokens, n, stop)  -> list 
     return response_list
 
 
-def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> list :
+def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop, critique=None)  -> list :
+    worker_addr = "http://0.0.0.0:21011"
     try:
         worker_addr = get_worker_address(model)
     except Exception as e:
@@ -103,6 +106,7 @@ def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> 
         "stop": stop,
         "stop_token_ids": conv.stop_token_ids,
         "echo": False,
+        'critique': critique
     }
     response_list = []
     for _ in range(n):

@@ -90,11 +90,26 @@ class ModelWorker(BaseModelWorker):
             debug=debug,
         )
         if kwargs['adapter_path'] != None:
-            from peft import PeftModel
-            self.model = PeftModel.from_pretrained(
-                self.model,
-                kwargs['adapter_path'],
+            from peft import LoraConfig, TaskType, get_peft_model, PeftModel, set_peft_model_state_dict
+            with open(os.path.join(kwargs['adapter_path'], 'config.json'), 'r', encoding='utf-8') as file:
+                peft_config = json.load(file)
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r= peft_config['lora_r'],
+                lora_alpha= peft_config['lora_alpha'],
+                lora_dropout= peft_config['lora_dropout'],
+                bias="none",
+                target_modules= peft_config['target_modules'],
+                inference_mode=False,
             )
+            self.model = get_peft_model(self.model, peft_config)
+
+            # Ensure LoRA layers are in the same dtype as the base model
+            for name, module in self.model.named_modules():
+                if 'lora_' in name:
+                    module.to(self.model.dtype)
+            lora_state_dict = torch.load(os.path.join(kwargs['adapter_path'], 'lora.pt'))
+            set_peft_model_state_dict(self.model, lora_state_dict)
         self.device = device
         if self.tokenizer.pad_token == None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -117,6 +132,10 @@ class ModelWorker(BaseModelWorker):
         try:
             if self.seed is not None:
                 set_seed(self.seed)
+            if 'critique' in params.keys() and params['critique'] != None:
+                self.model.set_adapter('default')
+            else:
+                self.model.disable_adapter()
             for output in self.generate_stream_func(
                 self.model,
                 self.tokenizer,
