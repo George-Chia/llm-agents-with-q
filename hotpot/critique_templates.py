@@ -16,7 +16,7 @@ Feedback:[[Feedback]]"""
 
 
 
-critique_prompt_template = """
+template_v1 = """
 
 Below are the previous Thought and Action you generated along with their corresponding Observation: 
 
@@ -28,7 +28,7 @@ Format
 Feedback:[[Feedback]]"""
 
 
-critique_prompt_template_v2 = """
+template_v2 = """
 
 Below are the previous Thought and Action you generated along with their corresponding Observation: 
 

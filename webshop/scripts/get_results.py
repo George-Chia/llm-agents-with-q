@@ -59,6 +59,7 @@ with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as fil
     dataset_idx_list = json.load(file)
 
 trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS-critique_test_llama31_T1.0_mcts_30iterations'
 # trajectories_save_path = 'webshop/trajectories-MCTS-gpt4o_critique_test_llama31_T1.0_mcts_30iterations'
 
 
@@ -66,14 +67,20 @@ done_task_id = []
 
 best_reward = []
 best_child_reward = []
+success_length_list = []
+
 for file in os.listdir(trajectories_save_path):
     if not file.endswith('json'):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
+
+    if result['best child reward'] > 0:
+        success_length_list.append(len(result['best_trajectory_index_list']))
     best_reward.append(result['best reward'])
     # best_child_reward.append(result['best child reward'])
     best_child_reward.append(0 if result['best child reward']==-1 else result['best child reward'])
 print("Sample number: ", len(best_child_reward))
+print("average success length: ", sum(success_length_list)/len(success_length_list))
 print("average best reward: ", sum(best_reward)/len(best_reward))
 print("average best child reward: ", sum(best_child_reward)/len(best_child_reward))

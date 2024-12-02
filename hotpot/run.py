@@ -183,8 +183,6 @@ def parse_args():
     args.add_argument('--disable_early_stop', action='store_true')
     args.add_argument('--enable_rollout_early_stop', action='store_true')
 
-    # various expansion_sampling_method for MCTS
-    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
 
     # for calculating DPO logits
     args.add_argument(
@@ -219,6 +217,13 @@ def parse_args():
     args.add_argument('--using_puct', action='store_true')
     args.add_argument('--puct_coeff', type=float, default=0.)
     args.add_argument('--enable_rollout_with_q', action='store_true')
+
+    # various expansion_sampling_method for MCTS
+    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
+
+    # for Critique
+    args.add_argument('--critique_backend', type=str,  default=None)
+    args.add_argument('--critique_prompt_template', type=str,  default=None)
 
     args = args.parse_args()
     return args

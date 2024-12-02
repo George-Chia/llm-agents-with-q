@@ -14,7 +14,7 @@ from fschat_templates import prompt_with_icl
 import re
 from node import *
 
-from critique_templates import auto_j_single_template, critique_prompt_template
+from critique_templates import auto_j_single_template, template_v1, template_v2
 
 
 env = wikienv.WikiEnv()
@@ -457,7 +457,15 @@ def expand_node(node, args, task, max_depth):
         if args.expansion_sampling_method == 'conditional':
             new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, n)
         elif args.expansion_sampling_method == 'critique':
-            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n)
+            if args.critique_prompt_template == 'auto-j':
+                critique_prompt_template = auto_j_single_template
+            elif args.critique_prompt_template == 'template_v1':
+                critique_prompt_template = template_v1
+            elif args.critique_prompt_template == 'template_v2':
+                critique_prompt_template = template_v2
+            else:
+                raise NotImplementedError
+            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template)
         elif args.expansion_sampling_method == 'vanilla':
             new_nodes = generate_new_states_fastchat_conv(node, args, task, n)
     else:
@@ -609,7 +617,7 @@ def get_context(node, conv_template, backend):
     if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend:
+    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend or 'Llama31-KTO' in backend:
         conv = get_conv_from_bottom(node, conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
@@ -743,7 +751,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     return list(unique_states.values())  # Return unique nodes as a list
 
 
-def generate_new_states_critique_fastchat_conv(node, args, task, n):
+def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template):
     global failed_trajectories
     assert args.enable_fastchat_conv
 
@@ -768,10 +776,10 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
             if not args.critique_conv_template:
                 args.critique_conv_template = args.conv_template
 
-            if 'auto-j' in args.critique_backend:
-                critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
-            else:
-                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+            # if 'auto-j' in args.critique_backend:
+            #     critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
+            # else:
+            critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
 
             critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
             if isinstance(critique_context, list):  # for openai GPT

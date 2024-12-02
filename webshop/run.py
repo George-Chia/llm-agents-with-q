@@ -140,7 +140,6 @@ def parse_args():
     # args.add_argument('--backend', type=str, choices=['gpt-4', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'llama2', "text-davinci-002",
     #                                                   'Phi-3-mini-4k-instruct-fastchat'], default='gpt-3.5-turbo-16k')
     args.add_argument('--backend', type=str, default='gpt-3.5-turbo-16k')
-    args.add_argument('--critique_backend', type=str,  default=None)
     args.add_argument('--temperature', type=float, default=1.0)
     args.add_argument('--data_split', type=str, default="test", help="Following ETO")
     args.add_argument(
@@ -211,6 +210,10 @@ def parse_args():
 
     # various expansion_sampling_method for MCTS
     args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
+
+    # for Critique
+    args.add_argument('--critique_backend', type=str,  default=None)
+    args.add_argument('--critique_prompt_template', type=str,  default=None)
 
     # webshop env
     args.add_argument('--add_fixed_prefix', action='store_true')
