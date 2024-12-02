@@ -171,9 +171,6 @@ def parse_args():
     args.add_argument('--q_model_conv_template', type=str)
     # args.add_argument('--agent_config_path', type=str)
 
-    # for MCTS
-    args.add_argument('--enable_rollout_early_stop', action='store_true')
-
     # for calculating DPO logits
     args.add_argument(
         "--policy_model_name_or_path",
@@ -207,6 +204,10 @@ def parse_args():
     args.add_argument('--using_puct', action='store_true')
     args.add_argument('--puct_coeff', type=float, default=0.)
     args.add_argument('--enable_rollout_with_q', action='store_true')
+
+    # for MCTS
+    args.add_argument('--disable_early_stop', action='store_true')
+    args.add_argument('--enable_rollout_early_stop', action='store_true')
 
     # various expansion_sampling_method for MCTS
     args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
