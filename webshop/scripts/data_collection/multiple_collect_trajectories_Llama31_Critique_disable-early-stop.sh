@@ -14,17 +14,19 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --data_split train \
     --part_num ${num_workers} \
     --part_idx ${part_idx} \
-    --n_generate_sample 5 \
+    --n_generate_sample 3 \
     --temperature 1.0 \
     --iterations 20 \
     --log logs/collect_trajectories_part-${j}.log \
-    --save_path trajectories-disable-early-stop \
+    --save_path trajectories-critique-disable-early-stop \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
     --enable_fastchat_conv \
     --enable_seq_mode \
     --disable_early_stop \
-    --conv_template llama-3 &
+    --conv_template llama-3 \
+    --expansion_sampling_method critique \
+    --critique_prompt_template template &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

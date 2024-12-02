@@ -17,6 +17,7 @@ def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
         idxs = json.load(open("data_split/train_indices.json"))
     else:
         idxs = json.load(open("data_split/test_indices.json"))
+    idxs = idxs[:500]
     if part_num == 1:
         idxs = idxs
     else:
