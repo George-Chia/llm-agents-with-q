@@ -60,8 +60,8 @@ with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as fil
 
 trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_30iterations'
 trajectories_save_path = 'webshop/trajectories-MCTS-critique_test_llama31_T1.0_mcts_30iterations'
-trajectories_save_path = 'webshop/trajectories-disable-early-stop_train_llama31_T1.0_mcts_20iterations'
-trajectories_save_path = 'webshop/trajectories-MCTS-3n20Iter_test_llama31_T1.0_mcts_20iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS-gpt4o_critique_test_llama31_T1.0_mcts_20iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
 
 
 done_task_id = []

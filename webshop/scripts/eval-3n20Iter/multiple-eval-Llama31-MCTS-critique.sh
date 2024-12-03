@@ -11,20 +11,19 @@ for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
     python run.py \
     --backend ${explore_model_name}-${j} \
-    --data_split train \
+    --data_split test \
     --part_num ${num_workers} \
     --part_idx ${part_idx} \
     --n_generate_sample 3 \
-    --temperature 1.0 \
+    --temperature 1 \
     --iterations 20 \
-    --log logs/collect_trajectories_part-${j}.log \
-    --save_path trajectories-critique-disable-early-stop \
+    --log logs/eval_part-${j}.log \
+    --save_path trajectories-MCTS-critique \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
     --enable_fastchat_conv \
     --enable_seq_mode \
-    --disable_early_stop \
     --conv_template llama-3 \
     --expansion_sampling_method critique \
     --critique_prompt_template template_v1 &

@@ -144,7 +144,6 @@ def run(args):
 def parse_args():
     args = argparse.ArgumentParser()
     args.add_argument('--backend', type=str,  default='gpt-4o-mini')
-    args.add_argument('--critique_backend', type=str,  default=None)
     args.add_argument('--temperature', type=float, default=1.0)
     args.add_argument('--data_split', type=str, default="test", help="Following ETO")
     args.add_argument('--training_indices_path', type=str, default="data_split/train_indices.json")

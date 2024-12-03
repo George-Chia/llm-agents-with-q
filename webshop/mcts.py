@@ -198,8 +198,6 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
 
-    save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-
     all_nodes_list.extend(terminal_nodes)
     best_child = max(all_nodes_list, key=lambda x: x.reward)
     failed_trajectories = []
