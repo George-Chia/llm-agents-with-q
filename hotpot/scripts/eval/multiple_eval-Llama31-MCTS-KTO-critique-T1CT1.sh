@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=7
+num_workers=2
 
 explore_model_name=llama31
 exp_name=llama31-collection-KTO-critique
@@ -16,7 +16,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 30 \
-        --save_path trajectories-MCTS-KTO_critique \
+        --save_path trajectories-MCTS_step4000-T1CT1-KTO_critique \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm mcts \
@@ -25,6 +25,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --conv_template llama-3 \
         --expansion_sampling_method critique \
         --critique_backend Llama31-KTO \
-        --critique_prompt_template template_v1 &
+        --critique_prompt_template template_v1 \
+        --critique_temperature 1 &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

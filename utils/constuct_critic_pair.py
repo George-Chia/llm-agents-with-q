@@ -2,17 +2,26 @@ import os
 import json
 import copy
 import traceback
-import webshop_prompt
-import hotpot_prompt
 from collections import deque
 from collections import Counter
 from transformers import AutoTokenizer
+
+template_v1 = """
+
+Below are the previous Thought and Action you generated along with their corresponding Observation: 
+
+{previous_response}
+{previous_obs}
+
+Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. 
+Format
+Feedback:[[Feedback]]"""
 
 preferred_value = []
 less_preferred_value = []
 difference_value = []
 
-tokenizer = AutoTokenizer.from_pretrained('/home/data/huan/llm/Llama3.1-8B-Instruct')
+tokenizer = AutoTokenizer.from_pretrained('/home/zhaiyuanzhao/llm/Meta-Llama-3.1-8B-Instruct')
 
 def get_max_min_children_index(node: list) -> tuple:
     value_list = []
@@ -62,9 +71,9 @@ def get_pointwise_data(trajectories_save_path, filter_num, depth_list, threshold
                             critique_prompt = copy.deepcopy(node1[1])
                             original_observation = critique_prompt[-1]['content']
                             if 'hotpot' in trajectories_save_path:
-                                critique_prompt[-1]['content'] = original_observation + node2[0]['state']['regenerate_prompt'].split('Critique:')[0] + hotpot_prompt.template_v1.split('{previous_obs}')[-1][1:]
+                                critique_prompt[-1]['content'] = original_observation + node2[0]['state']['regenerate_prompt'].split('Critique:')[0] + template_v1.split('{previous_obs}')[-1][1:]
                             elif 'webshop' in trajectories_save_path:
-                                critique_prompt[-1]['content'] = original_observation + node2[0]['state']['regenerate_prompt'].split('Critique:')[0] + hotpot_prompt.template_v1.split('{previous_obs}')[-1][1:]
+                                critique_prompt[-1]['content'] = original_observation + node2[0]['state']['regenerate_prompt'].split('Critique:')[0] + template_v1.split('{previous_obs}')[-1][1:]
                             else:
                                 exit(666)
                             critique = [{'role': 'assistant', 'content': node2[0]['state']['critique']}]
@@ -109,9 +118,9 @@ def get_pointwise_data(trajectories_save_path, filter_num, depth_list, threshold
                                 critique_prompt = copy.deepcopy(prompt)
                                 original_observation = critique_prompt[-1]['content']
                                 if 'hotpot' in trajectories_save_path:
-                                    critique_prompt[-1]['content'] = original_observation + node['children'][child_index]['state']['regenerate_prompt'].split('Critique:')[0] + hotpot_prompt.template_v1.split('{previous_obs}')[-1][1:]
+                                    critique_prompt[-1]['content'] = original_observation + node['children'][child_index]['state']['regenerate_prompt'].split('Critique:')[0] + template_v1.split('{previous_obs}')[-1][1:]
                                 elif 'webshop' in trajectories_save_path:
-                                    critique_prompt[-1]['content'] = original_observation + node['children'][child_index]['state']['regenerate_prompt'].split('Critique:')[0] + hotpot_prompt.template_v1.split('{previous_obs}')[-1][1:]
+                                    critique_prompt[-1]['content'] = original_observation + node['children'][child_index]['state']['regenerate_prompt'].split('Critique:')[0] + template_v1.split('{previous_obs}')[-1][1:]
                                 else:
                                     exit(666)
                                 critique = [{'role': 'assistant', 'content': node['children'][child_index]['state']['critique']}]
@@ -144,11 +153,11 @@ def get_pointwise_data(trajectories_save_path, filter_num, depth_list, threshold
 
 # dataset = 'hotpot'
 dataset = 'webshop'
-bfs_flag = True
-q_threshold = 0.
+bfs_flag = False
+q_threshold = 0.5
 
 depth_list = []
-trajectories_save_path = f"data/{dataset}/raw/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations"
+trajectories_save_path = f"hotpot/trajectories-5n/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations"
 preference_train_data = get_pointwise_data(trajectories_save_path, 0, depth_list, q_threshold, enable_bfs=bfs_flag, test=False)
 print('total training samples: ', len(preference_train_data))
 count = Counter(depth_list)
@@ -156,12 +165,14 @@ proportions = {item: count[item] / len(depth_list) for item in count}
 print('depth proportion: ', proportions)
 print('avg depth: ', sum(depth_list)/len(depth_list))
 
+'''
 json.dump(preference_train_data, open(f"data/{dataset}/post/train.json", "w"), indent=4)
 
 depth_list = []
 trajectories_save_path = f"data/{dataset}/raw/trajectories-MCTS-critique-disable_early_stop_test_llama31_mcts_20iterations"
 preference_test_data = get_pointwise_data(trajectories_save_path, 0, depth_list, q_threshold, bfs_flag, test=True)
 json.dump(preference_test_data, open(f"data/{dataset}/post/test.json", "w"), indent=4)
+'''
 
 # import random
 # one_tenth_size = len(preference_data) // 10

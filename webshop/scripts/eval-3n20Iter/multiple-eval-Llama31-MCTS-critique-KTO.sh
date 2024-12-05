@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_workers=3
+num_workers=2
 node_num=9
 
 explore_model_name=llama31
@@ -14,11 +14,11 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --data_split test \
     --part_num ${num_workers} \
     --part_idx ${part_idx} \
-    --n_generate_sample 5 \
+    --n_generate_sample 3 \
     --temperature 1 \
-    --iterations 30 \
+    --iterations 20 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories-MCTS-critique \
+    --save_path trajectories-MCTS-KTO-critique \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
@@ -26,6 +26,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --enable_seq_mode \
     --conv_template llama-3 \
     --expansion_sampling_method critique \
-    --critique_prompt_template template &
+    --critique_backend Llama31-KTO-webshop \
+    --critique_prompt_template template_v1 &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

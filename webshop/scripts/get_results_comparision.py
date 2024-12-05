@@ -8,9 +8,9 @@ with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as fil
 
 # trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_30iterations'
 
-trajectories_save_path_comparision = 'webshop/trajectories-MCTS-critique_test_llama31_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
 
-trajectories_save_path = 'webshop/trajectories-MCTS-critique-v2_test_llama31_T1.0_mcts_30iterations'
+trajectories_save_path_comparision = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
 
 
 best_reward_comparision = []
@@ -42,10 +42,14 @@ for file in os.listdir(trajectories_save_path):
     best_child_reward_comparision.append(0 if result_comparision['best child reward']==-1 else result_comparision['best child reward'])
 
 print("Sample number: ", len(best_child_reward))
-print("average success length: ", sum(success_length_list)/len(success_length_list))
+
 print("average best reward: ", sum(best_reward)/len(best_reward))
 print("average best child reward: ", sum(best_child_reward)/len(best_child_reward))
+print("average success length: ", sum(success_length_list)/len(success_length_list), "numbers: ", len(success_length_list))
 
-print("average success length_comparision: ", sum(success_length_list_comparision)/len(success_length_list_comparision))
+print('--------------------------------------------------------')
+
+
 print("average best reward_comparision: ", sum(best_reward_comparision)/len(best_reward_comparision))
 print("average best child reward_comparision: ", sum(best_child_reward_comparision)/len(best_child_reward_comparision))
+print("average success length_comparision: ", sum(success_length_list_comparision)/len(success_length_list_comparision), "numbers: ", len(success_length_list_comparision))

@@ -85,8 +85,7 @@ def phi3_instruct(prompt, model, temperature, max_new_tokens, n, stop)  -> list 
     return response_list
 
 
-def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop, critique=None)  -> list :
-    worker_addr = "http://0.0.0.0:21011"
+def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> list :
     try:
         worker_addr = get_worker_address(model)
     except Exception as e:
@@ -106,7 +105,7 @@ def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop, crit
         "stop": stop,
         "stop_token_ids": conv.stop_token_ids,
         "echo": False,
-        'critique': critique
+        # 'critique': critique
     }
     response_list = []
     for _ in range(n):

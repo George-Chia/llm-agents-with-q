@@ -21,3 +21,5 @@ fastchat/model_worker_*
 programming/mcts_llama31/
 fastchat/controlle*
 hotpot/trained_models/
+webshop/trained_models/
+model_worker_*

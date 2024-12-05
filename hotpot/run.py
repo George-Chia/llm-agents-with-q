@@ -223,6 +223,7 @@ def parse_args():
     # for Critique
     args.add_argument('--critique_backend', type=str,  default=None)
     args.add_argument('--critique_prompt_template', type=str,  default=None)
+    args.add_argument('--critique_temperature', type=float)
 
     args = args.parse_args()
     return args

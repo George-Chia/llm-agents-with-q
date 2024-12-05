@@ -132,10 +132,10 @@ class ModelWorker(BaseModelWorker):
         try:
             if self.seed is not None:
                 set_seed(self.seed)
-            if 'critique' in params.keys() and params['critique'] != None:
-                self.model.set_adapter('default')
-            else:
-                self.model.disable_adapter()
+            # if 'critique' in params.keys() and params['critique'] != None:
+            #     self.model.set_adapter('default')
+            # else:
+            #     self.model.disable_adapter()
             for output in self.generate_stream_func(
                 self.model,
                 self.tokenizer,

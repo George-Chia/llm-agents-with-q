@@ -83,7 +83,7 @@ for file in os.listdir(trajectories_save_path):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
-    if result['best child reward'] == 1:
+    if result['best child reward'] >0:
         success_length_list.append(len(result['best_trajectory_index_list']))
     best_reward.append(result['best reward'])
     best_em.append(result['best em'] if result['best em']  is not None else 0)
