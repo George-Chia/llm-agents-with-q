@@ -83,6 +83,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
     global critique_gpt
     if args.critique_backend:
+        if args.critique_temperature == None:
+            args.critique_temperature = args.temperature
         critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.temperature)
     else:
         critique_gpt = gpt

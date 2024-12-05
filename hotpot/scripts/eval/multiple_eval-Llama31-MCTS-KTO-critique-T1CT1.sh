@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=2
+num_workers=6
 
 explore_model_name=llama31
 exp_name=llama31-collection-KTO-critique

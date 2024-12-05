@@ -216,6 +216,7 @@ def parse_args():
     # for Critique
     args.add_argument('--critique_backend', type=str,  default=None)
     args.add_argument('--critique_prompt_template', type=str,  default=None)
+    args.add_argument('--critique_temperature', type=float)
 
     # webshop env
     args.add_argument('--add_fixed_prefix', action='store_true')
