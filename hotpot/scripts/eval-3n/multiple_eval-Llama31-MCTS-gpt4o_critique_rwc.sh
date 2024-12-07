@@ -1,8 +1,8 @@
 #!/bin/bash
-num_workers=6
+num_workers=3
 
 explore_model_name=llama31
-exp_name=llama31-collection-autoJ-critique
+exp_name=llama31-collection-critique
 
 for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
@@ -16,7 +16,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 20 \
-        --save_path trajectories-MCTS-auto-j_critique \
+        --save_path trajectories-MCTS-rwc-gpt4o_critique \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm mcts \
@@ -24,7 +24,8 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --enable_seq_mode \
         --conv_template llama-3 \
         --expansion_sampling_method critique \
-        --critique_backend auto-j-$((j % 2)) \
-        --critique_conv_template llama-2 &
+        --critique_backend gpt-4o \
+        --critique_prompt_template template_v1 \
+        --enable_rollout_with_critique &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

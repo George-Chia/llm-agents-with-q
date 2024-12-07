@@ -1,13 +1,15 @@
 import os
 import json
 
+'''
+交互前后对比
+trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31_mcts_20iterations'
 
-trajectories_save_path = 'hotpot/trajectories-MCTS_step4000-T1CT1-KTO_critique_test_llama31_mcts_30iterations'
-# trajectories_save_path = 'hotpot/trajectories-MCTS-KTO_critique_test_llama31_mcts_30iterations_1204_PM'
+trajectories_save_path_comparision = 'hotpot/trajectories-3n/trajectories-MCTS-gpt4o_critique_test_llama31_mcts_30iterations'
+'''
 
-trajectories_save_path_comparision = 'hotpot/trajectories-5n/trajectories-MCTS_test_llama31_mcts_30iterations'
-# trajectories_save_path_comparision = 'hotpot/trajectories-5n/trajectories-MCTS-critique_test_llama31_mcts_30iterations'
-# trajectories_save_path_comparision = 'hotpot/trajectories-5n/trajectories-MCTS-gpt4o_critique_test_llama31-0_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-MCTS-5n_test_llama31_mcts_30iterations'
+trajectories_save_path_comparision = 'hotpot/trajectories-5n-critique-wrong-InTurn/trajectories-MCTS_step4000-T1CT1-KTO_critique_test_llama31_mcts_30iterations'
 
 
 best_reward = []
@@ -22,6 +24,9 @@ success_length_list_comparision = []
 for file in os.listdir(trajectories_save_path):
     if not file.endswith('json'):
         continue
+    if file not in os.listdir(trajectories_save_path_comparision):
+        continue
+    
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
 

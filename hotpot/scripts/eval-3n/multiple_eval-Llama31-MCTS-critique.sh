@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=6
+num_workers=5
 
 explore_model_name=llama31
 exp_name=llama31-collection-critique
@@ -15,7 +15,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 30 \
+        --iterations 20 \
         --save_path trajectories-MCTS-critique \
         --log logs/llama31.log \
         --max_depth 7 \

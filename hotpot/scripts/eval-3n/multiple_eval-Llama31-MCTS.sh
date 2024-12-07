@@ -15,7 +15,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 30 \
+        --iterations 20 \
         --save_path trajectories-MCTS \
         --log logs/llama31.log \
         --max_depth 7 \

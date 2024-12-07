@@ -146,16 +146,18 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         # Simulation or rollout
         # terminal_node = rollout(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
-        try:
-            if args.enable_rollout_with_q:
-                terminal_node = rollout_with_q(node, args, task, idx, args.max_depth,
-                                            dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coeff)
-            else:
-                # TODO: according to UCT instead of value?
-                terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)     
-        except:
-            terminal_node = node
-            terminal_node.reward == -0.5
+        # try:
+        if args.enable_rollout_with_q:
+            terminal_node = rollout_with_q(node, args, task, idx, args.max_depth,
+                                        dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coeff)
+        elif args.enable_rollout_with_critique:
+            terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)     
+        else:
+            # TODO: according to UCT instead of value?
+            terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)     
+        # except:
+        #     terminal_node = node
+        #     terminal_node.reward == -0.5
         terminal_nodes.append(terminal_node)
 
         if args.enable_rollout_early_stop:
@@ -432,6 +434,43 @@ def rollout_random(node, args, task, idx, max_depth=15):
         if depth == max_depth:
             node.reward = -0.5
     return node  
+
+
+def rollout_with_critique(node, args, task, idx, max_depth=15):
+    depth = node.depth
+    n = args.rollout_width
+    assert n==1, "the same with rollout_random"
+    while not node.is_terminal and depth < max_depth:
+        # Generate new states
+        new_states = []
+        values = []
+        while len(new_states) == 0:
+            if args.enable_fastchat_conv:
+                if args.critique_prompt_template == 'auto-j':
+                    critique_prompt_template = auto_j_single_template
+                elif args.critique_prompt_template == 'template_v1':
+                    critique_prompt_template = template_v1
+                elif args.critique_prompt_template == 'template_v2':
+                    critique_prompt_template = template_v2
+                else:
+                    raise NotImplementedError
+                new_states_two = generate_new_states_critique_fastchat_conv(node, args, task, idx, 
+                                                                        n=2, critique_prompt_template=critique_prompt_template)
+                new_states = new_states_two[-1:]
+            else:
+               raise NotImplementedError
+
+        for state in new_states_two:
+            if state.is_terminal:
+                return state
+                
+
+        node = new_states[0] 
+        depth += 1
+        if depth == max_depth:
+            node.reward = -0.5
+    return node  
+
 
 
 def rollout_with_q(node, args, task, idx, max_depth, dpo_policy_model, dpo_reference_model, conv_template, tokenizer, puct_coef):

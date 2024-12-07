@@ -188,7 +188,10 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             value = evaluate_node(node, args, task)
 
         # Find the child with the highest value or UCT? A: similar effect.
-        reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
+        if args.enable_rollout_with_critique:
+            reward, terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
+        else:
+            reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
 
         terminal_nodes.append(terminal_node)
 
@@ -562,6 +565,40 @@ def rollout_random(node, args, task, idx, max_depth=7):
         if depth == max_depth:
             node.reward = -1
     return node.reward, node
+
+def rollout_with_critique(node, args, task, idx, max_depth=15):
+    depth = node.depth
+    n = args.rollout_width
+    assert n==1, "the same with rollout_random"
+    while not node.is_terminal and depth < max_depth:
+        # Generate new states
+        new_states = []
+        values = []
+        while len(new_states) == 0:
+            if args.enable_fastchat_conv:
+                if args.critique_prompt_template == 'auto-j':
+                    critique_prompt_template = auto_j_single_template
+                elif args.critique_prompt_template == 'template_v1':
+                    critique_prompt_template = template_v1
+                elif args.critique_prompt_template == 'template_v2':
+                    critique_prompt_template = template_v2
+                else:
+                    raise NotImplementedError
+                new_states_two = generate_new_states_critique_fastchat_conv(node=node, args=args, task=task, 
+                                                                        n=2, critique_prompt_template=critique_prompt_template)
+                new_states = new_states_two[-1:]
+            else:
+               raise NotImplementedError
+
+        for state in new_states_two:
+            if state.is_terminal:
+                return state.reward, state
+        node = new_states[0] 
+        depth += 1
+        if depth == max_depth:
+            node.reward = -1
+    return node.reward, node
+
 
 def generate_new_states(node, args, task, n):
     global failed_trajectories

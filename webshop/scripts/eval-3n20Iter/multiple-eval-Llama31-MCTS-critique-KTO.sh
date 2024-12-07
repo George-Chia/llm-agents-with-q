@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_workers=6
+num_workers=5
 node_num=9
 
 explore_model_name=llama31

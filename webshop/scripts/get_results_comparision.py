@@ -8,10 +8,20 @@ with open('webshop/data_split/train_indices.json', 'r', encoding='utf-8') as fil
 
 # trajectories_save_path = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_30iterations'
 
+'''
 trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
-
 trajectories_save_path_comparision = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
+打败了MCTS
+'''
 
+'''
+trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique-rwc_test_llama31_T1.0_mcts_20iterations'
+trajectories_save_path_comparision = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
+webshop中，加rwc还不如不加
+'''
+
+trajectories_save_path = 'webshop/trajectories-critique-disable-early-stop_train_llama31_T1.0_mcts_20iterations'
+trajectories_save_path_comparision = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
 
 best_reward_comparision = []
 best_child_reward_comparision = []
@@ -24,6 +34,8 @@ success_length_list = []
 
 for file in os.listdir(trajectories_save_path):
     if not file.endswith('json'):
+        continue
+    if not file in os.listdir(trajectories_save_path_comparision):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)

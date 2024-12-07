@@ -4,7 +4,7 @@ num_workers=4
 node_num=9
 
 explore_model_name=llama31
-exp_name=llama31-exploration
+exp_name=llama31-exploration-gpt4o
 
 
 for ((j=0;j<${num_workers};j=j+1)); do
