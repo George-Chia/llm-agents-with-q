@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=8
+num_workers=7
 
 explore_model_name=llama31
 exp_name=llama31-collection-critique
@@ -24,6 +24,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --enable_seq_mode \
         --conv_template llama-3 \
         --expansion_sampling_method critique \
-        --critique_backend gpt-4o &
+        --critique_backend gpt-4o \
+        --critique_prompt_template template_v1&
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

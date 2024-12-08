@@ -122,12 +122,13 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
     global critique_gpt
-    if args.critique_backend:
-        if args.critique_temperature == None:
-            args.critique_temperature = args.temperature
-        critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
-    else:
-        critique_gpt = gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
 
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}

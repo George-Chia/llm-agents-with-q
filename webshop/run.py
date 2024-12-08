@@ -10,6 +10,7 @@ from typing import List, Tuple, Any
 from tqdm import tqdm
 import transformers
 import math
+import random
 
 # Modified from ETO by 
 def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
@@ -18,6 +19,7 @@ def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
     else:
         idxs = json.load(open("data_split/test_indices.json"))
     # idxs = idxs[:500]
+    # random.shuffle(idxs)
     if part_num == 1:
         idxs = idxs
     else:

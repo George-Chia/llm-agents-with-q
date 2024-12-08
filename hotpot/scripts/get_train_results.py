@@ -51,7 +51,7 @@ abalation of iterations
 # average best child em:  0.54
 
 trajectories_save_path = 'hotpot/trajectories-MCTS-KTO_critique_test_llama31_mcts_30iterations'
-trajectories_save_path = 'hotpot/trajectories-MCTS_step4000-T1CT1-KTO_critique_test_llama31_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-MCTS-sft_153-T1CT1-KTO_critique_test_llama31_mcts_30iterations'
 
 # trajectories_save_path = "hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations"
 # Sample number:  950

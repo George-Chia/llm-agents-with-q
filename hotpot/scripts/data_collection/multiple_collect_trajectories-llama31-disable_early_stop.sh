@@ -1,5 +1,5 @@
 #!/bin/bash
-num_workers=4
+num_workers=7
 
 
 explore_model_name=llama31
@@ -25,6 +25,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --enable_fastchat_conv \
         --conv_template llama-3 \
         --disable_early_stop \
-        --expansion_sampling_method critique &
+        --expansion_sampling_method critique \
+        --critique_prompt_template template_v1 &
     echo $! >> logs/${exp_name}-collection_pid.txt
 done
