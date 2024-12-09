@@ -2,7 +2,7 @@ import os
 import json
 
 
-trajectories_save_path = 'webshop/trajectories_test_llama31-T0_simple_1iterations'
+trajectories_save_path = 'webshop/trajectories-critique_test_llama31_T1.0_simple_1iterations'
 
 
 

@@ -227,6 +227,15 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     action = 'reset'
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
+
     # start_time = time.time()
     x = env.step(idx, action, args.enable_seq_mode)[0]
     # end_time = time.time()
@@ -263,7 +272,10 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
             expand_node(node, args, task, idx, max_depth=args.max_depth)  # Expand current node
             if not node.children:
                 break  # If no child can be generated, break
-            node = random.choice(node.children)  # Randomly select a child node
+            if args.expansion_sampling_method == "critique":
+                node = node.children[-1]
+            else:
+                node = random.choice(node.children)  # Randomly select a child node
             depth += 1
 
         # Check the terminal condition
@@ -301,6 +313,7 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
         return best_node.state, best_node.value, best_node.reward, best_node.em
     elif not_finished_trajectories:
         return 0,0,0,0
+
 
 
 
@@ -665,6 +678,18 @@ def get_context(node, args, backend):
         raise NotImplementedError
     return context
 
+
+def get_critique_context(node, args, backend):
+    if "gpt-" in backend:
+        messages = get_messages_from_bottom_critique(node)
+        context =  messages
+    elif "Phi-3" in backend or "llama31" in backend or "Llama31" in backend:
+        conv = get_conv_from_bottom_critique(node, args.conv_template)
+        conv.append_message(conv.roles[1], None)
+        context =  conv
+    else:
+        raise NotImplementedError
+    return context
 
 def generate_new_states_fastchat_conv(node, args, task, idx, n):
     global failed_trajectories

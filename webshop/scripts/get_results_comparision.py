@@ -21,6 +21,8 @@ webshop中，加rwc还不如不加
 '''
 
 trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS-KTO-8000-critique_test_llama31_T1.0_mcts_20iterations'
+# trajectories_save_path = 'webshop/trajectories-MCTS-SFT-critique_test_llama31_T1.0_mcts_20iterations'
 
 # trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique-rwc_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations_from_wrong_Inturn'
@@ -28,6 +30,8 @@ trajectories_save_path_comparision = 'webshop/trajectories-MCTS-critique_test_ll
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS-3n-gpt4o_critique_test_llama31_T1.0_mcts_20iterations'
 
+
+# trajectories_save_path_comparision = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
 
 best_reward_comparision = []
 best_child_reward_comparision = []

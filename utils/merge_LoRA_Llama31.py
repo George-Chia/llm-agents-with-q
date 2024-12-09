@@ -9,7 +9,7 @@ from peft import PeftModel
 
 # Manually set your parameters here
 base_model_name_or_path = "/home/zhaiyuanzhao/llm/Meta-Llama-3.1-8B-Instruct"
-peft_model_path = "webshop/trained_models/step-3000"
+peft_model_path = "webshop/trained_models/webshop-all_traj-step-16000"
 output_dir = peft_model_path+"/merged_model"
 device = "cuda:7"  # set to 'auto' or specify device like 'cuda:0'
 push_to_hub = False  # set to True if you want to push to the Hugging Face Model Hub
