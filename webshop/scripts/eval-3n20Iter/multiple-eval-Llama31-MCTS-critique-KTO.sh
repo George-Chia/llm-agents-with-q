@@ -18,7 +18,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --temperature 1 \
     --iterations 20 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories-MCTS-16000-critique \
+    --save_path trajectories-MCTS-KTO-8000-critique \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \

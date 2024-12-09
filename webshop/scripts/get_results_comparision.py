@@ -22,6 +22,7 @@ webshop中，加rwc还不如不加
 
 trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
 trajectories_save_path = 'webshop/trajectories-MCTS-KTO-8000-critique_test_llama31_T1.0_mcts_20iterations'
+# trajectories_save_path = 'webshop/trajectories-MCTS-16000-critique_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path = 'webshop/trajectories-MCTS-SFT-critique_test_llama31_T1.0_mcts_20iterations'
 
 # trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique-rwc_test_llama31_T1.0_mcts_20iterations'
