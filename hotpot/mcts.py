@@ -720,6 +720,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     return list(unique_states.values())  # Return unique nodes as a list
 
 
+    
 def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     global failed_trajectories
     assert args.enable_fastchat_conv
@@ -791,6 +792,14 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     return list(unique_states.values())  # Return unique nodes as a list
 
 
+def get_raw_observation(text):
+    keyword = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation:'
+    index = text.find(keyword)
+    if index != -1:
+        return text[:index]
+    else:
+        return text
+
 def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template):
     global failed_trajectories
     assert args.enable_fastchat_conv
@@ -823,10 +832,10 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
 
             critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
             if isinstance(critique_context, list):  # for openai GPT
-                original_observation = critique_context[-1]['content']
+                original_observation = get_raw_observation(critique_context[-1]['content'])
                 critique_context[-1]['content'] += critique_prompt + "\n"
             else: # for fastchat
-                original_observation = critique_context.messages[-2][1]
+                original_observation = get_raw_observation(critique_context.messages[-2][1])
                 critique_context.messages[-2][1] += critique_prompt + "\n"
 
             critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv, temperature=args.critique_temperature)[0]
@@ -880,9 +889,9 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
             new_state['observation'] = f"Observation: {obs}"
-            if critique:
-                new_state['critique'] = critique
-                new_state['regenerate_prompt'] = regenerate_prompt
+
+            new_state['critique'] = critique
+            new_state['regenerate_prompt'] = regenerate_prompt
 
             previous_obs = f"Observation: {obs}"
 
