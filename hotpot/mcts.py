@@ -14,7 +14,7 @@ from fschat_templates import prompt_with_icl
 import re
 from node import *
 
-from critique_templates import auto_j_single_template, template_v1, template_v2
+from critique_templates import auto_j_single_template, template_v1, template_v2, template_huan, hotpot_description
 
 
 env = wikienv.WikiEnv()
@@ -469,6 +469,8 @@ def expand_node(node, args, task, max_depth):
                 critique_prompt_template = template_v1
             elif args.critique_prompt_template == 'template_v2':
                 critique_prompt_template = template_v2
+            elif args.critique_prompt_template == 'template_huan':
+                critique_prompt_template = template_huan.replace('{scenario_description}', hotpot_description)
             else:
                 raise NotImplementedError
             new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template)
@@ -583,6 +585,8 @@ def rollout_with_critique(node, args, task, idx, max_depth=15):
                     critique_prompt_template = template_v1
                 elif args.critique_prompt_template == 'template_v2':
                     critique_prompt_template = template_v2
+                elif args.critique_prompt_template == 'template_huan':
+                    critique_prompt_template = template_huan.replace('{scenario_description}', hotpot_description)
                 else:
                     raise NotImplementedError
                 new_states_two = generate_new_states_critique_fastchat_conv(node=node, args=args, task=task, 
@@ -800,6 +804,13 @@ def get_raw_observation(text):
     else:
         return text
 
+def get_historical_context(context):
+    prompt = ''
+    for message in context.messages[11:]: # todo
+        if message[1] is not None:
+            prompt += message[1].strip() + '\n'
+    return prompt
+
 def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template):
     global failed_trajectories
     assert args.enable_fastchat_conv
@@ -815,38 +826,53 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
         regenerate_prompt = None
         if previous_response:
             # generating critique
-
-            # critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            # critique_prompt += previous_response + "\n"
-            # critique_prompt += previous_obs + "\n\n"
-            # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
             if not args.critique_backend:
                 args.critique_backend = args.backend
             if not args.critique_conv_template:
                 args.critique_conv_template = args.conv_template
+            critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
+            # generating critique
+            if args.critique_prompt_template == 'template_huan':
+                critique_prompt_templat = critique_prompt_template.format(
+                    user_inst=critique_context.messages[10][1],
+                    historical_context=get_historical_context(critique_context),
+                    current_state = previous_response + '\n' + previous_obs
+                )
+                critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]],
+                                             ['user', critique_prompt_templat.split('</system>')[-1]],
+                                             ['assistant', None]]
+                critique = critique_gpt(critique_context, n=1, stop=["Observation", "Action"], enable_fastchat_conv=args.enable_fastchat_conv)[0]
+                if critique.startswith('Critique: '):
+                    critique = critique[10:]
+                regenerate_prompt = '\n\nBelow are the critique of your current status.\n\n'
+                regenerate_prompt += 'Critique: ' + critique + "\n\n"
+                regenerate_prompt += 'Based on the feedback, please regenerate a new Thought and Action base on the previous Observation:'
+                original_observation = get_raw_observation(context.messages[-2][1])
+                context.messages[-2][1] = regenerate_prompt + "\n" + original_observation
+            else:
+                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+                if isinstance(critique_context, list):  # for openai GPT
+                    original_observation = get_raw_observation(critique_context[-1]['content'])
+                    critique_context[-1]['content'] += critique_prompt + "\n"
+                else: # for fastchat
+                    original_observation = get_raw_observation(critique_context.messages[-2][1])
+                    critique_context.messages[-2][1] += critique_prompt + "\n"
+                critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+                # generating thought and action
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
+                regenerate_prompt += 'Critique: '+critique + "\n\n"
+                regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            # critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            # critique_prompt += previous_response + "\n"
+            # critique_prompt += previous_obs + "\n\n"
+            # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
 
             # if 'auto-j' in args.critique_backend:
             #     critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
             # else:
-            critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
-
-            critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
-            if isinstance(critique_context, list):  # for openai GPT
-                original_observation = get_raw_observation(critique_context[-1]['content'])
-                critique_context[-1]['content'] += critique_prompt + "\n"
-            else: # for fastchat
-                original_observation = get_raw_observation(critique_context.messages[-2][1])
-                critique_context.messages[-2][1] += critique_prompt + "\n"
-
-            critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv, temperature=args.critique_temperature)[0]
-
-            # generating thought and action
-            regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            regenerate_prompt += previous_response + "\n"
-            regenerate_prompt += previous_obs + "\n"
-            regenerate_prompt += 'Critique: '+critique + "\n\n"
-            regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
-            context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
 
         response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
         previous_response = response
