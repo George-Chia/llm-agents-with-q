@@ -42,10 +42,10 @@ Format
 Feedback:[[Feedback]]"""
 
 template_huan = """
-You are a critic, and your responsibility is to criticize the effectiveness of a single step (including thought, action, observation) in completing user instructions and explain the high level reasons behind it.
-I will give you task scenario description, the user instruction, historical context and the current step. The historical context includes previous mutilples step, and the current step is executed based on the interaction history.
-You task is to only the reason for the inefficiency of the current step. Please remember that you should not provide any specific suggestions or a next step regarding the current step.
-Give your concise critique after "Critique:", no more than 100 words.
+You are a critic responsible for assessing the effectiveness of a single step (including thought, action, observation) in completing user instructions and explaining the high-level reasons behind it.
+I will provide you with the task scenario description, user instruction, historical context, and the current step. The historical context includes previous multiple steps, and the current step is executed based on the interaction history. 
+Your task is to identify the reason for the inefficiency of the current step. Please remember not to provide any specific suggestions or a next step regarding the current step.
+Give your concise critique after 'Critique:', limited to no more than 100 words.
 </system>
 Task Scenario Description:
 {scenario_description}
@@ -57,7 +57,7 @@ Historical Context:
 {historical_context}
 
 Current Step: 
-{substep}
+{current_state}
 
 Critique:
 """
