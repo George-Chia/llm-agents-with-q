@@ -2,7 +2,8 @@ import argparse
 import json
 import time
 import requests
-
+import sys
+# sys.path.append('/home/data/huan/works/llm-agents-with-q')
 from fastchat.model.model_adapter import get_conversation_template
 from fastchat.conversation import get_conv_template
 

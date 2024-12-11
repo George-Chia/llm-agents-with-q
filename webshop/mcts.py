@@ -901,22 +901,17 @@ def generate_new_states_critique_fastchat_conv(node, args, task, idx, n, critiqu
             critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
             # generating critique
             if args.critique_prompt_template == 'template_huan':
+                original_observation = get_raw_observation(context.messages[-2][1])
                 critique_prompt_templat = critique_prompt_template.format(
                     user_inst=critique_context.messages[10][1],
                     historical_context=get_historical_context(critique_context),
-                    current_state = previous_response + '\n' + previous_obs
+                    substep=f"{previous_response}\n{previous_obs}"
                 )
                 critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]],
                                              ['user', critique_prompt_templat.split('</system>')[-1]],
                                              ['assistant', None]]
-                critique = critique_gpt(critique_context, n=1, stop=["Observation", "Action"], enable_fastchat_conv=args.enable_fastchat_conv)[0]
-                if critique.startswith('Critique: '):
-                    critique = critique[10:]
-                regenerate_prompt = '\n\nBelow are the critique of your current status.\n\n'
-                regenerate_prompt += 'Critique: ' + critique + "\n\n"
-                regenerate_prompt += 'Based on the feedback, please regenerate a new Thought and Action base on the previous Observation:'
-                original_observation = get_raw_observation(context.messages[-2][1])
-                context.messages[-2][1] = regenerate_prompt + "\n" + original_observation
+                critique = critique_gpt(critique_context, n=1, stop=["Observation:",], enable_fastchat_conv=args.enable_fastchat_conv)[0]
+
             else:
                 critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
                 if isinstance(critique_context, list):  # for openai GPT
@@ -925,14 +920,14 @@ def generate_new_states_critique_fastchat_conv(node, args, task, idx, n, critiqu
                 else: # for fastchat
                     original_observation = get_raw_observation(critique_context.messages[-2][1])
                     critique_context.messages[-2][1] += critique_prompt + "\n"
-                critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
-                # generating thought and action
-                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-                regenerate_prompt += previous_response + "\n"
-                regenerate_prompt += previous_obs + "\n"
-                regenerate_prompt += 'Critique: '+critique + "\n\n"
-                regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
-                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            if critique.startswith('Critique:'):
+                critique = critique[9:]
+            regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            regenerate_prompt += previous_response + "\n"
+            regenerate_prompt += previous_obs + "\n"
+            regenerate_prompt += 'Critique: '+critique + "\n\n"
+            regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
+            context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
 
         response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
         previous_response = response

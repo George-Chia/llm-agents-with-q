@@ -22,7 +22,8 @@ if api_base != "":
     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
     openai.api_base = api_base
 
-# @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
+
+@backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs) # https://platform.openai.com/docs/api-reference/chat/create
 
@@ -41,7 +42,7 @@ def gpt3(prompt, model="text-davinci-002", temperature=1.0, max_tokens=100, n=1,
     print(f"Models: {model}")
     return outputs
 
-def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=128, n=1, stop=None, enable_fastchat_conv=False) -> list:
+def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=256, n=1, stop=None, enable_fastchat_conv=False) -> list:
     if enable_fastchat_conv:
         if "gpt-" in model:
             return chatgpt(prompt, model, temperature, max_tokens, n, stop)

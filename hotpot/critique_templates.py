@@ -42,9 +42,10 @@ Format
 Feedback:[[Feedback]]"""
 
 template_huan = """
-You are an assistant whose job is to help me perform tasks. I will give you task scenario description, the user instruction, historical context, and current state (including thought, action and observation). 
-Your task is to synthesize these information, provide high-level critical feedback on the current state, and guide me to perform actions that are more likely or efficient to complete the user instruction. 
-Give your critique after "Critique:". When you feel that your current state is on the path to successfully completing the task and does not require critique, please output: the current state is efficient and does not require critique.
+You are a critic, and your responsibility is to criticize the effectiveness of a single step (including thought, action, observation) in completing user instructions and explain the high level reasons behind it.
+I will give you task scenario description, the user instruction, historical context and the current step. The historical context includes previous mutilples step, and the current step is executed based on the interaction history.
+You task is to only the reason for the inefficiency of the current step. Please remember that you should not provide any specific suggestions or a next step regarding the current step.
+Give your concise critique after "Critique:", no more than 100 words.
 </system>
 Task Scenario Description:
 {scenario_description}
@@ -55,8 +56,8 @@ User Instruction:
 Historical Context:
 {historical_context}
 
-Current State: 
-{current_state}
+Current Step: 
+{substep}
 
 Critique:
 """

@@ -833,6 +833,7 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
             critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
             # generating critique
             if args.critique_prompt_template == 'template_huan':
+                original_observation = get_raw_observation(context.messages[-2][1])
                 critique_prompt_templat = critique_prompt_template.format(
                     user_inst=critique_context.messages[-2][1],
                     historical_context=get_historical_context(critique_context),
@@ -847,11 +848,12 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
                 critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
                 if critique.startswith('Critique:'):
                     critique = critique[9:]
-                regenerate_prompt = '\n\nBelow are the critique of your current status.\n\n'
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
                 regenerate_prompt += 'Critique: ' + critique + "\n\n"
-                regenerate_prompt += 'Based on the critique, please regenerate a new Thought and Action base on the previous Observation:'
-                original_observation = get_raw_observation(context.messages[-2][1])
-                context.messages[-2][1] = regenerate_prompt + "\n" + original_observation
+                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
             else:
                 critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
                 if isinstance(critique_context, list):  # for openai GPT
