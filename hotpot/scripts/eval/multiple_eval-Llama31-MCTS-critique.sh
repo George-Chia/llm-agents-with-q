@@ -16,7 +16,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 30 \
-        --save_path trajectories-MCTS-critique \
+        --save_path trajectories-MCTS-critique-template_huan \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm mcts \
@@ -24,7 +24,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --enable_seq_mode \
         --conv_template llama-3 \
         --expansion_sampling_method critique \
-        --critique_prompt_template template_v1 \
+        --critique_prompt_template template_huan \
         --critique_temperature 1 &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

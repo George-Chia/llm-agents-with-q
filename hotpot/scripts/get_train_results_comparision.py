@@ -8,7 +8,7 @@ trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31_m
 trajectories_save_path_comparision = 'hotpot/trajectories-3n/trajectories-MCTS-gpt4o_critique_test_llama31_mcts_30iterations'
 '''
 
-trajectories_save_path = 'hotpot/trajectories-MCTS-critique_test_llama31_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-MCTS-critique-template_huan_test_llama31_mcts_30iterations'
 trajectories_save_path_comparision = 'hotpot/trajectories-5n-critique-wrong-InTurn/trajectories-MCTS-critique_test_llama31_mcts_30iterations'
 
 
