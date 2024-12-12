@@ -40,25 +40,26 @@ Below are the previous Thought and Action you generated along with their corresp
 Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. 
 Format
 Feedback:[[Feedback]]"""
-
+"For example, check if there is a 'Back to Search' button in current Observation before searching. If there is, click[Back to Search] first."
 # When you feel that your state is on the path to successfully completing the task and does not require critique, please output: the state is efficient and does not require critique.
 template_huan = """
-You are a critic, and your responsibility is to criticize the effectiveness of a single step (including thought, action, observation) in completing user instructions and explain the high level reasons behind it.
-I will give you task scenario description, the user instruction, historical context and the current step. The historical context includes previous mutilples step, and the current step is executed based on the interaction history.
-You task is to only the reason for the inefficiency of the current step. Please remember that you should not provide any specific suggestions or a next step regarding the current step.
-Give your concise critique after "Critique:", no more than 100 words.
+You are a critic responsible for assessing the effectiveness of a single step (including thought, action, observation) in completing user instructions and explaining the high-level reasons behind it.
+I will provide you with the task description, user instruction, and historical context. The historical context refers to the user's interaction history in the task environment, including multiple previous steps.
+Your task is to identify the reason for the efficiency or inefficiency of the last step in the historical context. Please remember not to provide any specific suggestions or next steps.
+Give your concise critique after 'Critique:', limited to no more than 100 words.
 </system>
-Task Scenario Description:
+
+<task description>
 {scenario_description}
+</task description>
 
-User Instruction:
+<user instruction>
 {user_inst}
+</user instruction>
 
-Historical Context:
+<historical context>
 {historical_context}
-
-Current Step: 
-{substep}
+</historical context>
 
 Critique:
 """

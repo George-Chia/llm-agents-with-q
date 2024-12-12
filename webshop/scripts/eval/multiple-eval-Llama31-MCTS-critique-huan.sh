@@ -15,10 +15,11 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --part_num ${num_workers} \
     --part_idx ${part_idx} \
     --n_generate_sample 3 \
-    --temperature 1 \
+    --temperature 1.0 \
+    --critique_temperature 1.0 \
     --iterations 30 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories-MCTS-critique-template_huan_invalid \
+    --save_path trajectories-MCTS-critique-template_huan_invalidv2 \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
