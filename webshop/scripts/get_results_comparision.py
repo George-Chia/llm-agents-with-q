@@ -22,13 +22,13 @@ webshop中，加rwc还不如不加
 
 # trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path = 'webshop/trajectories-MCTS-critique-template_huan_test_llama31_T1.0_mcts_30iterations'
-trajectories_save_path = 'webshop/trajectories-MCTS-critique-template_huan_fewshot_test_llama31_T1.0_mcts_30iterations'
+trajectories_save_path = 'webshop/trajectories-MCTS-critique-template_huan_invalidv2_test_llama31_T1.0_mcts_30iterations'
 # trajectories_save_path = 'webshop/trajectories-MCTS-16000-critique_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path = 'webshop/trajectories-MCTS-SFT-critique_test_llama31_T1.0_mcts_20iterations'
 
 # trajectories_save_path = 'webshop/trajectories-MCTS-KTO-critique-rwc_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS-KTO-critique_test_llama31_T1.0_mcts_20iterations_from_wrong_Inturn'
-trajectories_save_path_comparision = 'webshop/trajectories-MCTS-critique-template_v1_test_llama31_T1.0_mcts_30iterations'
+trajectories_save_path_comparision = 'webshop/trajectories-MCTS-critique-template_huan_fewshot_test_llama31_T1.0_mcts_30iterations'
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS_test_llama31_T1.0_mcts_20iterations'
 # trajectories_save_path_comparision = 'webshop/trajectories-MCTS-3n-gpt4o_critique_test_llama31_T1.0_mcts_20iterations'
 

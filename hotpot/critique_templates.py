@@ -42,23 +42,19 @@ Format
 Feedback:[[Feedback]]"""
 
 template_huan = """
-You are a critic responsible for assessing the rationality of a single step (including thought, action, observation) in completing user instructions and explaining the high-level reasons behind it.
-I will provide you with the task description, user instruction, and historical context. The historical context refers to the user's interaction history in the task environment, including multiple previous steps.
-Your task is to provide reasonable or unreasonable reasons for the last step in the historical context. You cannot consider multiple steps or previous steps at once, please focus on the last step. 
+You are a critic responsible for assessing the effectiveness of a single step (including thought, action, observation) in completing user instructions and explaining the high-level reasons behind it.
+I will provide you with the task scenario description, user instruction, historical context, and the current step. The historical context includes previous multiple steps, and the current step is executed based on the interaction history. 
+Your task is to identify the reason for the inefficiency of the current step. Please remember not to provide any specific suggestions or a next step regarding the current step.
 Give your concise critique after 'Critique:', limited to no more than 100 words.
 
-<task description>
+Task Scenario Description:
 {scenario_description}
-</task description>
 
-</system>
-<user instruction>
-{user_inst}
-</user instruction>
-
-<historical context>
+Historical Context:
 {historical_context}
-</historical context>
+
+Current Step: 
+{current_state}
 
 Critique:
 """

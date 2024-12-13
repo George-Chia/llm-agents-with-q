@@ -41,25 +41,24 @@ Review the previous Thought, Action, and Observation. Your role is to determine 
 Format
 Feedback:[[Feedback]]"""
 
-# Please remember not to provide any specific suggestions or next steps.
+#
 template_huan = """
-You are a critic responsible for assessing the rationality of a single step (including thought, action, observation) in completing user instructions and explaining the high-level reasons behind it.
-I will provide you with the task description, user instruction, and historical context. The historical context refers to the user's interaction history in the task environment, including multiple previous steps.
-Your task is to provide reasonable or unreasonable reasons for the last step in the historical context. You cannot consider multiple steps or previous steps at once, please focus on the last step. 
-Give your concise critique after 'Critique:', limited to no more than 100 words.
-
-<task description>
-{scenario_description}
-</task description>
-
+You are a critic, and your responsibility is to assess the effectiveness of a single step (including thought, action, observation) in completing user instructions and to explain the high-level reasons behind it.
+I will provide you with the task scenario description, user instruction, historical context, and the current step. The historical context includes previous multiple steps, and the current step is executed based on the interaction history.
+Your task is to identify the reason for the inefficiency of the current step. Please remember not to provide any specific suggestions or a next step regarding the current step.
+Give your concise critique after 'Critique:', no more than 100 words.
 </system>
-<user instruction>
-{user_inst}
-</user instruction>
+Task Scenario Description:
+{scenario_description}
 
-<historical context>
+User Instruction:
+{user_inst}
+
+Historical Context:
 {historical_context}
-</historical context>
+
+Current Step: 
+{substep}
 
 Critique:
 """
@@ -126,7 +125,7 @@ Instruction: [SEP] i looking gluten free italian ground sausage, and price lower
 Critique:"""],
 
 ['assistant',
- """Critique: The previous action was effective in narrowing down a list of potential products that match the search criteria. However, there is a typographical error in the search terms with "itlian" instead of "italian," which might reduce the effectiveness of the search results. Additionally, the search terms could be more specific to ensure results for "ground sausage" rather than other types of sausage. Therefore, the action was mostly effective, but attention to detail in search keywords could yield even more relevant results.
+ """Critique: The previous action was reasonable in narrowing down a list of potential products that match the search criteria. However, there is a typographical error in the search terms with "itlian" instead of "italian," which might reduce the effectiveness of the search results. Additionally, the search terms could be more specific to ensure results for "ground sausage" rather than other types of sausage. Therefore, the action was mostly effective, but attention to detail in search keywords could yield even more relevant results.
  """],
 
 ['user',
