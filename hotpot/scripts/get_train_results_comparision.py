@@ -9,7 +9,7 @@ trajectories_save_path_comparision = 'hotpot/trajectories-3n/trajectories-MCTS-g
 '''
 
 trajectories_save_path = 'hotpot/trajectories-MCTS-critique-template_huan1211_test_llama31_mcts_30iterations'
-trajectories_save_path_comparision = 'hotpot/trajectories-3-5n-right-InTurn-NotGood/trajectories-MCTS_test_llama31_mcts_30iterations'
+trajectories_save_path_comparision = 'hotpot/trajectories-MCTS-critique-template_huan1213_test_llama31_mcts_30iterations'
 
 
 best_reward = []
