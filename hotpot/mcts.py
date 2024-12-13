@@ -836,7 +836,8 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
                 original_observation = get_raw_observation(context.messages[-2][1])
                 critique_prompt_templat = critique_prompt_template.format(
                     user_inst=critique_context.messages[-2][1],
-                    historical_context=get_historical_context(critique_context) + f"{previous_response}\n{previous_obs}",
+                    historical_context=get_historical_context(critique_context),
+                    current_state = previous_response + '\n' + previous_obs
                 )
                 if 'gpt' in args.critique_backend:
                     raise NotImplementedError
@@ -844,16 +845,15 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
                     critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]],
                                                 ['user', critique_prompt_templat.split('</system>')[-1]],
                                                 ['assistant', None]]
-                critique = critique_gpt(critique_context, n=1, stop=["Observation:", ], enable_fastchat_conv=args.enable_fastchat_conv)[0]
+                critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
                 if critique.startswith('Critique:'):
                     critique = critique[9:]
-                regenerate_prompt = '\nBelow are the previous Thought and Action you generated along with their corresponding Observation:\n'
-                regenerate_prompt += f"<previous Thought, Action, and Observation>\n{previous_response}\n{previous_obs}\n</previous Thought, Action, and Observation>\n"
-                regenerate_prompt += f'Critique:\n<critique>{critique}</critique>\n'
-                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the current Observation:' + "\n"
-                original_observation = "<current observation>\nObservation:" + original_observation.replace("Observation:", '') + '</current observation>\n'
-                constraint = "Consider the feasibility of new actions based on the current observation, rather than relying on the previous observation."
-                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation + '\n' + constraint
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
+                regenerate_prompt += 'Critique: ' + critique + "\n\n"
+                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
             else:
                 critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
                 if isinstance(critique_context, list):  # for openai GPT
