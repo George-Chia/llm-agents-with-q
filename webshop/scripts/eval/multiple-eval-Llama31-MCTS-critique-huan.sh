@@ -19,7 +19,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --critique_temperature 1.0 \
     --iterations 30 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories-MCTS-critique-template_huan_invalidv2 \
+    --save_path trajectories-MCTS-critique-template_huan_fewshot_reasonable \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \
