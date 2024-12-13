@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-new-tokens", type=int, default=5120)
     parser.add_argument("--conv_template", type=str, default=None)
     parser.add_argument(
-        "--message", type=str, default=" Cache replaced问题怎么解决？请简短回答："
+        "--message", type=str, default="How may S's are there in Mississippi"
     )
     args = parser.parse_args()
 
