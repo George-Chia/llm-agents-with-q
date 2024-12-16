@@ -25,7 +25,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --conv_template llama-3 \
         --expansion_sampling_method critique \
         --critique_backend Llama31-KTO \
-        --critique_prompt_template template_v1 \
+        --critique_prompt_template template_huan \
         --critique_temperature 1 &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done
