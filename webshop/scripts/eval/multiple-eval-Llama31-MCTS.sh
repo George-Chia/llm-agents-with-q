@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_workers=2
+num_workers=7
 node_num=9
 
 explore_model_name=llama31
@@ -15,10 +15,10 @@ for ((j=0;j<${num_workers};j=j+1)); do
     --part_num ${num_workers} \
     --part_idx ${part_idx} \
     --n_generate_sample 5 \
-    --temperature 0 \
+    --temperature 1 \
     --iterations 30 \
     --log logs/eval_part-${j}.log \
-    --save_path trajectories \
+    --save_path trajectories-MCTS \
     --max_depth 10 \
     --rollout_width 1 \
     --algorithm mcts \

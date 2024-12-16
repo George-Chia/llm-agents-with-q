@@ -11,16 +11,17 @@ LOCAL_LLM_PATH = os.environ.get('LOCAL_LLM_PATH')
 tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
 
 
-# api_key = os.getenv("OPENAI_API_KEY", "")
-# if api_key != "":
-#     openai.api_key = api_key
-# else:
-#     print("Warning: OPENAI_API_KEY is not set")
+api_key = os.getenv("OPENAI_API_KEY", "")
+if api_key != "":
+    openai.api_key = api_key
+else:
+    print("Warning: OPENAI_API_KEY is not set")
     
-# api_base = os.getenv("OPENAI_API_BASE", "")
-# if api_base != "":
-#     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
-#     openai.api_base = api_base
+api_base = os.getenv("OPENAI_API_BASE", "")
+if api_base != "":
+    print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
+    openai.api_base = api_base
+
 
 @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):
@@ -41,7 +42,7 @@ def gpt3(prompt, model="text-davinci-002", temperature=1.0, max_tokens=100, n=1,
     print(f"Models: {model}")
     return outputs
 
-def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=128, n=1, stop=None, enable_fastchat_conv=False) -> list:
+def gpt(prompt, model="gpt-3.5-turbo-16k", temperature=1.0, max_tokens=256, n=1, stop=None, enable_fastchat_conv=False) -> list:
     if enable_fastchat_conv:
         if "gpt-" in model:
             return chatgpt(prompt, model, temperature, max_tokens, n, stop)

@@ -3,7 +3,8 @@
 num_workers=1
 node_num=1
 
-model_path=$LOCAL_LLM_PATH/Meta-Llama-3.1-8B-Instruct
+
+model_path=$LOCAL_LLM_PATH/Llama3.1-8B-Instruct
 explore_model_name=llama31
 exp_name=llama31-collect-MCTS
 

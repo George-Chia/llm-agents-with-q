@@ -2,7 +2,8 @@ import argparse
 import json
 import time
 import requests
-
+import sys
+# sys.path.append('/home/data/huan/works/llm-agents-with-q')
 from fastchat.model.model_adapter import get_conversation_template
 from fastchat.conversation import get_conv_template
 
@@ -125,8 +126,6 @@ def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> 
         ),
     )
 def gpt_instruct_conv(messages, model, temperature, max_new_tokens, n, stop)  -> list :
-    openai.api_base = ""
-    openai.api_key = ""
     response_list = []
     for _ in range(n):
         response = openai.ChatCompletion.create(

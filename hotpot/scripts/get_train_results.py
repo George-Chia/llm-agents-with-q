@@ -34,30 +34,38 @@ abalation of iterations
 # average best child em:  0.423
 '''
 
-# version2: rollout with UCT
-# trajectories_save_path = "hotpot/trajectories-reflection_train_gpt-4o-mini_mcts_30iterations"
 
 
+# trajectories_save_path = "hotpot/trajectories-MCTS_test_llama31_mcts_30iterations"
+# Sample number:  100
+# average best reward:  0.71
+# average best em:  0.71
+# average best child reward:  0.62
+# average best child em:  0.62
+
+# trajectories_save_path = 'hotpot/trajectories-MCTS-critique_test_llama31_no-backpro'
+# Sample number:  100
+# average best reward:  0.64
+# average best em:  0.64
+# average best child reward:  0.54
+# average best child em:  0.54
+
+trajectories_save_path = 'hotpot/trajectories-MCTS-KTO_critique_test_llama31_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-MCTS-template_huan-critique-disable_early_stop_train_llama31_mcts_20iterations'
+
+# trajectories_save_path = "hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations"
+# Sample number:  950
+# average best reward:  0.6936842105263158
+# average best em:  0.6936842105263158
+# average best child reward:  0.6157894736842106
+# average best child em:  0.6157894736842106
+
+# trajectories_save_path = "hotpot/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations"
 # Sample number:  1000
-# average best reward:  0.672
-# average best em:  0.213
-# average best child reward:  0.671
-# average best child em:  0.212
-# trajectories_save_path = "hotpot/trajectories_train_gpt-4o_mcts_30iterations_1000samples"
-
-trajectories_save_path = "hotpot/trajectories-MCTS_test_llama31-2_mcts_30iterations"
-# Sample number:  55
-# average best reward:  0.6909090909090909
-# average best em:  0.6909090909090909
-# average best child reward:  0.6545454545454545
-# average best child em:  0.6545454545454545
-
-trajectories_save_path = "hotpot/trajectories-MCTS-critique_test_llama31-3_mcts_30iterations"
-# Sample number:  8
-# average best reward:  0.75
-# average best em:  0.75
-# average best child reward:  0.75
-# average best child em:  0.75
+# average best reward:  0.66
+# average best em:  0.66
+# average best child reward:  0.558
+# average best child em:  0.558
 
 done_task_id = []
 
@@ -66,16 +74,23 @@ best_em = []
 
 best_child_reward = []
 best_child_em = []
+
+success_length_list = []
+
+
 for file in os.listdir(trajectories_save_path):
     if not file.endswith('json'):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
+    if result['best child reward'] >0:
+        success_length_list.append(len(result['best_trajectory_index_list']))
     best_reward.append(result['best reward'])
     best_em.append(result['best em'] if result['best em']  is not None else 0)
     best_child_reward.append(result['best child reward'])
     best_child_em.append(result['best child em'] if result['best child em']  is not None else 0)
 print("Sample number: ", len(best_child_reward))
+print("average success length: ", sum(success_length_list)/len(success_length_list))
 print("average best reward: ", sum(best_reward)/len(best_reward))
 print("average best em: ", sum(best_em)/len(best_reward))
 print("average best child reward: ", sum(best_child_reward)/len(best_child_reward))

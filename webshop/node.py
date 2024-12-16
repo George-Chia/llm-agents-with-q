@@ -181,6 +181,10 @@ def get_conv_from_bottom(node, conv_template):
     # Apply prompt templates
     messages = []
     while node.parent:
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     messages.insert(0, [conv.roles[0], f"{node.state['observation']}"+critique+node.state['observation']])
+        # else:
         messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
         messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
         node = node.parent
@@ -197,8 +201,18 @@ def get_conv_from_bottom(node, conv_template):
 def get_messages_from_bottom(node):
     messages = []
     while node.parent:
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"+critique+node.state['observation']})
+        # else:
         messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"})
         messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     action = f"{node.state['action']}"
+        #     messages.insert(0,{'role':'assistant', 'content': critique+"\n"+action})
+        # else:
+        #     messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
         # messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
         # messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
         node = node.parent
@@ -206,6 +220,53 @@ def get_messages_from_bottom(node):
     for message in node.messages[::-1]:
         messages.insert(0, message)
     return messages
+
+
+def get_conv_from_bottom_critique(node, conv_template):
+    conv = get_conv_template(conv_template)
+    # Apply prompt templates
+    messages = []
+    while node.parent:
+        if node.state['regenerate_prompt'] is not None:
+            critique = f"{node.state['regenerate_prompt']}"
+            messages.insert(0, [conv.roles[0], f"{node.state['observation']}"+critique+node.state['observation']])
+        else:
+            messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
+        messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        node = node.parent
+    # root node
+    for j, sentence in enumerate(node.messages):
+        role = sentence['role']
+        assert role in conv.roles[j % 2]
+        conv.append_message(conv.roles[j % 2], sentence["content"])
+    if len(messages)>0:
+        conv.messages.extend(messages)
+    return conv
+
+
+def get_messages_from_bottom_critique(node):
+    messages = []
+    while node.parent:
+        if node.state['regenerate_prompt'] is not None:
+            critique = f"{node.state['regenerate_prompt']}"
+            messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"+critique+node.state['observation']})
+        else:
+            messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"})
+        messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     action = f"{node.state['action']}"
+        #     messages.insert(0,{'role':'assistant', 'content': critique+"\n"+action})
+        # else:
+        #     messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
+        # messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        node = node.parent
+    # root node
+    for message in node.messages[::-1]:
+        messages.insert(0, message)
+    return messages
+
 
 
 def get_batch_logps(

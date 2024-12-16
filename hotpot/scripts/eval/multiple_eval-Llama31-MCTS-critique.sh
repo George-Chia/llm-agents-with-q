@@ -1,8 +1,8 @@
 #!/bin/bash
-num_workers=4
+num_workers=7
 
 explore_model_name=llama31
-exp_name=llama31-collection
+exp_name=llama31-collection-critique
 
 for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
@@ -16,13 +16,15 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 30 \
-        --save_path trajectories-MCTS-critique \
+        --save_path trajectories-MCTS-critique-template_huan \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm mcts \
         --enable_fastchat_conv \
         --enable_seq_mode \
         --conv_template llama-3 \
-        --expansion_sampling_method critique &
+        --expansion_sampling_method critique \
+        --critique_prompt_template template_huan \
+        --critique_temperature 1 &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

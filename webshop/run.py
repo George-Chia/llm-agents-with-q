@@ -10,6 +10,7 @@ from typing import List, Tuple, Any
 from tqdm import tqdm
 import transformers
 import math
+import random
 
 # Modified from ETO by 
 def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
@@ -17,6 +18,8 @@ def load_idxs(split: str, part_num: int, part_idx: int = -1) -> Tuple[int]:
         idxs = json.load(open("data_split/train_indices.json"))
     else:
         idxs = json.load(open("data_split/test_indices.json"))
+    # idxs = idxs[:500]
+    # random.shuffle(idxs)
     if part_num == 1:
         idxs = idxs
     else:
@@ -43,7 +46,7 @@ def run(args):
     if "Phi-3" in args.backend:
         trajectories_save_path = args.save_path+'_'+args.data_split+'_'+"Phi-3"+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     else:
-        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend+'_T'+str(args.temperature)+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
+        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend.split('-')[0]+'_T'+str(args.temperature)+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     done_task_id = []
     if not os.path.exists(trajectories_save_path):
         os.makedirs(trajectories_save_path)
@@ -98,7 +101,7 @@ def run(args):
 
 
     n=0
-    # idx=[314]
+    # idx=[9680]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -171,9 +174,6 @@ def parse_args():
     args.add_argument('--q_model_conv_template', type=str)
     # args.add_argument('--agent_config_path', type=str)
 
-    # for MCTS
-    args.add_argument('--enable_rollout_early_stop', action='store_true')
-
     # for calculating DPO logits
     args.add_argument(
         "--policy_model_name_or_path",
@@ -208,8 +208,18 @@ def parse_args():
     args.add_argument('--puct_coeff', type=float, default=0.)
     args.add_argument('--enable_rollout_with_q', action='store_true')
 
-    # for conditional action sampling
-    args.add_argument('--enable_conditional_sampling', action='store_true')
+    # for MCTS
+    args.add_argument('--disable_early_stop', action='store_true')
+    args.add_argument('--enable_rollout_early_stop', action='store_true')
+
+    # various expansion_sampling_method for MCTS
+    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
+
+    # for Critique
+    args.add_argument('--critique_backend', type=str,  default=None)
+    args.add_argument('--critique_prompt_template', type=str,  default=None)
+    args.add_argument('--critique_temperature', type=float)
+    args.add_argument('--enable_rollout_with_critique', action='store_true')
 
     # webshop env
     args.add_argument('--add_fixed_prefix', action='store_true')

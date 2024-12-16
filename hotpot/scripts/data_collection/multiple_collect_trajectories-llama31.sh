@@ -18,11 +18,12 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1.0 \
         --iterations 30 \
-        --save_path trajectories \
+        --save_path trajectories-MCTS-critique \
         --log logs/collect_trajectories_part-${j}.log \
         --max_depth 7 \
         --algorithm mcts \
         --enable_fastchat_conv \
-        --conv_template llama-3 &
-    echo $! >> logs/${exp_name}-eval_pid.txt
+        --conv_template llama-3 \
+        --expansion_sampling_method critique &
+    echo $! >> logs/${exp_name}-collection_pid.txt
 done

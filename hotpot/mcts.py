@@ -14,6 +14,8 @@ from fschat_templates import prompt_with_icl
 import re
 from node import *
 
+from critique_templates import auto_j_single_template, template_v1, template_v2, template_huan, hotpot_description
+
 
 env = wikienv.WikiEnv()
 env = wrappers.HotPotQAWrapper(env, split="train")
@@ -119,6 +121,15 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     global reflection_map
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
+
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
     x = env.reset(idx=idx)
@@ -147,7 +158,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     terminal_nodes = []
 
     for i in range(iterations):
-        print(f"Iteration {i + 1}...")
+        # print(f"Iteration {i + 1}...")
         node = select_node(root)
 
         while node is None or (node.is_terminal and node.reward != 1):
@@ -160,8 +171,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         if node.is_terminal and node.reward == 1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return node.state, node.value, all_nodes, node.reward, node.em
+            backpropagate(node, node.reward)
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return node.state, node.value, all_nodes, node.reward, node.em
         
         expand_node(node, args, task, args.max_depth)
 
@@ -174,7 +189,10 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             value = evaluate_node(node, args, task)
 
         # Find the child with the highest value or UCT? A: similar effect.
-        reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=4)
+        if args.enable_rollout_with_critique:
+            reward, terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
+        else:
+            reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
 
         terminal_nodes.append(terminal_node)
 
@@ -185,6 +203,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             if terminal_node.reward == 1:
                 logging.info("Successful trajectory found")
                 logging.info(f"Terminal node including rollouts with reward 1 found at iteration {i + 1}")
+                backpropagate(terminal_node, reward)
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
 
@@ -196,17 +215,24 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if terminal_nodes_with_reward_1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.value)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return best_node.state, best_node.value, best_node.reward, best_node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return best_node.state, best_node.value, best_node.reward, best_node.em
     
         for j, (node, value) in enumerate(all_nodes):
             logging.info(f"Node {j+1}: {str(node)}")
 
         logging.info(f"State of all_nodes after iteration {i + 1}: {all_nodes}")
     
+    all_nodes_list = collect_all_nodes(root)
+    for node in all_nodes_list:
+        if node.is_terminal and node.value==0:
+            backpropagate(node, node.reward)
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
-    all_nodes_list = collect_all_nodes(root)
+    
     all_nodes_list.extend(terminal_nodes)
     best_child = max(all_nodes_list, key=lambda x: x.reward)
     failed_trajectories = []
@@ -437,7 +463,17 @@ def expand_node(node, args, task, max_depth):
         if args.expansion_sampling_method == 'conditional':
             new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, n)
         elif args.expansion_sampling_method == 'critique':
-            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n)
+            if args.critique_prompt_template == 'auto-j':
+                critique_prompt_template = auto_j_single_template
+            elif args.critique_prompt_template == 'template_v1':
+                critique_prompt_template = template_v1
+            elif args.critique_prompt_template == 'template_v2':
+                critique_prompt_template = template_v2
+            elif args.critique_prompt_template == 'template_huan':
+                critique_prompt_template = template_huan.replace('{scenario_description}', hotpot_description)
+            else:
+                raise NotImplementedError
+            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template)
         elif args.expansion_sampling_method == 'vanilla':
             new_nodes = generate_new_states_fastchat_conv(node, args, task, n)
     else:
@@ -469,7 +505,7 @@ def parse_thought(llm_output: str) -> str:
     assert action is not None
     return action
 
-def rollout(node, args, task, idx, max_depth=4):
+def rollout(node, args, task, idx, max_depth=7):
     logging.info("ROLLING OUT")
     depth = node.depth
     # n = 5
@@ -502,7 +538,7 @@ def rollout(node, args, task, idx, max_depth=4):
     return sum(rewards) / len(rewards), node
 
 
-def rollout_random(node, args, task, idx, max_depth=15):
+def rollout_random(node, args, task, idx, max_depth=7):
     depth = node.depth
     n = args.rollout_width
     assert n==1, "large rollout_width is meanless for rollout_random"
@@ -532,6 +568,42 @@ def rollout_random(node, args, task, idx, max_depth=15):
         if depth == max_depth:
             node.reward = -1
     return node.reward, node
+
+def rollout_with_critique(node, args, task, idx, max_depth=15):
+    depth = node.depth
+    n = args.rollout_width
+    assert n==1, "the same with rollout_random"
+    while not node.is_terminal and depth < max_depth:
+        # Generate new states
+        new_states = []
+        values = []
+        while len(new_states) == 0:
+            if args.enable_fastchat_conv:
+                if args.critique_prompt_template == 'auto-j':
+                    critique_prompt_template = auto_j_single_template
+                elif args.critique_prompt_template == 'template_v1':
+                    critique_prompt_template = template_v1
+                elif args.critique_prompt_template == 'template_v2':
+                    critique_prompt_template = template_v2
+                elif args.critique_prompt_template == 'template_huan':
+                    critique_prompt_template = template_huan.replace('{scenario_description}', hotpot_description)
+                else:
+                    raise NotImplementedError
+                new_states_two = generate_new_states_critique_fastchat_conv(node=node, args=args, task=task, 
+                                                                        n=2, critique_prompt_template=critique_prompt_template)
+                new_states = new_states_two[-1:]
+            else:
+               raise NotImplementedError
+
+        for state in new_states_two:
+            if state.is_terminal:
+                return state.reward, state
+        node = new_states[0] 
+        depth += 1
+        if depth == max_depth:
+            node.reward = -1
+    return node.reward, node
+
 
 def generate_new_states(node, args, task, n):
     global failed_trajectories
@@ -585,12 +657,12 @@ def generate_new_states(node, args, task, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
-def get_context(node, args):
-    if "gpt-" in args.backend:
+def get_context(node, conv_template, backend):
+    if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in args.backend or "llama31" in args.backend:
-        conv = get_conv_from_bottom(node, args.conv_template)
+    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend or 'Llama31-KTO' in backend:
+        conv = get_conv_from_bottom(node, conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
     else:
@@ -600,7 +672,7 @@ def get_context(node, args):
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
 
-    context = get_context(node, args)
+    context = get_context(node, args.conv_template, args.backend)
     response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
 
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
@@ -652,6 +724,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     return list(unique_states.values())  # Return unique nodes as a list
 
 
+    
 def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     global failed_trajectories
     assert args.enable_fastchat_conv
@@ -662,7 +735,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     unique_states = {}  # Store unique states here
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = get_context(node, args.conv_template, args.backend)
         if len(sampled_response_list) > 0:
             original_observation = context.messages[-2][1]
             conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
@@ -702,7 +775,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
             new_state['observation'] = f"Observation: {obs}"
 
-            sampled_obs_list.append(obs)
+            sampled_obs_list.append(f"Observation: {obs}")
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done
@@ -723,7 +796,22 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, n):
     return list(unique_states.values())  # Return unique nodes as a list
 
 
-def generate_new_states_critique_fastchat_conv(node, args, task, n):
+def get_raw_observation(text):
+    keyword = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation:'
+    index = text.find(keyword)
+    if index != -1:
+        return text[:index]
+    else:
+        return text
+
+def get_historical_context(context):
+    prompt = ''
+    for message in context.messages[25:]: # todo
+        if message[1] is not None:
+            prompt += message[1].strip() + '\n'
+    return prompt
+
+def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template):
     global failed_trajectories
     assert args.enable_fastchat_conv
 
@@ -733,28 +821,63 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
     unique_states = {}  # Store unique states here
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = copy.deepcopy(get_context(node, args.conv_template, args.backend))
         critique = None
+        regenerate_prompt = None
         if previous_response:
-            original_observation = context.messages[-2][1]
             # generating critique
-            critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            critique_prompt += previous_response + "\n"
-            critique_prompt += 'Observation:'+previous_obs + "\n\n"
-            # critique_prompt += 'After reviewing the previous Thought, Action, and Observation:\n - Briefly provide specific and constructive feedback for refining the previous Thought and Action.\n - Conclude with the determination using the format "The action is <effective/ineffective>."'
-            critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective. If ineffective, provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\nThe action is <effective/ineffective>.\nFeedback:[[Feedback]]'
-            # critique_prompt += 'Given the previous Thought, Action, and Observation, your role is to provide specific and constructive feedback for refining the previous Thought and Action.\nFormat\n### Feedback\n[Your feedback]'
-            critique_context = copy.deepcopy(context)
-            critique_context.messages[-2][1] += critique_prompt + "\n"
-            critique = gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            if not args.critique_conv_template:
+                args.critique_conv_template = args.conv_template
+            critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
+            # generating critique
+            if args.critique_prompt_template == 'template_huan':
+                original_observation = get_raw_observation(context.messages[-2][1])
+                critique_prompt_templat = critique_prompt_template.format(
+                    user_inst=critique_context.messages[-2][1],
+                    historical_context=get_historical_context(critique_context),
+                    current_state = previous_response + '\n' + previous_obs
+                )
+                if 'gpt' in args.critique_backend:
+                    raise NotImplementedError
+                else:
+                    critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]],
+                                                ['user', critique_prompt_templat.split('</system>')[-1]],
+                                                ['assistant', None]]
+                critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+                if critique.startswith('Critique:'):
+                    critique = critique[9:]
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
+                regenerate_prompt += 'Critique: ' + critique + "\n\n"
+                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            else:
+                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+                if isinstance(critique_context, list):  # for openai GPT
+                    original_observation = get_raw_observation(critique_context[-1]['content'])
+                    critique_context[-1]['content'] += critique_prompt + "\n"
+                else: # for fastchat
+                    original_observation = get_raw_observation(critique_context.messages[-2][1])
+                    critique_context.messages[-2][1] += critique_prompt + "\n"
+                critique = critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+                # generating thought and action
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
+                regenerate_prompt += 'Critique: '+critique + "\n\n"
+                regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            # critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            # critique_prompt += previous_response + "\n"
+            # critique_prompt += previous_obs + "\n\n"
+            # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
 
-            # generating thought and action
-            regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            regenerate_prompt += previous_response + "\n\n"
-            regenerate_prompt += 'Observation:'+previous_obs + "\n"
-            regenerate_prompt += '\n'+"Critique of the previous Thought and Action: "+critique + "\n\n"
-            regenerate_prompt += 'Based on the critique and feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:'+ "\n"
-            context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            # if 'auto-j' in args.critique_backend:
+            #     critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
+            # else:
 
         response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
         previous_response = response
@@ -797,10 +920,11 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n):
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
             new_state['observation'] = f"Observation: {obs}"
-            if critique:
-                new_state['critique'] = critique
 
-            previous_obs = obs
+            new_state['critique'] = critique
+            new_state['regenerate_prompt'] = regenerate_prompt
+
+            previous_obs = f"Observation: {obs}"
 
             new_node = Node(state=new_state, question=node.question, parent=node)
             new_node.is_terminal = r == 1 or done

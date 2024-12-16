@@ -20,11 +20,12 @@ import time
 
 from fschat_templates import prompt_with_icl
 
+from critique_templates import auto_j_single_template, template_v1, template_v2, template_huan, webshop_description, rewrite_prompt, icl_prompt
+
+
  
 completion_tokens = prompt_tokens = 0
 # openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_base = ""
-openai.api_key = ""
 
 global reflection_map
 global failed_trajectories
@@ -80,6 +81,17 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     action = 'reset'
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
+        
+            
+
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
     x = env.step(idx, action, args.enable_seq_mode)[0]
@@ -117,8 +129,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         if node.is_terminal and node.reward == 1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return node.state, node.value, all_nodes, node.reward, node.em
+            backpropagate(node, node.reward)
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return node.state, node.value, all_nodes, node.reward, node.em
         
         expand_node(node, args, task, idx, max_depth=args.max_depth)
 
@@ -137,6 +153,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             if args.enable_rollout_with_q:
                 terminal_node = rollout_with_q(node, args, task, idx, args.max_depth,
                                             dpo_policy_model, dpo_reference_model, args.conv_template, tokenizer, args.puct_coeff)
+            elif args.enable_rollout_with_critique:
+                terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)     
             else:
                 # TODO: according to UCT instead of value?
                 terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)     
@@ -149,6 +167,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             if terminal_node.reward == 1:
                 logging.info("Successful trajectory found")
                 logging.info(f"Terminal node including rollouts with reward 1 found at iteration {i + 1}")
+                backpropagate(terminal_node, terminal_node.reward)
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
         # Backpropagate reward
@@ -166,8 +185,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             logging.info("Successful trajectory found")
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.reward)
-            save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
-            return best_node.state, best_node.value, best_node.reward, best_node.em
+            if args.disable_early_stop:
+                continue
+            else:
+                save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
+                return best_node.state, best_node.value, best_node.reward, best_node.em
     
         for j, (node, value) in enumerate(all_nodes):
             logging.info(f"Node {j+1}: {str(node)}")
@@ -175,11 +197,14 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         node_strings = '\n'.join(str(node[0]) for node in all_nodes)
         logging.info(f"State of all_nodes after iteration {i + 1}:\n{node_strings}")
 
-
-
+        
+    all_nodes_list = collect_all_nodes(root)
+    for node in all_nodes_list:
+        if node.is_terminal and node.value==0:
+            backpropagate(node, node.reward)
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
-    all_nodes_list = collect_all_nodes(root)
+
     all_nodes_list.extend(terminal_nodes)
     best_child = max(all_nodes_list, key=lambda x: x.reward)
     failed_trajectories = []
@@ -201,6 +226,15 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     global reflection_map
     action = 'reset'
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
+
+    global critique_gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
 
     # start_time = time.time()
     x = env.step(idx, action, args.enable_seq_mode)[0]
@@ -238,7 +272,10 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
             expand_node(node, args, task, idx, max_depth=args.max_depth)  # Expand current node
             if not node.children:
                 break  # If no child can be generated, break
-            node = random.choice(node.children)  # Randomly select a child node
+            if args.expansion_sampling_method == "critique":
+                node = node.children[-1]
+            else:
+                node = random.choice(node.children)  # Randomly select a child node
             depth += 1
 
         # Check the terminal condition
@@ -276,6 +313,8 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
         return best_node.state, best_node.value, best_node.reward, best_node.em
     elif not_finished_trajectories:
         return 0,0,0,0
+
+
 
 
 def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=None, 
@@ -414,6 +453,45 @@ def rollout_random(node, args, task, idx, max_depth=15):
     return node  
 
 
+def rollout_with_critique(node, args, task, idx, max_depth=15):
+    depth = node.depth
+    n = args.rollout_width
+    assert n==1, "the same with rollout_random"
+    while not node.is_terminal and depth < max_depth:
+        # Generate new states
+        new_states = []
+        values = []
+        while len(new_states) == 0:
+            if args.enable_fastchat_conv:
+                if args.critique_prompt_template == 'auto-j':
+                    critique_prompt_template = auto_j_single_template
+                elif args.critique_prompt_template == 'template_v1':
+                    critique_prompt_template = template_v1
+                elif args.critique_prompt_template == 'template_v2':
+                    critique_prompt_template = template_v2
+                elif args.critique_prompt_template == 'template_huan':
+                    critique_prompt_template = template_huan.replace('{scenario_description}', webshop_description)
+                else:
+                    raise NotImplementedError
+                new_states_two = generate_new_states_critique_fastchat_conv(node, args, task, idx, 
+                                                                        n=2, critique_prompt_template=critique_prompt_template)
+                new_states = new_states_two[-1:]
+            else:
+               raise NotImplementedError
+
+        for state in new_states_two:
+            if state.is_terminal:
+                return state
+                
+
+        node = new_states[0] 
+        depth += 1
+        if depth == max_depth:
+            node.reward = -0.5
+    return node  
+
+
+
 def rollout_with_q(node, args, task, idx, max_depth, dpo_policy_model, dpo_reference_model, conv_template, tokenizer, puct_coef):
     depth = node.depth
     n = args.rollout_width
@@ -487,9 +565,21 @@ def expand_node(node, args, task, idx, max_depth):
     # if node.depth == 0:  
     #     n *= 2
     if args.enable_fastchat_conv:
-        if args.enable_conditional_sampling:
+        if args.expansion_sampling_method == 'conditional':
             new_nodes = generate_new_states_conditional_fastchat_conv(node, args, task, idx, n)
-        else:
+        elif args.expansion_sampling_method == 'critique':
+            if args.critique_prompt_template == 'auto-j':
+                critique_prompt_template = auto_j_single_template
+            elif args.critique_prompt_template == 'template_v1':
+                critique_prompt_template = template_v1
+            elif args.critique_prompt_template == 'template_v2':
+                critique_prompt_template = template_v2
+            elif args.critique_prompt_template == 'template_huan':
+                critique_prompt_template = template_huan.replace('{scenario_description}', webshop_description)
+            else:
+                raise NotImplementedError
+            new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, idx, n, critique_prompt_template)
+        elif args.expansion_sampling_method == 'vanilla':
             new_nodes = generate_new_states_fastchat_conv(node, args, task, idx, n)
     else:
         new_nodes = generate_new_states(node, args, task, idx, n)
@@ -580,11 +670,11 @@ def generate_new_states(node, args, task, idx, n):
 
     return list(unique_states.values())  # Return unique nodes as a list
 
-def get_context(node, args):
-    if "gpt-" in args.backend:
+def get_context(node, args, backend):
+    if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in args.backend or "llama31" in args.backend:
+    elif "Phi-3" in backend or "llama31" in backend or "Llama31" in backend:
         conv = get_conv_from_bottom(node, args.conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
@@ -593,11 +683,23 @@ def get_context(node, args):
     return context
 
 
+def get_critique_context(node, args, backend):
+    if "gpt-" in backend:
+        messages = get_messages_from_bottom_critique(node)
+        context =  messages
+    elif "Phi-3" in backend or "llama31" in backend or "Llama31" in backend:
+        conv = get_conv_from_bottom_critique(node, args.conv_template)
+        conv.append_message(conv.roles[1], None)
+        context =  conv
+    else:
+        raise NotImplementedError
+    return context
+
 def generate_new_states_fastchat_conv(node, args, task, idx, n):
     global failed_trajectories
     assert args.enable_fastchat_conv
 
-    context = get_context(node, args)
+    context = get_context(node, args, args.backend)
     response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     sampled_actions = ["\nAction: "+parse_action(response) for response in copy.deepcopy(response_list)]
 
@@ -683,7 +785,7 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
     added = False
 
     for sampling_index in range(n):
-        context = get_context(node, args)
+        context = copy.deepcopy(get_context(node, args))
         # conditional generation
         if len(sampled_response_list) > 0:
             original_observation = context.messages[-2][1]
@@ -736,6 +838,142 @@ def generate_new_states_conditional_fastchat_conv(node, args, task, idx, n):
             # Update the new state dictionary
             new_state['action'] = response
             new_state['observation'] = f"Observation: \n{obs}"
+            
+            env_state_clone = env.clone_state()  # Clone current environment state
+            new_node = Node(state=new_state, question=node.question, env_state=env_state_clone, parent=node)
+            new_node.env_state = local_sessions
+            if r > 0 or done:
+                logging.info(f"reward:{r}")
+                new_node.is_terminal = True
+                #print("rew", r)
+            new_node.reward = r
+            new_node.value = r
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+
+            if new_node.is_terminal and r < 1.0 and r > 0.0 and added == False:
+                trajectory = collect_trajectory_from_bottom(new_node)
+
+                # Check if there is already a failed trajectory with the same reward
+                existing_rewards = [t['r'] for t in failed_trajectories]
+
+                if r not in existing_rewards:
+                    print("adding to failed")
+                    added = True
+                    failed_trajectories.append({'trajectory': trajectory, 'final_answer': f"{action_line}", 'r': r})
+    if len(list(unique_states.values())) == 0:
+        print('sss')
+    return list(unique_states.values())  # Return unique nodes as a list
+
+
+def get_raw_observation(text):
+    keyword = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation:'
+    index = text.find(keyword)
+    if index != -1:
+        return text[:index]
+    else:
+        return text
+    
+def get_historical_context(context):
+    prompt = ''
+    for message in context.messages[11:]:
+        if message[1] is not None:
+            prompt += message[1].strip() + '\n'
+    return prompt
+
+def generate_new_states_critique_fastchat_conv(node, args, task, idx, n, critique_prompt_template):
+    global failed_trajectories
+    assert args.enable_fastchat_conv
+
+    previous_response = None
+    previous_obs = None
+
+    unique_states = {}  # Store unique states here
+    added = False
+
+    for sampling_index in range(n):
+        context = copy.deepcopy(get_context(node, args, args.backend))
+        critique = None
+        regenerate_prompt = None
+        if previous_response:
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            critique_context = copy.deepcopy(get_context(node, args, args.critique_backend))
+            # generating critique
+            if args.critique_prompt_template == 'template_huan':
+                original_observation = get_raw_observation(context.messages[-2][1])
+                critique_prompt_templat = critique_prompt_template.format(
+                    user_inst=critique_context.messages[10][1],
+                    historical_context=get_historical_context(critique_context),
+                    substep=f"{previous_response}\n{previous_obs}"
+                )
+                critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]]]
+                # critique_context.messages.extend(icl_prompt)
+                critique_context.messages.extend([['user', critique_prompt_templat.split('</system>')[-1]], ['assistant', None]])
+                critique = critique_gpt(critique_context, n=1, stop=["Observation:",], enable_fastchat_conv=args.enable_fastchat_conv)[0]
+            else:
+                critique_prompt = critique_prompt_template.format(previous_response=previous_response, previous_obs=previous_obs)
+                if isinstance(critique_context, list):  # for openai GPT
+                    original_observation = get_raw_observation(critique_context[-1]['content'])
+                    critique_context[-1]['content'] += critique_prompt + "\n"
+                else: # for fastchat
+                    original_observation = get_raw_observation(critique_context.messages[-2][1])
+                    critique_context.messages[-2][1] += critique_prompt + "\n"
+            if critique.startswith('Critique:'):
+                critique = critique[9:]
+            regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+            regenerate_prompt += previous_response + "\n"
+            regenerate_prompt += previous_obs + "\n"
+            regenerate_prompt += 'Critique: ' + critique + "\n\n"
+            regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
+            context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+
+        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+        previous_response = response
+        action = "\nAction: "+parse_action(response)
+    
+
+        local_sessions = copy.deepcopy(node.env_state) # : for roll back
+        env.sessions = local_sessions
+        logging.info(env.sessions)
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+        action_line = next((line.split(":")[1].strip() for line in action.split("\n") if line.startswith("Action") and ":" in line), None)
+
+        # Use thought and action to form a unique key
+        unique_key = f"{action_line}"
+        
+        # if unique_key in unique_states:
+        #     continue  # Skip if this state already exists
+
+        if action_line:
+            try:
+                # buy now action cost very long time
+                # start_time = time.time()
+                res = env.step(idx, action_line, args.enable_seq_mode)
+                # end_time = time.time()
+                # print("env.step action_line 执行时间: {:.4f} 秒".format(end_time - start_time))
+                obs = res[0]
+                r = res[1]
+                done = res[2]
+            except AssertionError:
+                obs = 'Invalid action!'
+                # res = env.step(idx, action_line, args.enable_seq_mode)
+                # print("err")
+                r = -1
+                done = False
+
+            previous_obs = f"Observation: \n{obs}"
+            
+            if action_line.startswith('think'):
+                observation = 'OK.'
+      
+            # Update the new state dictionary
+            new_state['action'] = response
+            new_state['observation'] = f"Observation: \n{obs}"
+
+            new_state['critique'] = critique
+            new_state['regenerate_prompt'] = regenerate_prompt
+
             
             env_state_clone = env.clone_state()  # Clone current environment state
             new_node = Node(state=new_state, question=node.question, env_state=env_state_clone, parent=node)

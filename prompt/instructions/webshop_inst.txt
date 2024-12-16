@@ -14,3 +14,4 @@ Your response should use the following format:
 
 Thought: I think ...
 Action: click[something]
+Remember that the action - search[keywords] can only be performed on the initial interface. In other cases, to search, you need to first perform action - click[Back to Search] to return to the initial interface.

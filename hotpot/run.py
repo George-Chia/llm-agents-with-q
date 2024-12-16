@@ -21,7 +21,7 @@ def load_idxs(split: str, part_num: int, part_idx: int = -1, training_indices_pa
         idxs = json.load(open("data_split/valid_indices.json"))
     elif split == 'test':
         idxs = json.load(open("data_split/test_indices.json"))
-    random.shuffle(idxs)
+    # random.shuffle(idxs)
     if part_num == 1:
         idxs = idxs
     else:
@@ -44,7 +44,7 @@ def run(args):
     if "Phi-3" in args.backend:
         trajectories_save_path = args.save_path+'_'+args.data_split+'_'+"Phi-3"+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     else:
-        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
+        trajectories_save_path = args.save_path+'_'+args.data_split+'_'+args.backend.split('-')[0]+'_'+args.algorithm+'_'+str(args.iterations)+"iterations"
     done_task_id = []
     if not os.path.exists(trajectories_save_path):
         os.makedirs(trajectories_save_path)
@@ -174,14 +174,14 @@ def parse_args():
     args.add_argument('--enable_fastchat_conv', action='store_true')
     args.add_argument('--enable_seq_mode', action='store_true')
     args.add_argument('--conv_template', type=str)
+    args.add_argument('--critique_conv_template', type=str)
     args.add_argument('--q_model_conv_template', type=str)
     args.add_argument('--enable_reflection', action='store_true')
 
     # for MCTS
+    args.add_argument('--disable_early_stop', action='store_true')
     args.add_argument('--enable_rollout_early_stop', action='store_true')
 
-    # various expansion_sampling_method for MCTS
-    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
 
     # for calculating DPO logits
     args.add_argument(
@@ -211,16 +211,20 @@ def parse_args():
         type=bool,
         default=False,
     )
-    args.add_argument(
-        "--disable_early_stop",
-        type=bool,
-        default=False,
-    )
 
     # for puct
     args.add_argument('--using_puct', action='store_true')
     args.add_argument('--puct_coeff', type=float, default=0.)
     args.add_argument('--enable_rollout_with_q', action='store_true')
+
+    # various expansion_sampling_method for MCTS
+    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
+
+    # for Critique
+    args.add_argument('--critique_backend', type=str,  default=None)
+    args.add_argument('--critique_prompt_template', type=str,  default=None)
+    args.add_argument('--critique_temperature', type=float)
+    args.add_argument('--enable_rollout_with_critique', action='store_true')
 
     args = args.parse_args()
     return args
