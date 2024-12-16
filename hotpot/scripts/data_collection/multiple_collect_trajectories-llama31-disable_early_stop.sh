@@ -18,7 +18,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1.0 \
         --iterations 20 \
-        --save_path trajectories-MCTS-critique-disable_early_stop \
+        --save_path trajectories-MCTS-template_huan-critique-disable_early_stop \
         --log logs/collect_trajectories_part-${j}.log \
         --max_depth 7 \
         --algorithm mcts \
@@ -26,6 +26,6 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --conv_template llama-3 \
         --disable_early_stop \
         --expansion_sampling_method critique \
-        --critique_prompt_template template_v1 &
+        --critique_prompt_template template_huan &
     echo $! >> logs/${exp_name}-collection_pid.txt
 done

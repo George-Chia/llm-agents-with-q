@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_workers=7
+num_workers=3
 node_num=9
 
 model_path=$LOCAL_LLM_PATH/Meta-Llama-3.1-8B-Instruct
