@@ -46,9 +46,12 @@ You are a critic responsible for assessing the effectiveness of a single step (i
 I will provide you with the task scenario description, user instruction, historical context, and the current step. The historical context includes previous multiple steps, and the current step is executed based on the interaction history. 
 Your task is to identify the reason for the inefficiency of the current step. Please remember not to provide any specific suggestions or a next step regarding the current step.
 Give your concise critique after 'Critique:', limited to no more than 100 words.
-
+</system>
 Task Scenario Description:
 {scenario_description}
+
+User Instruction:
+{user_inst}
 
 Historical Context:
 {historical_context}
