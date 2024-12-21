@@ -1,6 +1,6 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
-from utils import *
-import search
+from hotpot_tog.tog.utils import *
+
 import ast
 
 SPARQLPATH = "http://10.107.7.80:8890/sparql"  # depend on your own internal address and port, shown in Freebase folder's readme.md
@@ -47,13 +47,13 @@ def id2entity_name_or_type(entity_id):
     else:
         return results["results"]["bindings"][0]['tailEntity']['value']
     
-from freebase_func import *
-from prompt_list import *
+from hotpot_tog.tog.freebase_func import *
+from hotpot_tog.tog.prompt_list import *
 import json
 import time
 import openai
 import re
-from prompt_list import *
+from hotpot_tog.tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer
@@ -117,7 +117,8 @@ def relation_search_prune(entity_id, entity_name, pre_relations, pre_head, quest
     tail_relations = execurte_sparql(sparql_relations_extract_tail)
     tail_relations = replace_relation_prefix(tail_relations)
 
-    if args.remove_unnecessary_rel:
+    #移出不必要的关系
+    if True:
         head_relations = [relation for relation in head_relations if not abandon_rels(relation)]
         tail_relations = [relation for relation in tail_relations if not abandon_rels(relation)]
     
@@ -131,19 +132,12 @@ def relation_search_prune(entity_id, entity_name, pre_relations, pre_head, quest
     total_relations = head_relations+tail_relations
     total_relations.sort()  # make sure the order in prompt is always equal
     
-    if args.prune_tools == "llm":
-        prompt = construct_relation_prune_prompt(question, entity_name, total_relations, args)
 
-        result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
-        flag, retrieve_relations_with_scores = clean_relations(result, entity_id, head_relations) 
+    prompt = construct_relation_prune_prompt(question, entity_name, total_relations, args)
 
-    elif args.prune_tools == "bm25":
-        topn_relations, topn_scores = compute_bm25_similarity(question, total_relations, args.width)
-        flag, retrieve_relations_with_scores = clean_relations_bm25_sent(topn_relations, topn_scores, entity_id, head_relations) 
-    else:
-        model = SentenceTransformer('sentence-transformers/msmarco-distilbert-base-tas-b')
-        topn_relations, topn_scores = retrieve_top_docs(question, total_relations, model, args.width)
-        flag, retrieve_relations_with_scores = clean_relations_bm25_sent(topn_relations, topn_scores, entity_id, head_relations) 
+    result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
+    flag, retrieve_relations_with_scores = clean_relations(result, entity_id, head_relations)
+
 
     if flag:
         return retrieve_relations_with_scores
@@ -180,20 +174,11 @@ def entity_score(question, entity_candidates_id, score, relation, args):
     entity_candidates, entity_candidates_id = zip(*zipped_lists)
     entity_candidates = list(entity_candidates)
     entity_candidates_id = list(entity_candidates_id)
-    if args.prune_tools == "llm":
-        prompt = construct_entity_score_prompt(question, relation, entity_candidates)
+    prompt = construct_entity_score_prompt(question, relation, entity_candidates)
 
-        result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
-        return [float(x) * score for x in clean_scores(result, entity_candidates)], entity_candidates, entity_candidates_id
+    result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
+    return [float(x) * score for x in clean_scores(result, entity_candidates)], entity_candidates, entity_candidates_id
 
-    elif args.prune_tools == "bm25":
-        topn_entities, topn_scores = compute_bm25_similarity(question, entity_candidates, args.width)
-    else:
-        model = SentenceTransformer('sentence-transformers/msmarco-distilbert-base-tas-b')
-        topn_entities, topn_scores = retrieve_top_docs(question, entity_candidates, model, args.width)
-    if if_all_zero(topn_scores):
-        topn_scores = [float(1/len(topn_scores))] * len(topn_scores)
-    return [float(x) * score for x in topn_scores], topn_entities, entity_candidates_id
 
     
 def update_history(entity_candidates, entity, scores, entity_candidates_id, total_candidates, total_scores, total_relations, total_entities_id, total_topic_entities, total_head):
@@ -261,9 +246,9 @@ def process_search(question, cluster_chain_of_entities, obs, args):
 
     for keyword in keywords_list:
         action = "search[" + keyword + "]"
-        myenv = search.WikiEnv()
-        obsi, r, done, info = myenv.step(action)
-        obs += obsi
+        #myenv = search.WikiEnv()
+        #obsi, r, done, info = myenv.step(action)
+        #obs += obsi
     return obs
 def reasoning(question, cluster_chain_of_entities, args,retrivainfo):
     obs = retrivainfo

@@ -1,14 +1,14 @@
-from prompt_list import *
+
 import json
 import time
 import openai
 import re
-from prompt_list import *
+from hotpot_tog.tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer
 
-openai.api_base = ""
+openai.api_base = "https://api.huiyan.chat/v1"
 
 def retrieve_top_docs(query, docs, model, width=3):
     """
@@ -109,7 +109,7 @@ def run_llm(prompt, temperature, max_tokens, opeani_api_keys, engine="gpt-3.5-tu
 
     if "llama" in engine.lower():
         openai.api_key = "EMPTY"
-        openai.api_base = ""  # your local llama server port
+        openai.api_base = "http://localhost:8000/v1"  # your local llama server port
         engine = openai.Model.list()["data"][0]["id"]
     else:
         openai.api_key = opeani_api_keys
@@ -118,11 +118,11 @@ def run_llm(prompt, temperature, max_tokens, opeani_api_keys, engine="gpt-3.5-tu
     message_prompt = {"role":"user","content":prompt}
     messages.append(message_prompt)
     f = 0
-    openai.api_base = ""
-    client = openai.OpenAI(api_key=opeani_api_keys,base_url = '')
+
     while(f == 0):
         try:
-            response = client.chat.completions.create(
+            response = openai.Completion.create(
+                    api_key=opeani_api_keys,
                     model=engine,
                     messages = messages,
                     temperature=temperature,
