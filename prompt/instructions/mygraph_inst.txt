@@ -1,0 +1,4 @@
+Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be two types:
+(1) Prune[entity], which prune the candidate relations in the knowledge graph and return a list of pruned relations. If the question cannot be answered based on the current observation,choose this action.
+(2) Finish[answer], which returns the answer and finishes the task. If the question can be answered based on the current observation,choose this action.
+After each observation, provide the next Thought and next Action.

@@ -1,0 +1,80 @@
+[
+    [
+        {
+            "role": "user",
+            "content": "Question: Rift Valley Province is located in a nation that uses which form of currency?"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: I needed to know which nation Rift Valley Province is located in. Action: Prune[Rift Valley]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [Rift Valley Province, location.administrative_division.country, Kenya]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: Now,I know Rift Valley Province is located in Kenya. I need to know which form of currency Kenya use. Action: Prune[Kenya]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [Rift Valley Province, location.administrative_division.country, Kenya],[Kenya, location.country.currency_used, Kenyan shilling]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: Based on the given knowledge triplets, Rift Valley Province is located in Kenya, which uses the Kenyan shilling as its currency. Therefore, the answer to the question is Kenyan shilling. Action: Finish[Kenyan shilling]"
+        }
+    ],
+    [
+        {
+            "role": "user",
+            "content": "Question: The artist nominated for The Long Winter lived where?"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: I need to search who nominated for The Long Winter. Action: Prune[The Long Winter]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: I know that Laura Ingalls Wilder nominated for The Long Winter. Then I need to know where Laura Ingalls Wilder lived. Action: Prune[Laura Ingalls Wilder]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder],[Laura Ingalls Wilder, people.place_lived.location, De Smet]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: Based on the given knowledge triplets, the author of The Long Winter, Laura Ingalls Wilder, lived in De Smet. Action: Finish[De Smet]"
+        }
+    ],
+    [
+        {
+            "role": "user",
+            "content": "Question: Which tennis player is younger, John Newcombe or Květa Peschke?"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: I need to know the date of birth of John Newcombe and Květa Peschke. Action: Prune[Květa Peschke]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [Květa Peschke, date of birth, +1975-07-09T00:00:00Z]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: Then I need to know the date of birth of John Newcombe. Action: Prune[John Newcombe]"
+        },
+        {
+            "role": "user",
+            "content": "Observation: Knowledge Triplets: [John Newcombe, date of birth, +1944-05-23T00:00:00Z]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: Based on the given knowledge triplets and my knowledge, John Newcombe was born on May 23, 1944, and Květa Peschke was born on July 9, 1975. Therefore, {Květa Peschke} is younger than John Newcombe. Action: Finish[Květa Peschke]"
+        }
+    ]
+]
