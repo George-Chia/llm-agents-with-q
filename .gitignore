@@ -25,3 +25,4 @@ webshop/trained_models/
 model_worker_*
 webshop/hotpot_traj*
 webshop/webshop_traj*
+math/
