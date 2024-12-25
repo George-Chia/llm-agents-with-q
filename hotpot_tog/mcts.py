@@ -850,9 +850,9 @@ def select(n,node):
         if len(my_entity_candidates_id) == 0:
             continue
         else:
-            entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
+            #entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
             # 保留全部实体
-            #entity_candidates_id = my_entity_candidates_id
+            entity_candidates_id = my_entity_candidates_id
 
         # 修改，不需要对实体的打分
         scores, entity_candidates, entity_candidates_id = entity_score(question, entity_candidates_id, entity['score'],entity['relation'], args)
