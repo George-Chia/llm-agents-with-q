@@ -93,7 +93,17 @@ def get_unique_trajectories(failed_trajectories, num=5):
         if len(unique_trajectories) >= num:
             break
     return unique_trajectories
-    
+
+
+def collect_trajectory_nodes(node):
+    trajectory = [node.state]
+    while node.parent:
+        trajectory.append(node.parent.state)
+        node = node.parent
+    trajectory.append(node.question)
+    return trajectory[::-1]
+
+
 def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     all_tree_nodes_list = collect_all_nodes(node)
     best_tree_child = max(all_tree_nodes_list, key=lambda x: x.reward)
@@ -111,6 +121,7 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     task_dict['best child reward'] = best_tree_child.reward
     task_dict['best child em'] = best_tree_child.em
     task_dict['best_trajectory_index_list'] = best_trajectory_index_list
+    task_dict['best_trajectory_nodes'] = collect_trajectory_nodes(best_child)
     task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
@@ -661,7 +672,7 @@ def get_context(node, conv_template, backend):
     if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend or 'Llama31-KTO' in backend:
+    elif "Phi-3" in backend or "lama31" in backend or 'auto-j' in backend:
         conv = get_conv_from_bottom(node, conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv

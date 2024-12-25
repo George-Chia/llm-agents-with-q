@@ -50,22 +50,43 @@ abalation of iterations
 # average best child reward:  0.54
 # average best child em:  0.54
 
-trajectories_save_path = 'hotpot/trajectories-MCTS-KTO_critique_test_llama31_mcts_30iterations'
-trajectories_save_path = 'hotpot/trajectories-MCTS-KTO-template_huan_1211-KTO_critique_test_llama31_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-iteration-v1_test_llama31_mcts_30iterations'
 
-# trajectories_save_path = "hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations"
-# Sample number:  950
-# average best reward:  0.6936842105263158
-# average best em:  0.6936842105263158
-# average best child reward:  0.6157894736842106
-# average best child em:  0.6157894736842106
+'''
+policy+critique 3-20:
+Sample number:  58
+average success length:  2.4722222222222223
+average best reward:  0.6896551724137931
+average best em:  0.6896551724137931
+average best child reward:  0.6206896551724138
+average best child em:  0.6206896551724138
 
-# trajectories_save_path = "hotpot/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations"
-# Sample number:  1000
-# average best reward:  0.66
-# average best em:  0.66
-# average best child reward:  0.558
-# average best child em:  0.558
+policy+critique 3-30:
+Sample number:  100
+average success length:  2.6875
+average best reward:  0.69
+average best em:  0.69
+average best child reward:  0.64
+average best child em:  0.64
+
+policy  3-20:
+Sample number:  67
+average success length:  2.3181818181818183
+average best reward:  0.6865671641791045
+average best em:  0.6865671641791045
+average best child reward:  0.6567164179104478
+average best child em:  0.6567164179104478
+
+policy 3-30:
+Sample number:  71
+average success length:  2.7435897435897436
+average best reward:  0.6338028169014085
+average best em:  0.6338028169014085
+average best child reward:  0.5492957746478874
+average best child em:  0.5492957746478874
+
+
+'''
 
 done_task_id = []
 

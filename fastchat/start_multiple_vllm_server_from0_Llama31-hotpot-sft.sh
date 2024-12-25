@@ -1,11 +1,11 @@
 #!/bin/bash
 
-num_workers=4
+num_workers=3
 node_num=9
 
-model_path=$LOCAL_LLM_PATH/Meta-Llama-3.1-8B-Instruct
-explore_model_name=llama31
-exp_name=llama31-collect-MCTS
+model_path=/home/zhaiyuanzhao/LLM-Agents-with-Q/hotpot/trained_models/template_huan/action-round1-checkpoint-51/merged_model
+explore_model_name=llama31-hotpot
+exp_name=llama31-hotpot-collect-MCTS
 
 fs_worker_port=21011
 worker_idx=0
