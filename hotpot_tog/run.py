@@ -146,7 +146,7 @@ def run(args):
 
 def parse_args():
     args = argparse.ArgumentParser()
-    args.add_argument('--backend', type=str,  default='gpt-4o-mini')
+    args.add_argument('--backend', type=str,  default='gpt-3.5-turbo')
     args.add_argument('--temperature', type=float, default=1.0)
     args.add_argument('--data_split', type=str, default="test", help="Following ETO")
     args.add_argument('--training_indices_path', type=str, default="data_split/train_indices.json")
@@ -163,13 +163,13 @@ def parse_args():
     # args.add_argument('--task_start_index', type=int, default=900)
     # args.add_argument('--task_end_index', type=int, default=1000)
     args.add_argument('--prompt_sample', type=str, choices=['standard', 'cot'],default='cot')
-    args.add_argument('--n_generate_sample', type=int, default=1)  
+    args.add_argument('--n_generate_sample', type=int, default=5)
     args.add_argument('--n_evaluate_sample', type=int, default=1)
-    args.add_argument('--iterations', type=int, default=1)
+    args.add_argument('--iterations', type=int, default=10)
     args.add_argument('--log', type=str,default='logs/gpt-4.log')
-    args.add_argument('--algorithm', type=str, choices=['mcts', 'rap', 'tot', 'simple', 'beam'],default='simple')
+    args.add_argument('--algorithm', type=str, choices=['mcts', 'rap', 'tot', 'simple', 'beam'],default='mcts')
 
-    # 此即图谱中的搜索深度
+    # 图谱中的搜索深度
     args.add_argument('--max_depth', type=int, default=5)
     #增加搜索宽度（没用到）
     args.add_argument('--search_width', type=int, default=3)

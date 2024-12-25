@@ -254,18 +254,18 @@ A: First, China, Norway, Finland, Estonia and Georgia is close to Russia. Second
 Q: What drug did the actor who portrayed the character Urethane Wheels Guy overdosed on?
 A: First, Mitchell Lee Hedberg portrayed character Urethane Wheels Guy. Second, Mitchell Lee Hedberg overdose Heroin. The answer is {Heroin}."""
 
-prompt_search = """Given a question and the associated retrieved knowledge graph triplets (entity, relation, entity), You need to think about what information you need to find in Wikipedia to answer this question and generate some keywords(less than four) for query.Only give me the answer and do not output any other words..If the information is insufficient or irrelevant, refine your query and search again until you are able to answer the question:
+prompt_search = """Given a question and the associated retrieved knowledge graph triplets (entity, relation, entity), You need to think about what information you need to find in Wikipedia to answer this question and generate some keywords(less than four) for query.Only give me the answer and do not output any other words.If the information is insufficient or irrelevant, refine your query and search again until you are able to answer the question:
 Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
 Knowledge Triplets: Taste cannot be controlled by law., media_common.quotation.author, Thomas Jefferson
-retrivainfo: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
-Keywords: Thomas Jefferson
+existing information: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
+Keywords: [Thomas,Jefferson]
 
 Q: Who is the coach of the team owned by Steve Bisciotti?
 Knowledge Triplets: Steve Bisciotti, sports.professional_sports_team.owner_s, Baltimore Ravens
 Steve Bisciotti, sports.sports_team_owner.teams_owned, Baltimore Ravens
 Steve Bisciotti, organization.organization_founder.organizations_founded, Allegis Group
-retrivainfo: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
-Keywords: Baltimore Ravens
+existing information: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
+Keywords: [Baltimore Ravens]
 
 Q: The country with the National Anthem of Bolivia borders which nations?
 Knowledge Triplets: National Anthem of Bolivia, government.national_anthem_of_a_country.anthem, UnName_Entity
@@ -273,6 +273,6 @@ National Anthem of Bolivia, music.composition.composer, Leopoldo Benedetto Vince
 National Anthem of Bolivia, music.composition.lyricist, José Ignacio de Sanjinés
 UnName_Entity, government.national_anthem_of_a_country.country, Bolivia
 Bolivia, location.country.national_anthem, UnName_Entity
-retrivainfo: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
-Keywords: Bolivia
+existing information: Libya,officially the State of Libya,is a country in the Maghreb region of North Africa.
+Keywords: [Bolivia]
 """

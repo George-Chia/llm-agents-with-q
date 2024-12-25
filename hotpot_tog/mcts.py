@@ -114,11 +114,40 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
+#对三元组打分
+def triple_scores(triples, question,thought):
+    scores = []
+    prompt = f"Question: {question}\nThought: {thought}\n"
+    for i, triple in enumerate(triples):
+        prompt += f"Triple {i + 1}: {triple}\n"
+    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.9, 0.8, 0.2]"
+
+    # 调用 GPT 模型获取评分
+    score_output = gpt(prompt, n=1, stop=None)[0].strip()
+
+    # 解析评分
+    try:
+        # 提取方括号中的分数列表
+        score_str = score_output.split('[')[1].split(']')[0]
+        scores = list(map(float, score_str.split(',')))
+        # 确保分数在有效范围内
+        scores = [score if 0 <= score <= 0.9 else 0.0 for score in scores]
+    except (IndexError, ValueError):
+        scores = [0.0] * len(triples)  # 如果无法解析为浮点数，设为0.0
+    return scores
+
+
 def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None,
                        dpo_policy_model=None, dpo_reference_model=None, tokenizer=None, enable_reflection=False):
     global gpt
     global failed_trajectories
     global reflection_map
+    #定义一个字符串，储存每次迭代后已经掌握的信息
+    global information_explored
+    # 定义一个字符串，储存每次迭代后搜索wiki得到的信息
+    global wiki_explored
+    information_explored = ""
+    wiki_explored = ""
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
     global critique_gpt
@@ -136,17 +165,19 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     if to_print:
         print(idx, x)
 
-    root = Node(state=None, question=x)
-    cur_task = x
+    # 把中心词传给根节点
+    root = Node(state=None, question=x[0], topic_entity=x[1])
+    cur_task = x[0]
     if enable_reflection:
         instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
         icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"    
-    else:  
-        instruction_path = "../prompt/instructions/hotpot_inst.txt"
-        icl_path = "../prompt/icl_examples/hotpot_icl.json"
+    else:
+        instruction_path = "../prompt/instructions/mygraph_inst.txt"
+        icl_path = "../prompt/icl_examples/mygraph_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
-    raw_icl = json.load(open(icl_path))
+    # 文件编码 utf-8
+    raw_icl = json.load(open(icl_path, encoding='utf-8'))
 
     observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
     root.messages = messages
@@ -180,9 +211,10 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         
         expand_node(node, args, task, args.max_depth)
 
+
         while node.is_terminal or not node.children:
             logging.info(f"Depth limit node found at iteration {i + 1}, reselecting...")
-            node = select_node(root)
+            node = select_node(root,i)
             expand_node(node, args, task, args.max_depth)
 
         if args.enable_value_evaluation:
@@ -424,13 +456,23 @@ def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=No
     elif not_finished_trajectories:
         return 0,0,0,0
 
-def select_node(node):
+def select_node(node,i = 0):
+    #根据wiki选择初始节点
+    if node.depth == 0 and i != 0:
+        node_children_relation = []
+        for child in node.children:
+            node_children_relation.append(child.triple)
+        score_relation = triple_scores(node_children_relation,node.question,wiki_explored)
+        max_score_index = score_relation.index(max(score_relation))
+        selected_child = node.children[max_score_index]
+        return selected_child
+
     while node and node.children:
         logging.info(f"Selecting from {len(node.children)} children at depth {node.depth}.")
         
         terminal_children = [child for child in node.children if child.is_terminal]
         terminal_status = [child.is_terminal for child in node.children]
-        
+
         if len(terminal_children) == len(node.children):
             logging.info(f"All children are terminal at depth {node.depth}. Backtracking...")
             if node.parent:  
@@ -452,12 +494,64 @@ def select_node(node):
         
     return node  # This will return None if all paths from the root are exhausted
 
+#判断需要wiki搜索的内容
+def generate_query(question="",myinformation_explored="",mywiki_explored=""):
+    global gpt
+    prompt = f"""Given the question and the existing information, the existing knowledge triplets, what additional information is needed to answer the question? Please provide a list of keywords (no more than 3) that can be used for further Wikipedia search. Here are some examples:
+
+    Q: Find the person who said "Taste cannot be controlled by law", what did this person die from?
+    Knowledge Triplets: Taste cannot be controlled by law., media_common.quotation.author, Thomas Jefferson
+    existing information: Libya, officially the State of Libya, is a country in the Maghreb region of North Africa.
+    Keywords: [Thomas, Jefferson]
+
+    Q: Who is the coach of the team owned by Steve Bisciotti?
+    Knowledge Triplets: Steve Bisciotti, sports.professional_sports_team.owner_s, Baltimore Ravens
+    Steve Bisciotti, sports.sports_team_owner.teams_owned, Baltimore Ravens
+    Steve Bisciotti, organization.organization_founder.organizations_founded, Allegis Group
+    existing information: Libya, officially the State of Libya, is a country in the Maghreb region of North Africa.
+    Keywords: [Baltimore Ravens]
+
+    Q: The country with the National Anthem of Bolivia borders which nations?
+    Knowledge Triplets: National Anthem of Bolivia, government.national_anthem_of_a_country.anthem, UnName_Entity
+    National Anthem of Bolivia, music.composition.composer, Leopoldo Benedetto Vincenti
+    National Anthem of Bolivia, music.composition.lyricist, José Ignacio de Sanjinés
+    UnName_Entity, government.national_anthem_of_a_country.country, Bolivia
+    Bolivia, location.country.national_anthem, UnName_Entity
+    existing information: Libya, officially the State of Libya, is a country in the Maghreb region of North Africa.
+    Keywords: [Bolivia]
+
+    Q: {question}
+    Knowledge Triplets: {myinformation_explored}
+    existing information: {mywiki_explored}
+    Keywords:"""
+    response = gpt(prompt, n=1, stop=None)[0]
+
+    # Extract keywords from the response using regular expression
+    match = re.search(r'Keywords:\s*\[(.*?)\]', response)
+    if match:
+        keywords = [keyword.strip() for keyword in match.group(1).split(",")]
+    else:
+        keywords = []
+
+    return keywords
+
+
 def expand_node(node, args, task, max_depth):
     n = args.n_generate_sample
     if node.depth >= max_depth:
         logging.info("Depth limit reached")
         print("Depth limit reached")
         node.is_terminal = True
+        #达到最大深度，判断是否需要wiki
+        myenv = wikienv.WikiEnv()
+        if node.reward !=1:
+            this_time_imformation = ""
+            global wiki_explored
+            keywords = generate_query(node.question, information_explored,wiki_explored)
+            if len(keywords) != 0:
+                for keyword in keywords:
+                    this_time_imformation += myenv.search_step(keyword)
+            wiki_explored = wiki_explored + this_time_imformation
         return
 
     assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method
@@ -545,6 +639,7 @@ def rollout_random(node, args, task, idx, max_depth=7):
     depth = node.depth
     n = args.rollout_width
     assert n==1, "large rollout_width is meanless for rollout_random"
+
     while not node.is_terminal and depth < max_depth:
         # Generate new states
         new_states = []
@@ -565,7 +660,8 @@ def rollout_random(node, args, task, idx, max_depth=7):
         #     values = get_values(task, node.question, child_prompts, args.n_evaluate_sample)
         
         # max_value_index = values.index(max(values))
-        max_value_index=random.randint(0,len(new_states)-1)
+        #max_value_index=random.randint(0,len(new_states)-1)
+        max_value_index = random.randint(0,len(new_states)-1)
         node = new_states[max_value_index] 
         depth += 1
         if depth == max_depth:
@@ -672,25 +768,200 @@ def get_context(node, conv_template, backend):
         raise NotImplementedError
     return context
 
+
+# 找出所有候选关系
+from tqdm import tqdm
+import argparse
+from utils import *
+from tog.freebase_func import *
+import random
+from tog.client import *
+
+
+def select(n,node):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str,
+                        default="webqsp", help="choose the dataset.")
+    parser.add_argument("--max_length", type=int,
+                        default=2048, help="the max length of LLMs output.")
+    parser.add_argument("--temperature_exploration", type=float,
+                        default=0.4, help="the temperature in exploration stage.")
+    parser.add_argument("--temperature_reasoning", type=float,
+                        default=0, help="the temperature in reasoning stage.")
+    parser.add_argument("--width", type=int,
+                        default=n, help="choose the search width of ToG.")
+    parser.add_argument("--depth", type=int,
+                        default=1, help="choose the search depth of ToG.")
+    parser.add_argument("--remove_unnecessary_rel", type=bool,
+                        default=True, help="whether removing unnecessary relations.")
+    parser.add_argument("--LLM_type", type=str,
+                        default="gpt-4o-mini", help="base LLM model.")
+    parser.add_argument("--opeani_api_keys", type=str,
+                        default="sk-nPQVAFBDhZoMmYEnPPxYKk0p86jfCMxyQaqnCLV5qKq0XHxK",
+                        help="if the LLM_type is gpt-3.5-turbo or gpt-4, you need add your own openai api keys.")
+    parser.add_argument("--num_retain_entity", type=int,
+                        default=1, help="Number of entities retained during entities search.")
+    parser.add_argument("--prune_tools", type=str,
+                        default="bm25", help="prune tools for ToG, can be llm (same as LLM_type), bm25 or sentencebert.")
+    args = parser.parse_args()
+    question = node.question
+    topic_entity = node.topic_entity
+
+
+    pre_relations = []
+    pre_heads = [-1] * len(topic_entity)
+    flag_printed = False
+    search_depth = 1
+
+    current_entity_relations_list = []
+    i = 0
+    for entity in topic_entity:
+        if entity != "[FINISH_ID]":
+            retrieve_relations_with_scores = relation_search_prune(entity, topic_entity[entity], pre_relations,
+                                                                   pre_heads[i], question, args)
+            current_entity_relations_list.extend(retrieve_relations_with_scores)
+        i += 1
+    total_candidates = []
+    total_scores = []
+    total_relations = []
+    total_entities_id = []
+    total_topic_entities = []
+    total_head = []
+    num_relation = 0
+
+    for entity in current_entity_relations_list:
+        if entity['head']:
+            my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], True)
+        else:
+            my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], False)
+
+        entity_candidates = [id2entity_name_or_type(entity_id) for entity_id in my_entity_candidates_id]
+        indices_to_remove_entity = []
+        for i in range(len(entity_candidates)):
+            if node.depth>0:
+                if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity'] or entity_candidates[i] == str(node.parent.topic_entity.keys()):
+                    indices_to_remove_entity.append(i)
+            else:
+                if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity']:
+                    indices_to_remove_entity.append(i)
+        for i in sorted(indices_to_remove_entity, reverse=True):
+            del my_entity_candidates_id[i]
+
+        if len(my_entity_candidates_id) == 0:
+            continue
+        else:
+            entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
+            # 保留全部实体
+            #entity_candidates_id = my_entity_candidates_id
+
+        # 修改，不需要对实体的打分
+        scores, entity_candidates, entity_candidates_id = entity_score(question, entity_candidates_id, entity['score'],entity['relation'], args)
+        total_candidates, total_scores, total_relations, total_entities_id, total_topic_entities, total_head = update_history(entity_candidates, entity, scores, entity_candidates_id, total_candidates, total_scores, total_relations,total_entities_id, total_topic_entities, total_head)
+
+    flag, chain_of_entities, entities_id, pre_relations, pre_heads = entity_prune(total_entities_id, total_relations,total_candidates,total_topic_entities, total_head,total_scores, args)
+    #self.cluster_chain_of_entities.append(chain_of_entities)
+    #移出 unname
+    indices_to_remove = []
+    for i in range(len(total_entities_id)):
+        if total_candidates[i] == 'UnName_Entity':
+            indices_to_remove.append(i)
+    for i in sorted(indices_to_remove, reverse=True):
+        del total_entities_id[i]
+        del total_relations[i]
+        del total_candidates[i]
+        del total_scores[i]
+
+    mychain_of_entities = []
+    for i in range(len(total_relations)):
+        mychain = [topic_entity[total_topic_entities[i]],total_relations[i],total_candidates[i]]
+        mychain_of_entities.append(mychain)
+
+    node.entity_list = entities_id
+    new_topic_entity = []
+    for i in range(len(total_candidates)):
+        new_topic_entity.append({})
+        new_topic_entity[i][total_entities_id[i]] = total_candidates[i]
+    #node.topic_entity = new_topic_entity
+    # 对整个三元组打分，select top N
+    thought = str(node.state)
+    total_scores = triple_scores(mychain_of_entities,question,thought)
+    # 找到 N 个最高分的位置
+    top_n_indices = sorted(range(len(total_scores)), key=lambda i: total_scores[i], reverse=True)[:n]
+
+    # 根据这些位置重新排列 mychain_of_entities, new_topic_entity, total_relations, total_scores
+    mychain_of_entities = [mychain_of_entities[i] for i in top_n_indices]
+    new_topic_entity = [new_topic_entity[i] for i in top_n_indices]
+    total_relations = [total_relations[i] for i in top_n_indices]
+    total_scores = [total_scores[i] for i in top_n_indices]
+    return total_relations,new_topic_entity ,mychain_of_entities,total_scores
+
+#直接生成所有的新状态
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
 
     context = get_context(node, args.conv_template, args.backend)
-    response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
+    tried_actions = []
 
+    unique_states = {}
+
+    # 扩展的关系
+    current_entity_relations_list = []
+    # 扩展的实体
+    current_entity_list = []
+    # 扩展的三元组
+    current_chain_list = []
+    total_scores = []
+    current_entity_relations_list, current_entity_list, current_chain_list, total_scores = select(n, node)
+    #扩展的节点数
+    i = len(current_entity_relations_list)
+    #图谱中没找到信息
+    if i == 0:
+        action_type = "Finish[]"
+        action_param = "I don't found enough information"
+        new_state = node.state.copy()
+
+        if action_type.startswith("Finish[") and action_type.endswith("]"):
+            # 把当前节点传进环境
+            env.env.env.node = node
+            obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+            # Update the new state dictionary
+            # new_state['thought'] = thought_line
+            new_state['action'] = f"Thought: {action_param} Action: {action_type}"
+            new_state['observation'] = f"Observation: {action_param}"
+            unique_key = f"{action_param}::{action_type}"
+
+            # 新节点的topic_entity即父节点的关系剪枝后的entity
+            new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity)
+            new_node.is_terminal = True
+            #new_node.reward = -1
+            new_node.depth = node.depth + 1
+            if r == 1:
+                new_node.em = info.get('em')
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+            logging.info(f"Feedback: {info}")
+
+            if new_node.is_terminal and r == 0:
+                trajectory = collect_trajectory_from_bottom(new_node)
+                # print(trajectory)
+                # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
+                failed_trajectories.append(
+                    {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+        return list(unique_states.values())
+    response_list = gpt(context, n=i, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
     action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
     # sampled_actions = response_list
 
     logging.info(f"SAMPLED ACTION: {action_lines}")
-    tried_actions = []
-    
-    unique_states = {}  # Store unique states here
-    for thought_line, action_line in zip(thought_lines, action_lines):
+      # Store unique states here
+
+    #处理图谱扩展
+    for thought_line, action_line, current_entity_relation, current_entity, current_chain ,current_score in zip(thought_lines, action_lines,current_entity_relations_list,current_entity_list,current_chain_list,total_scores):
         new_state = node.state.copy()  # Make a copy of the parent node's state
 
         # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
+        unique_key = f"{thought_line}::{action_line}::{current_entity_relation}"
         
         if unique_key in unique_states:
             continue  # Skip if this state already exists
@@ -701,31 +972,50 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
             action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
 
-            # 把当前节点传进环境
-            env.env.env.node = node
-            obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+            if action_type.startswith("Finish[") and action_type.endswith("]"):
+                # 把当前节点传进环境
+                env.env.env.node = node
+                obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+                # Update the new state dictionary
+                # new_state['thought'] = thought_line
+                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                new_state['observation'] = f"Observation: {obs}"
 
-            # Update the new state dictionary
-            # new_state['thought'] = thought_line
-            new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-            new_state['observation'] = f"Observation: {obs}"
+                # 新节点的topic_entity即父节点的关系剪枝后的entity
+                new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity)
+                new_node.is_terminal = True
+                new_node.reward = 1
+                new_node.depth = node.depth + 1
+                if r == 1:
+                    new_node.em = info.get('em')
+                unique_states[unique_key] = new_node  # Add this state to unique_states
+                logging.info(f"NEW NODE: {new_node}")
+                logging.info(f"Feedback: {info}")
 
-            # 新节点的topic_entity即父节点的关系剪枝后的entity
-            new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity)
-            new_node.is_terminal = r == 1 or done
-            new_node.reward = r
-            new_node.depth = node.depth + 1
-            if r == 1:
-                new_node.em = info.get('em')
-            unique_states[unique_key] = new_node  # Add this state to unique_states
-            logging.info(f"NEW NODE: {new_node}")
-            logging.info(f"Feedback: {info}")
-
-            if new_node.is_terminal and r == 0:
-                trajectory = collect_trajectory_from_bottom(new_node)
-                #print(trajectory)
-                #if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
-                failed_trajectories.append({'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+                if new_node.is_terminal and r == 0:
+                    trajectory = collect_trajectory_from_bottom(new_node)
+                    # print(trajectory)
+                    # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
+                    failed_trajectories.append(
+                        {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+            else:
+                #直接扩展节点
+                select_relation = current_entity_relation
+                obs = f"Knowledge Triplets:  {current_chain}\n"
+                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                new_state['observation'] = f"Observation: {obs}"
+                new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
+                new_node.is_terminal = False
+                new_node.triple = node.triple + str(current_chain)
+                if current_score>0.9:
+                    new_node.value = 0.9
+                else:
+                    new_node.value = current_score
+                new_node.depth = node.depth + 1
+                unique_states[unique_key] = new_node
+                logging.info(f"NEW NODE: {new_node}")
+                info = select_relation
+                logging.info(f"Feedback: {info}")
 
     return list(unique_states.values())  # Return unique nodes as a list
 

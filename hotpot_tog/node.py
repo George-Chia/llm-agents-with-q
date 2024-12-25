@@ -50,6 +50,8 @@ class Node:
         self.topic_entity = topic_entity
         # 增加当前实体列表
         self.entity_list = []
+        # 增加当前轨迹
+        self.triple = ""
     def uct(self):
         if self.visits == 0 and self.value >= 0:
             return float('inf')
@@ -178,9 +180,14 @@ def collect_trajectory_from_bottom(node):
             trajectory.insert(1, f"Observation: {node.state['observation']}\n")
         else:
             logging.warning(f"Missing or empty observation in node at depth {node.depth}")
-            
+        # 将可能的列表转成字符串
+        if isinstance(node.state, list):
+            # 如果 state 是列表，则将其转换为字符串
+            trajectory.append('\n'.join(map(str, node.state)))
+        else:
+            trajectory.append(str(node.state))
         node = node.parent
-    return '\n'.join(trajectory)
+        return '\n'.join(trajectory)
 
 def get_conv_from_bottom(node, conv_template):
     conv = get_conv_template(conv_template)

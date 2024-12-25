@@ -146,7 +146,7 @@ class WikiEnv(gym.Env):
         self.obs = self.get_page_obs(self.page)
         self.lookup_keyword = self.lookup_list = self.lookup_cnt = None
   
-  def prune(self,node):
+  def select(self,node):
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str,
                         default="webqsp", help="choose the dataset.")
@@ -226,6 +226,7 @@ class WikiEnv(gym.Env):
     for i in range(len(total_candidates)):
       new_topic_entity[total_entities_id[i]] = total_candidates[i]
     node.topic_entity = new_topic_entity
+    return chain_of_entities,total_scores[0]
 
 
 
@@ -256,13 +257,16 @@ class WikiEnv(gym.Env):
         self.obs = f"(Result {self.lookup_cnt + 1} / {len(self.lookup_list)}) " + self.lookup_list[self.lookup_cnt]
         self.lookup_cnt += 1
     # 剪枝获得下一节点的实体
-    elif action.startswith("prune[") and action.endswith("]"):
-      self.prune(self.node)
-      self.obs = f"Knowledge Triplets:  {self.cluster_chain_of_entities}\n"
+    elif action.startswith("select[") and action.endswith("]"):
+      r,current_triple = self.select(self.node)
+      self.obs = f"Knowledge Triplets:  {current_triple}\n"
+      reward = r
     elif action.startswith("finish[") and action.endswith("]"):
       answer = action[len("finish["):-1]
       # self.answer = answer
       done = True
+      # 找到答案
+      reward = 1
       self.obs = f"Episode finished, reward = {reward}\n"
     elif action.startswith("think[") and action.endswith("]"):
       self.obs = "Nice thought."

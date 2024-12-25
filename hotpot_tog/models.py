@@ -36,7 +36,7 @@ if api_base != "":
     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
     openai.api_base = api_base
 # key 读取失败，显式设置
-api_key= "sk-F29EYhchwPz1aEmoRu0U7W2IQL7vRxjHyFKkPV9irCOteTeB"
+api_key= "e2baf9a04c6255347ed14ca3ea9257669cb7d79b"
 openai.api_base= "https://api.huiyan-ai.cn/v1"
 @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):
@@ -68,8 +68,14 @@ def chatgpt(messages, model="gpt-3.5-turbo", temperature=1.0, max_tokens=100, n=
         res = completions_with_backoff(model=model, messages=messages, temperature=temperature, max_tokens=max_tokens, n=cnt, stop=stop)
         outputs.extend([choice["message"]["content"] for choice in res["choices"]])
         # log completion tokens
-        completion_tokens += res["usage"]["completion_tokens"]
-        prompt_tokens += res["usage"]["prompt_tokens"]
+        if "usage" in res and "completion_tokens" in res["usage"]:
+            completion_tokens += res["usage"]["completion_tokens"]
+            prompt_tokens += res["usage"]["prompt_tokens"]
+        else:
+            print("Warning: 'usage' key not found in API response.")
+            completion_tokens += 0
+            prompt_tokens += 0
+
     # print('Model: ', model)
     return outputs
     

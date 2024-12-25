@@ -57,11 +57,16 @@ def compute_bm25_similarity(query, corpus, width=3):
     tokenized_query = query.split(" ")
 
     doc_scores = bm25.get_scores(tokenized_query)
-    
+    # 修改打分，直接返回全部结构
+    '''
     relations = bm25.get_top_n(tokenized_query, corpus, n=width)
     doc_scores = sorted(doc_scores, reverse=True)[:width]
-
     return relations, doc_scores
+    '''
+    scored_relations = list(zip(corpus, doc_scores))
+    scored_relations.sort(key=lambda x: x[1], reverse=True)
+    relations, scores = zip(*scored_relations)
+    return list(relations), list(scores)
 
 
 def clean_relations(string, entity_id, head_relations):
@@ -104,7 +109,45 @@ def clean_relations_bm25_sent(topn_relations, topn_scores, entity_id, head_relat
         i+=1
     return True, relations
 
+#原来的runllm运行失败，暂时没找到原因，换一个自己写的
 
+def openai_chat_completion(model_engine="gpt-3.5-turbo", in_context=False, temperature = 1,prompt=""):
+    chatLog = []
+    save_ornot = ""
+    if model_engine.startswith("gpt") or model_engine.startswith("text-davinci"):
+        openai.api_base = "https://api.huiyan.chat/v1"
+        openai.api_key = "sk-F29EYhchwPz1aEmoRu0U7W2IQL7vRxjHyFKkPV9irCOteTeB"
+    elif model_engine.startswith("Wizard") or model_engine.startswith("llama") or model_engine.startswith("vicuna"):
+        openai.api_base = "http://175.6.27.233:8000/v1"
+        openai.api_key = "sk-F29EYhchwPz1aEmoRu0U7W2IQL7vRxjHyFKkPV9irCOteTeB"
+    else:
+        print(f"[-]Model do not support: {model_engine}")
+        return
+
+    user_input = prompt
+    if in_context:
+        chatLog.append({"role": "user", "content": user_input})
+    else:
+        chatLog = [{"role": "user", "content": user_input}]
+
+    if model_engine.startswith("text-davinci"):
+        prompt = "\n".join([f"{i['role']}: {i['content']}" for i in chatLog]) + "\nassistant: "
+        chat = openai.Completion.create(model = model_engine, prompt = prompt, temperature = temperature)
+    else:
+        chat = openai.ChatCompletion.create(model = model_engine, messages = chatLog, temperature = temperature)
+    if isinstance(chat, str):
+
+        chat = json.loads(chat)
+
+    if chat.get("error"):
+        print("Error: ", chat["error"]['message'])
+
+
+    elif chat.get("choices"):
+        answer = chat["choices"][0]['message']['content'].lstrip()
+        chatLog.append({"role": "assistant", "content": answer})
+
+    return answer
 def run_llm(prompt, temperature, max_tokens, opeani_api_keys, engine="gpt-3.5-turbo"):
 
     if "llama" in engine.lower():
@@ -119,17 +162,21 @@ def run_llm(prompt, temperature, max_tokens, opeani_api_keys, engine="gpt-3.5-tu
     messages.append(message_prompt)
     f = 0
 
+
     while(f == 0):
         try:
+
+            api_key=opeani_api_keys,
+            base_url = 'https://api.huiyan.chat/v1',
             response = openai.Completion.create(
-                    api_key=opeani_api_keys,
                     model=engine,
                     messages = messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    frequency_penalty=0,
-                    presence_penalty=0)
+                    )
             result = response.choices[0].message.content
+
+            #result = openai_chat_completion(model_engine=engine, in_context=False, temperature=temperature, prompt=messages)
             f = 1
         except:
             print("openai error, retry")

@@ -112,16 +112,15 @@ def relation_search_prune(entity_id, entity_name, pre_relations, pre_head, quest
     sparql_relations_extract_head = sparql_head_relations % (entity_id)
     head_relations = execurte_sparql(sparql_relations_extract_head)
     head_relations = replace_relation_prefix(head_relations)
-    
-    sparql_relations_extract_tail= sparql_tail_relations % (entity_id)
+
+    sparql_relations_extract_tail = sparql_tail_relations % (entity_id)
     tail_relations = execurte_sparql(sparql_relations_extract_tail)
     tail_relations = replace_relation_prefix(tail_relations)
 
-    #移出不必要的关系
-    if True:
+    if args.remove_unnecessary_rel:
         head_relations = [relation for relation in head_relations if not abandon_rels(relation)]
         tail_relations = [relation for relation in tail_relations if not abandon_rels(relation)]
-    
+
     if pre_head:
         tail_relations = list(set(tail_relations) - set(pre_relations))
     else:
@@ -129,20 +128,29 @@ def relation_search_prune(entity_id, entity_name, pre_relations, pre_head, quest
 
     head_relations = list(set(head_relations))
     tail_relations = list(set(tail_relations))
-    total_relations = head_relations+tail_relations
+    total_relations = head_relations + tail_relations
     total_relations.sort()  # make sure the order in prompt is always equal
-    
 
-    prompt = construct_relation_prune_prompt(question, entity_name, total_relations, args)
+    if args.prune_tools == "llm":
+        prompt = construct_relation_prune_prompt(question, entity_name, total_relations, args)
 
-    result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
-    flag, retrieve_relations_with_scores = clean_relations(result, entity_id, head_relations)
+        result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
+        flag, retrieve_relations_with_scores = clean_relations(result, entity_id, head_relations)
 
+    elif args.prune_tools == "bm25":
+        topn_relations, topn_scores = compute_bm25_similarity(question, total_relations, args.width)
+        flag, retrieve_relations_with_scores = clean_relations_bm25_sent(topn_relations, topn_scores, entity_id,
+                                                                         head_relations)
+    else:
+        model = SentenceTransformer('sentence-transformers/msmarco-distilbert-base-tas-b')
+        topn_relations, topn_scores = retrieve_top_docs(question, total_relations, model, args.width)
+        flag, retrieve_relations_with_scores = clean_relations_bm25_sent(topn_relations, topn_scores, entity_id,
+                                                                         head_relations)
 
     if flag:
         return retrieve_relations_with_scores
     else:
-        return [] # format error or too small max_length
+        return []  # format error or too small max_length
     
     
 def entity_search(entity, relation, head=True):
@@ -176,8 +184,11 @@ def entity_score(question, entity_candidates_id, score, relation, args):
     entity_candidates_id = list(entity_candidates_id)
     prompt = construct_entity_score_prompt(question, relation, entity_candidates)
 
-    result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
-    return [float(x) * score for x in clean_scores(result, entity_candidates)], entity_candidates, entity_candidates_id
+    # 调用失败，改成随机数
+    #result = run_llm(prompt, args.temperature_exploration, args.max_length, args.opeani_api_keys, args.LLM_type)
+    score_entity =[0]
+
+    return score_entity, entity_candidates, entity_candidates_id
 
 
     
