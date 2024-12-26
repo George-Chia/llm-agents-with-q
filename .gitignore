@@ -26,4 +26,5 @@ model_worker_*
 webshop/hotpot_traj*
 webshop/webshop_traj*
 math/
-hotpot_tog/kg/
+kgqa/kg/
+kgqa/trajectories*
