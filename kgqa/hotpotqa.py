@@ -9,10 +9,6 @@ import random
 # 从环境变量中读取
 LOCAL_LLM_PATH = os.getenv('LOCAL_LLM_PATH', 'default_path')
 
-# 或者从配置文件中读取
-with open('config.txt', 'r') as file:
-   LOCAL_LLM_PATH = file.read().strip()
-
 
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2-medium')
 def get_token_length(text):

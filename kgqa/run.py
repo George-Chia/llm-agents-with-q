@@ -174,10 +174,34 @@ def parse_args():
     #增加搜索宽度（没用到）
     args.add_argument('--search_width', type=int, default=3)
     #设置每次剪枝后的实体数（没用到）
-    args.add_argument('--width', type=int, default=3)
+    # args.add_argument('--width', type=int, default=3)
     args.add_argument('--rollout_width', type=int, default=1)
     args.add_argument('--save_path', type=str,default='trajectories')
     args.add_argument('--enable_value_evaluation', action='store_true')
+
+    args.add_argument("--dataset", type=str,
+                        default="webqsp", help="choose the dataset.")
+    args.add_argument("--max_length", type=int,
+                        default=2048, help="the max length of LLMs output.")
+    args.add_argument("--temperature_exploration", type=float,
+                        default=0.4, help="the temperature in exploration stage.")
+    args.add_argument("--temperature_reasoning", type=float,
+                        default=0, help="the temperature in reasoning stage.")
+    args.add_argument("--width", type=int,    # --n_generate_sample
+                        default=3, help="choose the search width of ToG.")
+    # args.add_argument("--depth", type=int,    # --max_depth
+    #                     default=1, help="choose the search depth of ToG.")
+    args.add_argument("--remove_unnecessary_rel", type=bool,
+                        default=True, help="whether removing unnecessary relations.")
+    args.add_argument("--LLM_type", type=str,
+                        default="gpt-4o-mini", help="base LLM model.")
+    args.add_argument("--opeani_api_keys", type=str,
+                        default="sk-nPQVAFBDhZoMmYEnPPxYKk0p86jfCMxyQaqnCLV5qKq0XHxK",
+                        help="if the LLM_type is gpt-3.5-turbo or gpt-4, you need add your own openai api keys.")
+    args.add_argument("--num_retain_entity", type=int,
+                        default=1, help="Number of entities retained during entities search.")
+    args.add_argument("--prune_tools", type=str,
+                        default="bm25", help="prune tools for ToG, can be llm (same as LLM_type), bm25 or sentencebert.")
 
     args.add_argument('--enable_fastchat_conv', action='store_true',default='enable_fastchat_conv')
     args.add_argument('--enable_seq_mode', action='store_true')

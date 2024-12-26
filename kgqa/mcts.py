@@ -554,7 +554,7 @@ def expand_node(node, args, task, max_depth):
             wiki_explored = wiki_explored + this_time_imformation
         return
 
-    assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method
+    assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method yet
 
     if args.enable_fastchat_conv:
         if args.expansion_sampling_method == 'conditional':
@@ -778,32 +778,7 @@ import random
 from tog.client import *
 
 
-def select(n,node):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str,
-                        default="webqsp", help="choose the dataset.")
-    parser.add_argument("--max_length", type=int,
-                        default=2048, help="the max length of LLMs output.")
-    parser.add_argument("--temperature_exploration", type=float,
-                        default=0.4, help="the temperature in exploration stage.")
-    parser.add_argument("--temperature_reasoning", type=float,
-                        default=0, help="the temperature in reasoning stage.")
-    parser.add_argument("--width", type=int,
-                        default=n, help="choose the search width of ToG.")
-    parser.add_argument("--depth", type=int,
-                        default=1, help="choose the search depth of ToG.")
-    parser.add_argument("--remove_unnecessary_rel", type=bool,
-                        default=True, help="whether removing unnecessary relations.")
-    parser.add_argument("--LLM_type", type=str,
-                        default="gpt-4o-mini", help="base LLM model.")
-    parser.add_argument("--opeani_api_keys", type=str,
-                        default="sk-nPQVAFBDhZoMmYEnPPxYKk0p86jfCMxyQaqnCLV5qKq0XHxK",
-                        help="if the LLM_type is gpt-3.5-turbo or gpt-4, you need add your own openai api keys.")
-    parser.add_argument("--num_retain_entity", type=int,
-                        default=1, help="Number of entities retained during entities search.")
-    parser.add_argument("--prune_tools", type=str,
-                        default="bm25", help="prune tools for ToG, can be llm (same as LLM_type), bm25 or sentencebert.")
-    args = parser.parse_args()
+def select(n, node, args):
     question = node.question
     topic_entity = node.topic_entity
 
@@ -893,7 +868,7 @@ def select(n,node):
     new_topic_entity = [new_topic_entity[i] for i in top_n_indices]
     total_relations = [total_relations[i] for i in top_n_indices]
     total_scores = [total_scores[i] for i in top_n_indices]
-    return total_relations,new_topic_entity ,mychain_of_entities,total_scores
+    return total_relations,new_topic_entity, mychain_of_entities,total_scores
 
 #直接生成所有的新状态
 def generate_new_states_fastchat_conv(node, args, task, n):
@@ -911,7 +886,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     # 扩展的三元组
     current_chain_list = []
     total_scores = []
-    current_entity_relations_list, current_entity_list, current_chain_list, total_scores = select(n, node)
+    current_entity_relations_list, current_entity_list, current_chain_list, total_scores = select(n, node, args)
     #扩展的节点数
     i = len(current_entity_relations_list)
     #图谱中没找到信息
