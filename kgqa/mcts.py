@@ -114,7 +114,7 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
-#对三元组打分
+#对三元组打分，没有用这个
 def triple_scores(triples, question,thought):
     scores = []
     prompt = f"Question: {question}\nThought: {thought}\n"
@@ -536,6 +536,7 @@ def generate_query(question="",myinformation_explored="",mywiki_explored=""):
     return keywords
 
 
+
 def expand_node(node, args, task, max_depth):
     n = args.n_generate_sample
     if node.depth >= max_depth:
@@ -551,7 +552,9 @@ def expand_node(node, args, task, max_depth):
             if len(keywords) != 0:
                 for keyword in keywords:
                     this_time_imformation += myenv.search_step(keyword)
-            wiki_explored = wiki_explored + this_time_imformation
+            #wiki_explored = wiki_explored + this_time_imformation
+            #只保留当前的wiki检索信息,增加长度限制
+            wiki_explored = this_time_imformation[:1000]
         return
 
     assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method yet
@@ -856,7 +859,8 @@ def select(n, node, args):
     for i in range(len(total_candidates)):
         new_topic_entity.append({})
         new_topic_entity[i][total_entities_id[i]] = total_candidates[i]
-    #node.topic_entity = new_topic_entity
+    # node.topic_entity = new_topic_entity
+    '''
     # 对整个三元组打分，select top N
     thought = str(node.state)
     total_scores = triple_scores(mychain_of_entities,question,thought)
@@ -868,7 +872,9 @@ def select(n, node, args):
     new_topic_entity = [new_topic_entity[i] for i in top_n_indices]
     total_relations = [total_relations[i] for i in top_n_indices]
     total_scores = [total_scores[i] for i in top_n_indices]
-    return total_relations,new_topic_entity, mychain_of_entities,total_scores
+    '''
+
+    return total_relations,new_topic_entity, mychain_of_entities
 
 #直接生成所有的新状态
 def generate_new_states_fastchat_conv(node, args, task, n):
@@ -886,7 +892,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     # 扩展的三元组
     current_chain_list = []
     total_scores = []
-    current_entity_relations_list, current_entity_list, current_chain_list, total_scores = select(n, node, args)
+    current_entity_relations_list, current_entity_list, current_chain_list = select(n, node, args)
     #扩展的节点数
     i = len(current_entity_relations_list)
     #图谱中没找到信息
@@ -932,7 +938,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
       # Store unique states here
 
     #处理图谱扩展
-    for thought_line, action_line, current_entity_relation, current_entity, current_chain ,current_score in zip(thought_lines, action_lines,current_entity_relations_list,current_entity_list,current_chain_list,total_scores):
+    for thought_line, action_line, current_entity_relation, current_entity, current_chain in zip(thought_lines, action_lines,current_entity_relations_list,current_entity_list,current_chain_list):
         new_state = node.state.copy()  # Make a copy of the parent node's state
 
         # Use thought and action to form a unique key
@@ -982,11 +988,20 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
                 new_node.is_terminal = False
                 new_node.triple = node.triple + str(current_chain)
-                if current_score>0.9:
-                    new_node.value = 0.9
-                else:
-                    new_node.value = current_score
                 new_node.depth = node.depth + 1
+                # 找到节点的下一跳
+                next_entity_relations_list, next_entity_list, next_triple_list = select(n, new_node, args)
+                new_node.state['observation'] = f"Observation: "+ str(next_triple_list)
+                #搜索信息
+                myenv = wikienv.WikiEnv()
+                this_time_imformation = ""
+                keywords = generate_query(node.question, new_node.state['observation'], "")
+                if len(keywords) != 0:
+                    for keyword in keywords:
+                        this_time_imformation += myenv.search_step(keyword)
+                # wiki_explored = wiki_explored + this_time_imformation
+                # 增加长度限制
+                new_node.wikiinformation = f"Some information from wikipedia: "+this_time_imformation[:1000]
                 unique_states[unique_key] = new_node
                 logging.info(f"NEW NODE: {new_node}")
                 info = select_relation

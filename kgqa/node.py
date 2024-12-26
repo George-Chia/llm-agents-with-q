@@ -52,6 +52,8 @@ class Node:
         self.entity_list = []
         # 增加当前轨迹
         self.triple = ""
+        # 增加当前对wiki的搜索
+        self.wikiinformation = ""
     def uct(self):
         if self.visits == 0 and self.value >= 0:
             return float('inf')
@@ -218,7 +220,8 @@ def get_messages_from_bottom(node):
         #     critique = f"{node.state['regenerate_prompt']}"
         #     messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"+critique+node.state['observation']})
         # else:
-        messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"})
+        # 增加 wiki 信息
+        messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
         messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
         # if 'regenerate_prompt' in node.state.keys():
         #     critique = f"{node.state['regenerate_prompt']}"

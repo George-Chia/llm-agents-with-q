@@ -6,19 +6,19 @@
         },
         {
             "role": "assistant",
-            "content": "Thought: I needed to know which nation Rift Valley Province is located in. Action: Prune[Rift Valley]"
+            "content": "Thought: I needed to know which nation Rift Valley Province is located in. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [Rift Valley Province, location.administrative_division.country, Kenya]"
+            "content": "Observation: Knowledge Triplets: [Rift Valley Province, location.administrative_division.country, Kenya]   Some information from wikipedia: Kenya, country in East Africa famed for its scenic landscapes and vast wildlife preserves. Its Indian Ocean coast provided historically important ports by which goods from Arabian and Asian traders have entered the continent for many centuries. Along that coast, which holds some of the finest beaches in Africa, are predominantly Muslim Swahili cities such as Mombasa, a historic centre that has contributed much to the musical and culinary heritage of the country."
         },
         {
             "role": "assistant",
-            "content": "Thought: Now,I know Rift Valley Province is located in Kenya. I need to know which form of currency Kenya use. Action: Prune[Kenya]"
+            "content": "Thought: Now,I know Rift Valley Province is located in Kenya. I need to know which form of currency Kenya use. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [Rift Valley Province, location.administrative_division.country, Kenya],[Kenya, location.country.currency_used, Kenyan shilling]"
+            "content": "Observation: Knowledge Triplets: [Kenya, location.country.currency_used, Kenyan shilling]   Some information from wikipedia: 1 Kenyan Shilling (KES) is equivalent to 0.007737 US Dollars (USD)."
         },
         {
             "role": "assistant",
@@ -32,19 +32,19 @@
         },
         {
             "role": "assistant",
-            "content": "Thought: I need to search who nominated for The Long Winter. Action: Prune[The Long Winter]"
+            "content": "Thought: I need to search who nominated for The Long Winter. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder]"
+            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder]   Some information from wikipedia: Laura Ingalls Wilder was an American author best known for her Little House series of children's books, which are based on her own experiences growing up in a pioneer family in the American Midwest. Born on February 7, 1867, in Lake Pepin, Wisconsin, Wilder lived a life of frequent moves with her family, traveling by covered wagon to various parts of the frontier, including Minnesota, Iowa, Missouri, Kansas, Indian Territory, and Dakota Territory. She began teaching in rural schools at the age of 15 and married Almanzo J. Wilder in 1885. They later settled on a farm near Mansfield, Missouri, where she started writing for various periodicals."
         },
         {
             "role": "assistant",
-            "content": "Thought: I know that Laura Ingalls Wilder nominated for The Long Winter. Then I need to know where Laura Ingalls Wilder lived. Action: Prune[Laura Ingalls Wilder]"
+            "content": "Thought: I know that Laura Ingalls Wilder nominated for The Long Winter. Then I need to know where Laura Ingalls Wilder lived. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder],[Laura Ingalls Wilder, people.place_lived.location, De Smet]"
+            "content": "Observation: Knowledge Triplets: [The Long Winter, book.written_work.author, Laura Ingalls Wilder],[Laura Ingalls Wilder, people.place_lived.location, De Smet]   Some information from wikipedia: Laura Ingalls Wilder (February 7, 1867 – February 10, 1957) was an American writer who is best known for her Little House on the Prairie series of children's books, which were based on her own childhood experiences. These books have been cherished for their depiction of life in the American frontier during the late 19th century."
         },
         {
             "role": "assistant",
@@ -58,19 +58,19 @@
         },
         {
             "role": "assistant",
-            "content": "Thought: I need to know the date of birth of John Newcombe and Květa Peschke. Action: Prune[Květa Peschke]"
+            "content": "Thought: I need to know the date of birth of John Newcombe and Květa Peschke. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [Květa Peschke, date of birth, +1975-07-09T00:00:00Z]"
+            "content": "Observation: Knowledge Triplets: [Květa Peschke, date of birth, +1975-07-09T00:00:00Z]   Some information from wikipedia: Květa Peschke is a retired professional tennis player from the Czech Republic."
         },
         {
             "role": "assistant",
-            "content": "Thought: Then I need to know the date of birth of John Newcombe. Action: Prune[John Newcombe]"
+            "content": "Thought: Then I need to know the date of birth of John Newcombe. Action: Select[]"
         },
         {
             "role": "user",
-            "content": "Observation: Knowledge Triplets: [John Newcombe, date of birth, +1944-05-23T00:00:00Z]"
+            "content": "Observation: Knowledge Triplets: [John Newcombe, date of birth, +1944-05-23T00:00:00Z]   Some information from wikipedia: John Newcombe is a former Australian tennis player who was born on May 23, 1944, in Sydney, New South Wales, Australia."
         },
         {
             "role": "assistant",
