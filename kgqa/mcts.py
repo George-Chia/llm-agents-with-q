@@ -828,7 +828,9 @@ def select(n, node, args):
         if len(my_entity_candidates_id) == 0:
             continue
         else:
-            #entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
+            if len(my_entity_candidates_id) >100:
+                my_entity_candidates_id = random.sample(my_entity_candidates_id, 100)
+            # entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
             # 保留全部实体
             entity_candidates_id = my_entity_candidates_id
 
