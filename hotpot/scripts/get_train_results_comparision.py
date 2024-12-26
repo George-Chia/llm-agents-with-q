@@ -8,9 +8,21 @@ trajectories_save_path = 'hotpot/trajectories-MCTS-gpt4o_critique_test_llama31_m
 trajectories_save_path_comparision = 'hotpot/trajectories-3n/trajectories-MCTS-gpt4o_critique_test_llama31_mcts_30iterations'
 '''
 
+# MCTS
 trajectories_save_path = 'hotpot/trajectories-3-5n-right-InTurn-NotGood/trajectories-MCTS-3n_test_llama31_mcts_30iterations'
+
+# Critique-MCTS
 trajectories_save_path = 'hotpot/trajectories-3n-template_huan/trajectories-MCTS-critique-template_huan1211_test_llama31_mcts_30iterations'
-trajectories_save_path_comparision = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-iteration-huan_test_llama31_mcts_30iterations'
+
+# Critique-MCTS-w/o_training_Critique
+trajectories_save_path = 'hotpot/trajectories-Critique-MCTS-3n-policy-iteration-huan_test_llama31_mcts_30iterations'
+
+# Critique-MCTS-w/o_training_policy
+trajectories_save_path = 'hotpot/trajectories_SIGIR/Iteration1/test/trajectories-Critique-MCTS-3n-policy-critique-iteration-huan_test_llama31_mcts_30iterations'
+
+
+# Critique-MCTS-iteration1
+trajectories_save_path_comparision = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-Iter1Epoch3-huan_test_llama31_mcts_30iterations'
 
 
 best_reward = []

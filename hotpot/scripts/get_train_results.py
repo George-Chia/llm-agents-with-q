@@ -50,7 +50,9 @@ abalation of iterations
 # average best child reward:  0.54
 # average best child em:  0.54
 
-trajectories_save_path = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-iteration-v1_test_llama31_mcts_30iterations'
+trajectories_save_path = 'hotpot/trajectories-MCTS-n3-critique-disable_early_stop_train_llama31_mcts_20iterations'
+
+# trajectories_save_path = ""
 
 '''
 policy+critique 3-20:
