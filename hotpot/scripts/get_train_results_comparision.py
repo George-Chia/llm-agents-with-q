@@ -4,7 +4,7 @@ import json
 # Critique-MCTS-iteration1-epoch3
 trajectories_save_path = 'hotpot/trajectories_SIGIR/Iteration1/test/trajectories-Critique-MCTS-3n-policy-critique-iteration-huan_test_llama31_mcts_30iterations'
 # Critique-MCTS-iteration1-epoch1
-trajectories_save_path_comparision = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-Iter1Epoch3-huan_test_llama31_mcts_30iterations'
+trajectories_save_path_comparision = 'hotpot/trajectories-MCTS-n3-critique-disable_early_stop_train_llama31_mcts_20iterations'
 
 
 # # Critique-MCTS-iteration0-training-set
