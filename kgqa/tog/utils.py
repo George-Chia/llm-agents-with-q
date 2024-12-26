@@ -3,7 +3,7 @@ import json
 import time
 import openai
 import re
-from kgqa.tog.prompt_list import *
+from tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer

@@ -1,2 +1,0 @@
-LOCAL_LLM_PATH=D:\models
-     
