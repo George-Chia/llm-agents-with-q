@@ -36,7 +36,7 @@ if api_base != "":
     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
     openai.api_base = api_base
 # key 读取失败，显式设置
-api_key= "e2baf9a04c6255347ed14ca3ea9257669cb7d79b"
+api_key= "sk-nPQVAFBDhZoMmYEnPPxYKk0p86jfCMxyQaqnCLV5qKq0XHxK"
 openai.api_base= "https://api.huiyan-ai.cn/v1"
 @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):
