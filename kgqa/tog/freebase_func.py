@@ -1,5 +1,5 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
-from hotpot_tog.tog.utils import *
+from kgqa.tog.utils import *
 
 import ast
 
@@ -47,13 +47,13 @@ def id2entity_name_or_type(entity_id):
     else:
         return results["results"]["bindings"][0]['tailEntity']['value']
     
-from hotpot_tog.tog.freebase_func import *
-from hotpot_tog.tog.prompt_list import *
+from kgqa.tog.freebase_func import *
+from kgqa.tog.prompt_list import *
 import json
 import time
 import openai
 import re
-from hotpot_tog.tog.prompt_list import *
+from kgqa.tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer
