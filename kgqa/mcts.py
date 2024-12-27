@@ -1,6 +1,9 @@
 import itertools
 import numpy as np
 from functools import partial
+
+from torch.ao.quantization.backend_config.onednn import observation_type
+
 from models import gpt
 import wikienv, wrappers
 import requests
@@ -167,6 +170,17 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
     # 把中心词传给根节点
     root = Node(state=None, question=x[0], topic_entity=x[1])
+    #增加observation
+    # 扩展的关系
+    current_entity_relations_list = []
+    # 扩展的实体
+    current_entity_list = []
+    # 扩展的三元组
+    current_chain_list = []
+    # total_scores = []
+    current_entity_relations_list, current_entity_list, current_chain_list = select(args.n_generate_sample, root, args)
+    root.state['observation'] = f"Observation: " + str(current_chain_list)
+
     cur_task = x[0]
     if enable_reflection:
         instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
@@ -208,6 +222,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             else:
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return node.state, node.value, all_nodes, node.reward, node.em
+
+        #设置终止
+        if node.is_terminal and node.reward != 1:
+            logging.info(f"There is not enough information in the knowledge graph.")
+            break
         
         expand_node(node, args, task, args.max_depth)
 
@@ -544,6 +563,7 @@ def expand_node(node, args, task, max_depth):
         print("Depth limit reached")
         node.is_terminal = True
         #达到最大深度，判断是否需要wiki
+        '''
         myenv = wikienv.WikiEnv()
         if node.reward !=1:
             this_time_imformation = ""
@@ -555,6 +575,7 @@ def expand_node(node, args, task, max_depth):
             #wiki_explored = wiki_explored + this_time_imformation
             #只保留当前的wiki检索信息,增加长度限制
             wiki_explored = this_time_imformation[:1000]
+            '''
         return
 
     assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method yet
@@ -650,6 +671,9 @@ def rollout_random(node, args, task, idx, max_depth=7):
         while len(new_states) == 0:
             if args.enable_fastchat_conv:
                 new_states = generate_new_states_fastchat_conv(node, args, task, n)
+                if new_states.is_terminal and new_states.reward != 1:
+                    logging.info(f"There is not enough information in the knowledge graph.")
+                    break
             else:
                 new_states = generate_new_states(node, args, task, n)
 
@@ -780,101 +804,168 @@ from tog.freebase_func import *
 import random
 from tog.client import *
 
+# 图谱中无信息，llm直接回答问题，提取答案
+def clean_results(string):
+    if "{" in string:
+        start = string.find("{") + 1
+        end = string.find("}")
+        content = string[start:end]
+        return content
+    else:
+        return "NULL"
+
+#第一轮选择节点
+def choose_node(question,observation_list, triple_list,args):
+    idx = 0
+    # 构造提示（prompt）
+    prompt = f"""
+    Question: {question}
+
+    You are given a list of possible next observations and the triples you can obtain by choosing each branch.
+    Your task is to determine which branch is most likely to help answer the question.
+
+    Observations and corresponding triples:
+    """
+
+    for i, (obs, triples) in enumerate(zip(observation_list, triple_list)):
+        prompt += f"\nBranch {i}:\n"
+        prompt += f"  Observation: {obs}\n"
+        prompt += f"  Triples: {', '.join(triples)}\n"
+
+    prompt += """
+    Examples:
+    Branch 0:
+      Observation: The sky is blue.
+      Triples: (sky, color, blue)
+    Branch 1:
+      Observation: The grass is green.
+      Triples: (grass, color, green)
+    Response: [1]
+
+    Branch 0:
+      Observation: The cat is sleeping.
+      Triples: (cat, action, sleeping)
+    Branch 1:
+      Observation: The dog is barking.
+      Triples: (dog, action, barking)
+    Response: [0]
+
+    Please provide the index of the branch that is most likely to help answer the question in the format [index].
+    """
+
+    # 调用大模型
+    response = gpt(prompt, n=1, stop=None)[0].strip()
+
+    # 解析响应以获取索引
+    try:
+        # 提取索引部分
+        idx_str = response.strip('[]')
+        idx = int(idx_str)
+        if idx < 0 or idx >= len(observation_list):
+            raise ValueError("Index out of range")
+    except ValueError:
+        logging.error(f"Invalid response from GPT: {response}")
+        idx = 0  # 默认选择第一个分支
+    return idx
+
 
 def select(n, node, args):
-    question = node.question
-    topic_entity = node.topic_entity
+    if len(node.next_triple_list) == 0:
+        question = node.question
+        topic_entity = node.topic_entity
 
 
-    pre_relations = []
-    pre_heads = [-1] * len(topic_entity)
-    flag_printed = False
-    search_depth = 1
+        pre_relations = []
+        pre_heads = [-1] * len(topic_entity)
+        flag_printed = False
+        search_depth = 1
 
-    current_entity_relations_list = []
-    i = 0
-    for entity in topic_entity:
-        if entity != "[FINISH_ID]":
-            retrieve_relations_with_scores = relation_search_prune(entity, topic_entity[entity], pre_relations,
-                                                                   pre_heads[i], question, args)
-            current_entity_relations_list.extend(retrieve_relations_with_scores)
-        i += 1
-    total_candidates = []
-    total_scores = []
-    total_relations = []
-    total_entities_id = []
-    total_topic_entities = []
-    total_head = []
-    num_relation = 0
+        current_entity_relations_list = []
+        i = 0
+        for entity in topic_entity:
+            if entity != "[FINISH_ID]":
+                retrieve_relations_with_scores = relation_search_prune(entity, topic_entity[entity], pre_relations,
+                                                                       pre_heads[i], question, args)
+                current_entity_relations_list.extend(retrieve_relations_with_scores)
+            i += 1
+        total_candidates = []
+        total_scores = []
+        total_relations = []
+        total_entities_id = []
+        total_topic_entities = []
+        total_head = []
+        num_relation = 0
 
-    for entity in current_entity_relations_list:
-        if entity['head']:
-            my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], True)
-        else:
-            my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], False)
-
-        entity_candidates = [id2entity_name_or_type(entity_id) for entity_id in my_entity_candidates_id]
-        indices_to_remove_entity = []
-        for i in range(len(entity_candidates)):
-            if node.depth>0:
-                if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity'] or entity_candidates[i] == str(node.parent.topic_entity.keys()):
-                    indices_to_remove_entity.append(i)
+        for entity in current_entity_relations_list:
+            if entity['head']:
+                my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], True)
             else:
-                if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity']:
-                    indices_to_remove_entity.append(i)
-        for i in sorted(indices_to_remove_entity, reverse=True):
-            del my_entity_candidates_id[i]
+                my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], False)
 
-        if len(my_entity_candidates_id) == 0:
-            continue
-        else:
-            if len(my_entity_candidates_id) >100:
-                my_entity_candidates_id = random.sample(my_entity_candidates_id, 100)
-            # entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
-            # 保留全部实体
-            entity_candidates_id = my_entity_candidates_id
+            entity_candidates = [id2entity_name_or_type(entity_id) for entity_id in my_entity_candidates_id]
+            indices_to_remove_entity = []
+            for i in range(len(entity_candidates)):
+                if node.depth>0:
+                    if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity'] or entity_candidates[i] == str(node.parent.topic_entity.keys()):
+                        indices_to_remove_entity.append(i)
+                else:
+                    if entity_candidates[i] == 'UnName_Entity' or my_entity_candidates_id[i] == entity['entity']:
+                        indices_to_remove_entity.append(i)
+            for i in sorted(indices_to_remove_entity, reverse=True):
+                del my_entity_candidates_id[i]
 
-        # 修改，不需要对实体的打分
-        scores, entity_candidates, entity_candidates_id = entity_score(question, entity_candidates_id, entity['score'],entity['relation'], args)
-        total_candidates, total_scores, total_relations, total_entities_id, total_topic_entities, total_head = update_history(entity_candidates, entity, scores, entity_candidates_id, total_candidates, total_scores, total_relations,total_entities_id, total_topic_entities, total_head)
+            if len(my_entity_candidates_id) == 0:
+                continue
+            else:
+                if len(my_entity_candidates_id) >100:
+                    my_entity_candidates_id = random.sample(my_entity_candidates_id, 100)
+                # entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
+                # 保留全部实体
+                entity_candidates_id = my_entity_candidates_id
 
-    flag, chain_of_entities, entities_id, pre_relations, pre_heads = entity_prune(total_entities_id, total_relations,total_candidates,total_topic_entities, total_head,total_scores, args)
-    #self.cluster_chain_of_entities.append(chain_of_entities)
-    #移出 unname
-    indices_to_remove = []
-    for i in range(len(total_entities_id)):
-        if total_candidates[i] == 'UnName_Entity':
-            indices_to_remove.append(i)
-    for i in sorted(indices_to_remove, reverse=True):
-        del total_entities_id[i]
-        del total_relations[i]
-        del total_candidates[i]
-        del total_scores[i]
+            # 修改，不需要对实体的打分
+            scores, entity_candidates, entity_candidates_id = entity_score(question, entity_candidates_id, entity['score'],entity['relation'], args)
+            total_candidates, total_scores, total_relations, total_entities_id, total_topic_entities, total_head = update_history(entity_candidates, entity, scores, entity_candidates_id, total_candidates, total_scores, total_relations,total_entities_id, total_topic_entities, total_head)
 
-    mychain_of_entities = []
-    for i in range(len(total_relations)):
-        mychain = [topic_entity[total_topic_entities[i]],total_relations[i],total_candidates[i]]
-        mychain_of_entities.append(mychain)
+        flag, chain_of_entities, entities_id, pre_relations, pre_heads = entity_prune(total_entities_id, total_relations,total_candidates,total_topic_entities, total_head,total_scores, args)
+        #self.cluster_chain_of_entities.append(chain_of_entities)
+        #移出 unname
+        indices_to_remove = []
+        for i in range(len(total_entities_id)):
+            if total_candidates[i] == 'UnName_Entity':
+                indices_to_remove.append(i)
+        for i in sorted(indices_to_remove, reverse=True):
+            del total_entities_id[i]
+            del total_relations[i]
+            del total_candidates[i]
+            del total_scores[i]
 
-    node.entity_list = entities_id
-    new_topic_entity = []
-    for i in range(len(total_candidates)):
-        new_topic_entity.append({})
-        new_topic_entity[i][total_entities_id[i]] = total_candidates[i]
-    # node.topic_entity = new_topic_entity
-    '''
-    # 对整个三元组打分，select top N
-    thought = str(node.state)
-    total_scores = triple_scores(mychain_of_entities,question,thought)
-    # 找到 N 个最高分的位置
-    top_n_indices = sorted(range(len(total_scores)), key=lambda i: total_scores[i], reverse=True)[:n]
+        mychain_of_entities = []
+        for i in range(len(total_relations)):
+            mychain = [topic_entity[total_topic_entities[i]],total_relations[i],total_candidates[i]]
+            mychain_of_entities.append(mychain)
 
-    # 根据这些位置重新排列 mychain_of_entities, new_topic_entity, total_relations, total_scores
-    mychain_of_entities = [mychain_of_entities[i] for i in top_n_indices]
-    new_topic_entity = [new_topic_entity[i] for i in top_n_indices]
-    total_relations = [total_relations[i] for i in top_n_indices]
-    total_scores = [total_scores[i] for i in top_n_indices]
-    '''
+        node.entity_list = entities_id
+        new_topic_entity = []
+        for i in range(len(total_candidates)):
+            new_topic_entity.append({})
+            new_topic_entity[i][total_entities_id[i]] = total_candidates[i]
+        # node.topic_entity = new_topic_entity
+        '''
+        # 对整个三元组打分，select top N
+        thought = str(node.state)
+        total_scores = triple_scores(mychain_of_entities,question,thought)
+        # 找到 N 个最高分的位置
+        top_n_indices = sorted(range(len(total_scores)), key=lambda i: total_scores[i], reverse=True)[:n]
+    
+        # 根据这些位置重新排列 mychain_of_entities, new_topic_entity, total_relations, total_scores
+        mychain_of_entities = [mychain_of_entities[i] for i in top_n_indices]
+        new_topic_entity = [new_topic_entity[i] for i in top_n_indices]
+        total_relations = [total_relations[i] for i in top_n_indices]
+        total_scores = [total_scores[i] for i in top_n_indices]
+        '''
+    else:
+        return node.next_entity_relations_list,node.next_entity_list,node.next_triple_list
 
     return total_relations,new_topic_entity, mychain_of_entities
 
@@ -893,14 +984,16 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     current_entity_list = []
     # 扩展的三元组
     current_chain_list = []
-    total_scores = []
+    #total_scores = []
     current_entity_relations_list, current_entity_list, current_chain_list = select(n, node, args)
     #扩展的节点数
     i = len(current_entity_relations_list)
     #图谱中没找到信息
     if i == 0:
+        #直接调gpt回答问题
+        results = generate_without_explored_paths(node.question, [], args, '')
         action_type = "Finish[]"
-        action_param = "I don't found enough information"
+        action_param = clean_results(results)
         new_state = node.state.copy()
 
         if action_type.startswith("Finish[") and action_type.endswith("]"):
@@ -910,7 +1003,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # Update the new state dictionary
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {action_param} Action: {action_type}"
-            new_state['observation'] = f"Observation: {action_param}"
+            new_state['observation'] = f"Observation: {results}"
             unique_key = f"{action_param}::{action_type}"
 
             # 新节点的topic_entity即父节点的关系剪枝后的entity
@@ -985,18 +1078,21 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 #直接扩展节点
                 select_relation = current_entity_relation
                 obs = f"Knowledge Triplets:  {current_chain}\n"
+                '''
                 if node.depth == 0:
                     obs = f"This step knowledge triplets:  {current_chain}\n"
-                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                '''
+                new_state['action'] = f"Thought: {thought_line} Action: {action_line} {current_chain}"
                 new_state['observation'] = f"Observation: {obs}"
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
                 new_node.is_terminal = False
-                new_node.triple = node.triple + str(current_chain)
+                new_node.triple = str(current_chain)
                 new_node.depth = node.depth + 1
                 # 找到节点的下一跳
-                next_entity_relations_list, next_entity_list, next_triple_list = select(n, new_node, args)
-                new_node.state['observation'] = f"Observation: "+ str(next_triple_list)
+                new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = select(n, new_node, args)
+                new_node.state['observation'] = f"Observation: "+ str(new_node.next_triple_list)
                 #搜索信息
+                '''
                 myenv = wikienv.WikiEnv()
                 this_time_imformation = ""
                 keywords = generate_query(node.question, new_node.state['observation'], "")
@@ -1006,12 +1102,32 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 # wiki_explored = wiki_explored + this_time_imformation
                 # 增加长度限制
                 new_node.wikiinformation = f"Some information from wikipedia: "+this_time_imformation[:1000]
+                '''
                 unique_states[unique_key] = new_node
                 logging.info(f"NEW NODE: {new_node}")
                 info = select_relation
                 logging.info(f"Feedback: {info}")
 
-    return list(unique_states.values())  # Return unique nodes as a list
+    # 根据 obersvation 生成新的节点
+    choosed_node_idx = []
+
+    key_candidates = [unique_key for unique_key in unique_states.keys()]
+    node_candidates = list(unique_states.values())
+    observation_list = [node.state['observation'] for node in node_candidates]
+    triple_list = [node.triple for node in node_candidates]
+    for i in range(n):
+        choosed_node_idx.append(choose_node(node.question,observation_list, triple_list,args))
+
+    # 去除重复元素
+    choosed_node_idx = list(set(choosed_node_idx))
+
+    choose_key = [key_candidates[idx] for idx in choosed_node_idx]
+    unique_states = {key: unique_states[key] for key in choose_key}
+
+    selected_nodes = [node_candidates[idx] for idx in choosed_node_idx]
+
+
+    return selected_nodes  # Return unique nodes as a list
 
 
     

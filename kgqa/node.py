@@ -54,6 +54,11 @@ class Node:
         self.triple = ""
         # 增加当前对wiki的搜索
         self.wikiinformation = ""
+        #增加下一跳信息
+        self.next_entity_relations_list=[]
+        self.next_entity_list=[]
+        self.next_triple_list=[]
+
     def uct(self):
         if self.visits == 0 and self.value >= 0:
             return float('inf')
