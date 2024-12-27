@@ -27,7 +27,7 @@ def select_node_softmax(node, temperature=1.0):
 
 
 class Node:
-    def __init__(self, state, question,topic_entity={}, env_state=None, parent=None):
+    def __init__(self, state, question, topic_entity={}, env_state=None, parent=None):
         self.state = {'action': '', 'observation': topic_entity} if state is None else state
         self.parent = parent
         self.question = question
