@@ -56,7 +56,7 @@ def compute_bm25_similarity(query, corpus, width=3):
     bm25 = BM25Okapi(tokenized_corpus)
     tokenized_query = query.split(" ")
 
-    doc_scores = bm25.get_scores(tokenized_query)
+    doc_scores = bm25.get_scores(tokenized_query, corpus)
     # 修改打分，直接返回全部结构
     '''
     relations = bm25.get_top_n(tokenized_query, corpus, n=width)
