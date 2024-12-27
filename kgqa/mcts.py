@@ -985,6 +985,8 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 #直接扩展节点
                 select_relation = current_entity_relation
                 obs = f"Knowledge Triplets:  {current_chain}\n"
+                if node.depth == 0:
+                    obs = f"This step knowledge triplets:  {current_chain}\n"
                 new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
                 new_state['observation'] = f"Observation: {obs}"
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
