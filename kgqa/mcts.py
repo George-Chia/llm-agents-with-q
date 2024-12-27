@@ -172,14 +172,18 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     root = Node(state=None, question=x[0], topic_entity=x[1])
     #增加observation
     # 扩展的关系
-    current_entity_relations_list = []
+    #current_entity_relations_list = []
     # 扩展的实体
-    current_entity_list = []
+    #current_entity_list = []
     # 扩展的三元组
-    current_chain_list = []
+    #current_chain_list = []
     # total_scores = []
-    current_entity_relations_list, current_entity_list, current_chain_list = select(args.n_generate_sample, root, args)
-    root.state['observation'] = f"Observation: " + str(current_chain_list)
+    current_entity_relations_list, current_entity_list, current_chain_list = find_next_triples(args.n_generate_sample, root, args)
+    root.state['observation'] = f"Here are some triples that might help answer the question: " + str(current_chain_list)
+    root.next_triple_list = current_chain_list
+    root.next_entity_relations_list = current_entity_relations_list
+    root.next_entity_list = current_entity_list
+
 
     cur_task = x[0]
     if enable_reflection:
@@ -194,6 +198,10 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     raw_icl = json.load(open(icl_path, encoding='utf-8'))
 
     observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
+    messages.append({
+        "role": "user",
+        "content": root.state['observation']
+    })
     root.messages = messages
 
     #print("ROOTSTATE", root.env_state)
@@ -671,9 +679,10 @@ def rollout_random(node, args, task, idx, max_depth=7):
         while len(new_states) == 0:
             if args.enable_fastchat_conv:
                 new_states = generate_new_states_fastchat_conv(node, args, task, n)
-                if new_states.is_terminal and new_states.reward != 1:
-                    logging.info(f"There is not enough information in the knowledge graph.")
-                    break
+                for state in new_states:
+                    if state.is_terminal and state.reward != 1:
+                        logging.info(f"There is not enough information in the knowledge graph.")
+                        break
             else:
                 new_states = generate_new_states(node, args, task, n)
 
@@ -814,14 +823,13 @@ def clean_results(string):
     else:
         return "NULL"
 
-#第一轮选择节点
+#这个没用了
 def choose_node(question,observation_list, triple_list,args):
     idx = 0
     # 构造提示（prompt）
     prompt = f"""
     Question: {question}
-
-    You are given a list of possible next observations and the triples you can obtain by choosing each branch.
+    You are given a list of the triples you can obtain by choosing each branch.
     Your task is to determine which branch is most likely to help answer the question.
 
     Observations and corresponding triples:
@@ -868,8 +876,15 @@ def choose_node(question,observation_list, triple_list,args):
         idx = 0  # 默认选择第一个分支
     return idx
 
+def string_to_list(input_string):
+    # 去掉字符串两边的方括号
+    stripped_string = input_string.strip("[]")
+    # 使用逗号分割字符串，并去除每个元素两边的空格
+    result_list = [item.strip() for item in stripped_string.split(",")]
+    return result_list
 
-def select(n, node, args):
+# 找到当前节点的下一跳三元组
+def find_next_triples(n, node, args):
     if len(node.next_triple_list) == 0:
         question = node.question
         topic_entity = node.topic_entity
@@ -917,8 +932,8 @@ def select(n, node, args):
             if len(my_entity_candidates_id) == 0:
                 continue
             else:
-                if len(my_entity_candidates_id) >100:
-                    my_entity_candidates_id = random.sample(my_entity_candidates_id, 100)
+                if len(my_entity_candidates_id) >10:
+                    my_entity_candidates_id = random.sample(my_entity_candidates_id, 10)
                 # entity_candidates_id = random.sample(my_entity_candidates_id, args.num_retain_entity)
                 # 保留全部实体
                 entity_candidates_id = my_entity_candidates_id
@@ -978,14 +993,8 @@ def generate_new_states_fastchat_conv(node, args, task, n):
 
     unique_states = {}
 
-    # 扩展的关系
-    current_entity_relations_list = []
-    # 扩展的实体
-    current_entity_list = []
-    # 扩展的三元组
-    current_chain_list = []
-    #total_scores = []
-    current_entity_relations_list, current_entity_list, current_chain_list = select(n, node, args)
+
+    current_entity_relations_list, current_entity_list, current_chain_list = find_next_triples(n, node, args)
     #扩展的节点数
     i = len(current_entity_relations_list)
     #图谱中没找到信息
@@ -1004,7 +1013,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {action_param} Action: {action_type}"
             new_state['observation'] = f"Observation: {results}"
-            unique_key = f"{action_param}::{action_type}"
+            unique_key = f"{action_param}::{action_type}::none"
 
             # 新节点的topic_entity即父节点的关系剪枝后的entity
             new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity)
@@ -1024,7 +1033,8 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 failed_trajectories.append(
                     {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
         return list(unique_states.values())
-    response_list = gpt(context, n=i, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
+
+    response_list = gpt(context, n=args.n_generate_sample, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
     action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
     # sampled_actions = response_list
@@ -1034,10 +1044,11 @@ def generate_new_states_fastchat_conv(node, args, task, n):
 
     #处理图谱扩展
     for thought_line, action_line, current_entity_relation, current_entity, current_chain in zip(thought_lines, action_lines,current_entity_relations_list,current_entity_list,current_chain_list):
+        idx = 0
         new_state = node.state.copy()  # Make a copy of the parent node's state
 
         # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}::{current_entity_relation}"
+        unique_key = f"{thought_line}::{action_line}"
         
         if unique_key in unique_states:
             continue  # Skip if this state already exists
@@ -1055,7 +1066,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 # Update the new state dictionary
                 # new_state['thought'] = thought_line
                 new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-                new_state['observation'] = f"Observation: {obs}"
+                new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
 
                 # 新节点的topic_entity即父节点的关系剪枝后的entity
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity)
@@ -1075,22 +1086,31 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     failed_trajectories.append(
                         {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
             else:
-                #直接扩展节点
+                #从action 提取选择的三元组
+                current_chain = string_to_list(action_param)
+                try:
+                    idx = current_chain_list.index(current_chain)
+                except ValueError:
+                    idx = random.randint(0, len(current_chain_list) - 1)
+                current_entity_relation = current_entity_relations_list[idx]
+                current_entity = current_entity_list[idx]
+                current_chain = current_chain_list[idx]
+
                 select_relation = current_entity_relation
                 obs = f"Knowledge Triplets:  {current_chain}\n"
                 '''
                 if node.depth == 0:
                     obs = f"This step knowledge triplets:  {current_chain}\n"
                 '''
-                new_state['action'] = f"Thought: {thought_line} Action: {action_line} {current_chain}"
-                new_state['observation'] = f"Observation: {obs}"
+                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
                 new_node.is_terminal = False
                 new_node.triple = str(current_chain)
                 new_node.depth = node.depth + 1
                 # 找到节点的下一跳
-                new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = select(n, new_node, args)
-                new_node.state['observation'] = f"Observation: "+ str(new_node.next_triple_list)
+                new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
+                new_node.state['observation'] = f"Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
                 #搜索信息
                 '''
                 myenv = wikienv.WikiEnv()
@@ -1107,27 +1127,9 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 logging.info(f"NEW NODE: {new_node}")
                 info = select_relation
                 logging.info(f"Feedback: {info}")
+        idx += 1
 
-    # 根据 obersvation 生成新的节点
-    choosed_node_idx = []
-
-    key_candidates = [unique_key for unique_key in unique_states.keys()]
-    node_candidates = list(unique_states.values())
-    observation_list = [node.state['observation'] for node in node_candidates]
-    triple_list = [node.triple for node in node_candidates]
-    for i in range(n):
-        choosed_node_idx.append(choose_node(node.question,observation_list, triple_list,args))
-
-    # 去除重复元素
-    choosed_node_idx = list(set(choosed_node_idx))
-
-    choose_key = [key_candidates[idx] for idx in choosed_node_idx]
-    unique_states = {key: unique_states[key] for key in choose_key}
-
-    selected_nodes = [node_candidates[idx] for idx in choosed_node_idx]
-
-
-    return selected_nodes  # Return unique nodes as a list
+    return list(unique_states.values())
 
 
     

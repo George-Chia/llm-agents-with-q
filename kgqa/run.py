@@ -103,7 +103,7 @@ def run(args):
     info = []
 
     # 设置索引
-    idx = [50]
+    idx = [1,5,10,15,20,25,30,35,40,45,50,51,60,65,70,75,80,85,90,95,100]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -163,14 +163,14 @@ def parse_args():
     # args.add_argument('--task_start_index', type=int, default=900)
     # args.add_argument('--task_end_index', type=int, default=1000)
     args.add_argument('--prompt_sample', type=str, choices=['standard', 'cot'],default='cot')
-    args.add_argument('--n_generate_sample', type=int, default=5)
+    args.add_argument('--n_generate_sample', type=int, default=3)
     args.add_argument('--n_evaluate_sample', type=int, default=1)
-    args.add_argument('--iterations', type=int, default=10)
+    args.add_argument('--iterations', type=int, default=3)
     args.add_argument('--log', type=str,default='logs/gpt-4.log')
     args.add_argument('--algorithm', type=str, choices=['mcts', 'rap', 'tot', 'simple', 'beam'],default='mcts')
 
     # 图谱中的搜索深度
-    args.add_argument('--max_depth', type=int, default=5)
+    args.add_argument('--max_depth', type=int, default=3)
     #增加搜索宽度（没用到）
     args.add_argument('--search_width', type=int, default=3)
     #设置每次剪枝后的实体数（没用到）

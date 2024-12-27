@@ -1,5 +1,11 @@
-Solve a question-answering task using interleaved Thought, Action, and Observation steps. Thought involves reasoning about the current situation, and Action can be one of two types:
-1. Select[], which selects candidate relations from the knowledge graph and returns a relation. Choose this action if the question cannot be answered based on the current observation.
-2. Finish[answer], which returns the answer and ends the task. Choose this action if the question can be answered based on the current observation.
-After each observation, provide the subsequent Thought and the following Action.
+To address a question-answering task, follow a sequence of Thought, Action, and Observation steps. Here's how each step works:
 
+1. Thought: This is where you analyze the current state of information and determine what you need to do next. It involves reasoning about what information is missing or what action should be taken to progress towards answering the question.
+
+2. Action: This step involves taking one of two possible actions based on the Thought step:
+   - Select[[head_entity,relation,tail_entity]]: This action is chosen when additional information is needed to answer the question. It requires selecting an exact and complete triple from the list provided in the last observation. The selected triple must match exactly with one of the triples in the observation, with no variations allowed. The selected triple will be used to gather more details.
+   - Finish[answer]: This action is chosen when the question can be answered with the information currently available from the observations. It ends the task by providing the answer.
+
+3. Observation: After each action, new information will be provided, which will be used to inform the next Thought step.
+
+Remember, after each observation, you should have a Thought about what to do next and then an Action that follows from that Thought.
