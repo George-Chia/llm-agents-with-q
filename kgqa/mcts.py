@@ -247,6 +247,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             expand_node(node, args, task, args.max_depth)
 
         if args.enable_value_evaluation:
+            # TODO
             value = evaluate_node(node, args, task)
 
         # Find the child with the highest value or UCT? A: similar effect.
@@ -807,7 +808,7 @@ def get_context(node, conv_template, backend):
     if "gpt-" in backend:
         messages = get_messages_from_bottom(node)
         context =  messages
-    elif "Phi-3" in backend or "llama31" in backend or 'auto-j' in backend or 'Llama31-KTO' in backend:
+    elif "Phi-3" in backend or "lama31" in backend or 'auto-j' in backend or 'Llama31-KTO' in backend:
         conv = get_conv_from_bottom(node, conv_template)
         conv.append_message(conv.roles[1], None)
         context =  conv
@@ -1010,7 +1011,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     i = len(next_entity_relations_list)
     #图谱中没找到信息
     if i == 0:
-        #直接调gpt回答问题
+        #TODO: 直接调gpt回答问题
         results = generate_without_explored_paths(node.question, [], args, '')
         action_type = "Finish[]"
         action_param = clean_results(results)
@@ -1068,23 +1069,23 @@ def generate_new_states_fastchat_conv(node, args, task, n):
         
         if action_line:
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
-            # action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
-            action_param_match = re.search(r'\[\[(.*)\]\]', action_line)
-            action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
+            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+            # action_param_match = re.search(r'\[\[(.*)\]\]', action_line)
+            # action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
 
-            if action_type.startswith("Finish[") and action_type.endswith("]"):
+            if action_type.startswith("Finish"):
                 # 把当前节点传进环境
                 env.env.env.node = node
                 obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
                 # Update the new state dictionary
                 # new_state['thought'] = thought_line
                 new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-                new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
+                new_state['observation'] = f"Answer: {obs}"
 
                 # 新节点的topic_entity即父节点的关系剪枝后的entity
                 new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity)
                 new_node.is_terminal = True
-                new_node.reward = 1
+                new_node.reward = r
                 new_node.depth = node.depth + 1
                 if r == 1:
                     new_node.em = info.get('em')
@@ -1123,14 +1124,16 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     new_node.depth = node.depth + 1
                     # 找到节点的下一跳
                     new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
-                    new_node.state['observation'] = f"Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
+                    new_node.state['observation'] = f"Observation: Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
                 else: 
                     # 如果生成不在next_chain_list候选三元组，告诉他，让他重新生成
                     # obs =
-                    new_node = copy.deepcopy(node)
-                    new_node.depth = node.depth + 1
+                    
                     new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-                    new_node.state['observation'] = f'You selected a triple that is not in the candidate triples. Please remember to selecting an exact and complete triple from: '
+                    original_observation = new_state['observation']
+                    new_state['observation'] = f'Observation: You selected a triple that is not in the candidate triples. Please remember to selecting an exact and complete triple from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
+                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
+                    new_node.depth = node.depth + 1
                 #搜索信息
                 '''
                 myenv = wikienv.WikiEnv()

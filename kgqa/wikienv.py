@@ -258,9 +258,12 @@ class WikiEnv(gym.Env):
         self.lookup_cnt += 1
     # 剪枝获得下一节点的实体
     elif action.startswith("select[") and action.endswith("]"):
+      raise NotImplementedError
+      '''
       r,current_triple = self.select(self.node)
       self.obs = f"Knowledge Triplets:  {current_triple}\n"
       reward = r
+      '''
     elif action.startswith("finish[") and action.endswith("]"):
       answer = action[len("finish["):-1]
       # self.answer = answer
