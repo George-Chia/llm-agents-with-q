@@ -172,17 +172,17 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     root = Node(state=None, question=x[0], topic_entity=x[1])
     #增加observation
     # 扩展的关系
-    #current_entity_relations_list = []
+    #next_entity_relations_list = []
     # 扩展的实体
-    #current_entity_list = []
+    #next_entity_list = []
     # 扩展的三元组
-    #current_chain_list = []
+    #next_chain_list = []
     # total_scores = []
-    current_entity_relations_list, current_entity_list, current_chain_list = find_next_triples(args.n_generate_sample, root, args)
-    root.state['observation'] = f"Here are some triples that might help answer the question: " + str(current_chain_list)
-    root.next_triple_list = current_chain_list
-    root.next_entity_relations_list = current_entity_relations_list
-    root.next_entity_list = current_entity_list
+    next_entity_relations_list, next_entity_list, next_chain_list = find_next_triples(args.n_generate_sample, root, args)
+    root.state['observation'] = f"Here are some triples that might help answer the question: " + str(next_chain_list)
+    root.next_triple_list = next_chain_list
+    root.next_entity_relations_list = next_entity_relations_list
+    root.next_entity_list = next_entity_list
 
 
     cur_task = x[0]
@@ -198,10 +198,12 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     raw_icl = json.load(open(icl_path, encoding='utf-8'))
 
     observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
-    messages.append({
-        "role": "user",
-        "content": root.state['observation']
-    })
+    assert messages[-1]['role'] == 'user'
+    messages[-1]['content'] += ' Observation: '+ root.state['observation']
+    # messages[-1].append({
+    #     "role": "user",
+    #     "content": root.state['observation']
+    # })
     root.messages = messages
 
     #print("ROOTSTATE", root.env_state)
@@ -252,6 +254,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             reward, terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
         else:
             reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
+        # TODO
+        # reward, terminal_node = rollout_on_kg(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
 
         terminal_nodes.append(terminal_node)
 
@@ -704,6 +708,13 @@ def rollout_random(node, args, task, idx, max_depth=7):
             node.reward = -1
     return node.reward, node
 
+
+def rollout_on_kg(node, args, task, idx, max_depth=7):
+    # TODO
+    raise NotImplementedError
+
+
+
 def rollout_with_critique(node, args, task, idx, max_depth=15):
     depth = node.depth
     n = args.rollout_width
@@ -895,13 +906,13 @@ def find_next_triples(n, node, args):
         flag_printed = False
         search_depth = 1
 
-        current_entity_relations_list = []
+        next_entity_relations_list = []
         i = 0
         for entity in topic_entity:
             if entity != "[FINISH_ID]":
                 retrieve_relations_with_scores = relation_search_prune(entity, topic_entity[entity], pre_relations,
                                                                        pre_heads[i], question, args)
-                current_entity_relations_list.extend(retrieve_relations_with_scores)
+                next_entity_relations_list.extend(retrieve_relations_with_scores)
             i += 1
         total_candidates = []
         total_scores = []
@@ -911,7 +922,7 @@ def find_next_triples(n, node, args):
         total_head = []
         num_relation = 0
 
-        for entity in current_entity_relations_list:
+        for entity in next_entity_relations_list:
             if entity['head']:
                 my_entity_candidates_id = entity_search(entity['entity'], entity['relation'], True)
             else:
@@ -994,9 +1005,9 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     unique_states = {}
 
 
-    current_entity_relations_list, current_entity_list, current_chain_list = find_next_triples(n, node, args)
+    next_entity_relations_list, next_entity_list, next_chain_list = find_next_triples(n, node, args)
     #扩展的节点数
-    i = len(current_entity_relations_list)
+    i = len(next_entity_relations_list)
     #图谱中没找到信息
     if i == 0:
         #直接调gpt回答问题
@@ -1043,12 +1054,12 @@ def generate_new_states_fastchat_conv(node, args, task, n):
       # Store unique states here
 
     #处理图谱扩展
-    for thought_line, action_line, current_entity_relation, current_entity, current_chain in zip(thought_lines, action_lines,current_entity_relations_list,current_entity_list,current_chain_list):
+    for thought_line, action_line, next_entity_relation, next_entity, next_chain in zip(thought_lines, action_lines,next_entity_relations_list,next_entity_list,next_chain_list):
         idx = 0
         new_state = node.state.copy()  # Make a copy of the parent node's state
 
-        # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
+        # Use action to form a unique key
+        unique_key = f"{action_line}"
         
         if unique_key in unique_states:
             continue  # Skip if this state already exists
@@ -1057,7 +1068,9 @@ def generate_new_states_fastchat_conv(node, args, task, n):
         
         if action_line:
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
-            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+            # action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+            action_param_match = re.search(r'\[\[(.*)\]\]', action_line)
+            action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
 
             if action_type.startswith("Finish[") and action_type.endswith("]"):
                 # 把当前节点传进环境
@@ -1087,30 +1100,37 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                         {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
             else:
                 #从action 提取选择的三元组
-                current_chain = string_to_list(action_param)
-                try:
-                    idx = current_chain_list.index(current_chain)
-                except ValueError:
-                    idx = random.randint(0, len(current_chain_list) - 1)
-                current_entity_relation = current_entity_relations_list[idx]
-                current_entity = current_entity_list[idx]
-                current_chain = current_chain_list[idx]
+                generated_chain = string_to_list(action_param)
+                # try:
+                #     idx = next_chain_list.index(current_chain)
+                #     print('LLM choose a triplet from the candidates')
+                # except ValueError:
+                #     print('LLM did not choose a triplet from the candidates')
+                #     idx = random.randint(0, len(next_chain_list) - 1)
+                if generated_chain in next_chain_list:
+                    idx = next_chain_list.index(generated_chain)
+                    next_entity_relation = next_entity_relations_list[idx]
+                    next_entity = next_entity_list[idx]
+                    next_chain = next_chain_list[idx]
 
-                select_relation = current_entity_relation
-                obs = f"Knowledge Triplets:  {current_chain}\n"
-                '''
-                if node.depth == 0:
-                    obs = f"This step knowledge triplets:  {current_chain}\n"
-                '''
-                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-                new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
-                new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=current_entity)
-                new_node.is_terminal = False
-                new_node.triple = str(current_chain)
-                new_node.depth = node.depth + 1
-                # 找到节点的下一跳
-                new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
-                new_node.state['observation'] = f"Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
+                    select_relation = next_entity_relation
+                    # obs = f"Knowledge Triplets:  {next_chain}\n"
+                    new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                    # new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
+                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
+                    new_node.is_terminal = False
+                    new_node.triple = str(next_chain)
+                    new_node.depth = node.depth + 1
+                    # 找到节点的下一跳
+                    new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
+                    new_node.state['observation'] = f"Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
+                else: 
+                    # 如果生成不在next_chain_list候选三元组，告诉他，让他重新生成
+                    # obs =
+                    new_node = copy.deepcopy(node)
+                    new_node.depth = node.depth + 1
+                    new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                    new_node.state['observation'] = f'You selected a triple that is not in the candidate triples. Please remember to selecting an exact and complete triple from: '
                 #搜索信息
                 '''
                 myenv = wikienv.WikiEnv()
@@ -1125,8 +1145,8 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 '''
                 unique_states[unique_key] = new_node
                 logging.info(f"NEW NODE: {new_node}")
-                info = select_relation
-                logging.info(f"Feedback: {info}")
+                # info = select_relation
+                # logging.info(f"Feedback: {info}")
         idx += 1
 
     return list(unique_states.values())
