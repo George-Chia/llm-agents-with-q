@@ -889,10 +889,14 @@ def choose_node(question,observation_list, triple_list,args):
     return idx
 
 def string_to_list(input_string):
-    # 去掉字符串两边的方括号
-    stripped_string = input_string.strip("[]")
-    # 使用逗号分割字符串，并去除每个元素两边的空格
-    result_list = [item.strip() for item in stripped_string.split(",")]
+    # 使用正则表达式提取字符串中[]内部的内容
+    match = re.search(r'\[(.*?)\]', input_string)
+    if match:
+        stripped_string = match.group(1)
+        # 使用逗号分割字符串，并去除每个元素两边的空格和双引号
+        result_list = [item.strip().strip('"').strip("'") for item in stripped_string.split(",")]
+    else:
+        result_list = []
     return result_list
 
 # 找到当前节点的下一跳三元组
@@ -1046,6 +1050,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
         return list(unique_states.values())
 
+    #改成两轮，先判断动作，如果是不是finish, 再判断选择哪个三元组
     response_list = gpt(context, n=args.n_generate_sample, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
     action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
@@ -1100,6 +1105,15 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     failed_trajectories.append(
                         {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
             else:
+                #再次判断选择哪个三元组，使用最简单的提示词
+                prompt = f"""
+                    Question: {node.question}
+                    Here are some triples that might help answer the question: {node.state['observation']}
+                    You need to pick one triple that is most helpful to answer the question. You need to output the triple directly,with no other words.
+                    """
+
+                # 调用大模型
+                action_param = gpt(prompt, n=1, stop=None)[0].strip()
                 #从action 提取选择的三元组
                 generated_chain = string_to_list(action_param)
                 # try:
@@ -1131,7 +1145,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     
                     new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
                     original_observation = new_state['observation']
-                    new_state['observation'] = f'Observation: You selected a triple that is not in the candidate triples. Please remember to selecting an exact and complete triple from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
+                    new_state['observation'] = f'Observation: You selected a triple that is not in the candidate triples. Please remember to choosing an exact and complete triple from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
                     new_node.depth = node.depth + 1
                 #搜索信息
@@ -1151,7 +1165,6 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 # info = select_relation
                 # logging.info(f"Feedback: {info}")
         idx += 1
-
     return list(unique_states.values())
 
 
