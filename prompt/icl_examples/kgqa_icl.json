@@ -54,7 +54,7 @@
     [
         {
             "role": "user",
-            "content": "Question: Who has won more Academy Awards, Meryl Streep or Tom Hanks? Here are some triples that might help answer the question: [[Meryl Streep, awards.won, Academy Award for Best Actress], [Tom Hanks, awards.won, Academy Award for Best Actor], [Meryl Streep, awards.count, 3]]"
+            "content": "Question: Who has won more Academy Awards, Meryl Streep or Tom Hanks? Here are some candidate knowledge triplets you can choose from: [[Meryl Streep, awards.won, Academy Award for Best Actress], [Tom Hanks, awards.won, Academy Award for Best Actor], [Meryl Streep, awards.count, 3]]"
         },
         {
             "role": "assistant",
@@ -62,7 +62,7 @@
         },
         {
             "role": "user",
-            "content": "Observation: Here are some triples that might help answer the question: [[Tom Hanks, awards.acting, Academy Award for Best Actor], [Tom Hanks, actor.films_starred_in, 'Forrest Gump']]"
+            "content": "Observation: Here are some candidate knowledge triplets you can choose from: [[Tom Hanks, awards.acting, Academy Award for Best Actor], [Tom Hanks, actor.films_starred_in, 'Forrest Gump']]"
         },
         {
             "role": "assistant",

@@ -179,7 +179,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     #next_chain_list = []
     # total_scores = []
     next_entity_relations_list, next_entity_list, next_chain_list = find_next_triples(args.n_generate_sample, root, args)
-    root.state['observation'] = f"Here are some triples that might help answer the question: " + str(next_chain_list)
+    root.state['observation'] = f"Here are some candidate knowledge triplets you can choose from: " + str(next_chain_list)
     root.next_triple_list = next_chain_list
     root.next_entity_relations_list = next_entity_relations_list
     root.next_entity_list = next_entity_list
@@ -1050,7 +1050,6 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
         return list(unique_states.values())
 
-    #改成两轮，先判断动作，如果是不是finish, 再判断选择哪个三元组
     response_list = gpt(context, n=args.n_generate_sample, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
     thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
     action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
@@ -1075,7 +1074,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
         
         if action_line:
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
-            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+            action_param = '[' + action_line.split('[')[1].split(']')[0] + ']' if '[' in action_line else ""
             # action_param_match = re.search(r'\[\[(.*)\]\]', action_line)
             # action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
 
@@ -1124,7 +1123,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 while True:
                     prompt = f"""
                         Question: {node.question}
-                        Here are some triples that might help answer the question: {node.state['observation']}
+                        Here are some candidate knowledge triplets you can choose from: {node.state['observation']}
                         You need to pick one triple that is most helpful to answer the question. You need to output the triple directly,with no other words.
                         """
 
@@ -1162,27 +1161,27 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     select_relation = next_entity_relation
                     # obs = f"Knowledge Triplets:  {next_chain}\n"
                     new_state['action'] = f"Thought: {thought_line} Action: Choose{action_param}"
-                    # new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
+                    # new_state['observation'] = f"Here are some candidate knowledge triplets you can choose from: {obs}"
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
                     new_node.is_terminal = False
                     new_node.triple = str(next_chain)
                     new_node.depth = node.depth + 1
                     # 找到节点的下一跳
                     new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
-                    new_node.state['observation'] = f"Observation: Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
+                    new_node.state['observation'] = f"Observation: Here are some candidate knowledge triplets you can choose from: "+ str(new_node.next_triple_list)
                     unique_states[unique_key] = new_node
                     logging.info(f"NEW NODE: {new_node}")
-                '''
+                
                 else: 
                     # 如果生成不在next_chain_list候选三元组，告诉他，让他重新生成
                     # obs =
                     
                     new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
                     original_observation = new_state['observation']
-                    new_state['observation'] = f'Observation: You selected a triple that is not in the candidate triples. Please remember to choosing an exact and complete triple from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
+                    new_state['observation'] = f'Observation: Invalid action! You chose a triplet that does not match any of the candidate knowledge triplets. Please remember to choosing an exact and complete triplet from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
                     new_node.depth = node.depth + 1
-                '''
+                
                 #搜索信息
                 '''
                 myenv = wikienv.WikiEnv()
