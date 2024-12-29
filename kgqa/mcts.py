@@ -1063,7 +1063,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     for thought_line, action_line, next_entity_relation, next_entity, next_chain in zip(thought_lines, action_lines,next_entity_relations_list,next_entity_list,next_chain_list):
         idx = 0
         new_state = node.state.copy()  # Make a copy of the parent node's state
-
+        '''
         # Use action to form a unique key
         unique_key = f"{action_line}"
         
@@ -1071,6 +1071,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             continue  # Skip if this state already exists
 
         tried_actions.append(action_line)
+        '''
         
         if action_line:
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
@@ -1079,6 +1080,13 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
 
             if action_type.startswith("Finish"):
+                # Use action to form a unique key
+                unique_key = f"{action_line}"
+
+                if unique_key in unique_states:
+                    continue  # Skip if this state already exists
+
+                tried_actions.append(action_line)
                 # 把当前节点传进环境
                 env.env.env.node = node
                 obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
@@ -1106,16 +1114,31 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                         {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
             else:
                 #再次判断选择哪个三元组，使用最简单的提示词
-                prompt = f"""
-                    Question: {node.question}
-                    Here are some triples that might help answer the question: {node.state['observation']}
-                    You need to pick one triple that is most helpful to answer the question. You need to output the triple directly,with no other words.
-                    """
+                #重复次数i
+                i =5
+                while True:
+                    prompt = f"""
+                        Question: {node.question}
+                        Here are some triples that might help answer the question: {node.state['observation']}
+                        You need to pick one triple that is most helpful to answer the question. You need to output the triple directly,with no other words.
+                        """
 
-                # 调用大模型
-                action_param = gpt(prompt, n=1, stop=None)[0].strip()
-                #从action 提取选择的三元组
-                generated_chain = string_to_list(action_param)
+                    # 调用大模型
+                    action_param = gpt(prompt, n=1, stop=None)[0].strip()
+                    #从action 提取选择的三元组
+                    generated_chain = string_to_list(action_param)
+                    i -= 1
+                    if generated_chain in next_chain_list:
+                        break
+                    if i <=0:
+                        break
+                # Use action to form a unique key
+                unique_key = f"{action_type}{action_param}"
+
+                if unique_key in unique_states:
+                    continue  # Skip if this state already exists
+
+                tried_actions.append(action_line)
                 # try:
                 #     idx = next_chain_list.index(current_chain)
                 #     print('LLM choose a triplet from the candidates')
@@ -1130,7 +1153,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
 
                     select_relation = next_entity_relation
                     # obs = f"Knowledge Triplets:  {next_chain}\n"
-                    new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                    new_state['action'] = f"Thought: {thought_line} Action: Choose{action_param}"
                     # new_state['observation'] = f"Here are some triples that might help answer the question: {obs}"
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
                     new_node.is_terminal = False
@@ -1139,6 +1162,9 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     # 找到节点的下一跳
                     new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(n, new_node, args)
                     new_node.state['observation'] = f"Observation: Here are some triples that might help answer the question: "+ str(new_node.next_triple_list)
+                    unique_states[unique_key] = new_node
+                    logging.info(f"NEW NODE: {new_node}")
+                '''
                 else: 
                     # 如果生成不在next_chain_list候选三元组，告诉他，让他重新生成
                     # obs =
@@ -1148,6 +1174,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     new_state['observation'] = f'Observation: You selected a triple that is not in the candidate triples. Please remember to choosing an exact and complete triple from: ' + original_observation[original_observation.find('['):] if '[' in original_observation else original_observation
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity)
                     new_node.depth = node.depth + 1
+                '''
                 #搜索信息
                 '''
                 myenv = wikienv.WikiEnv()
@@ -1160,8 +1187,6 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 # 增加长度限制
                 new_node.wikiinformation = f"Some information from wikipedia: "+this_time_imformation[:1000]
                 '''
-                unique_states[unique_key] = new_node
-                logging.info(f"NEW NODE: {new_node}")
                 # info = select_relation
                 # logging.info(f"Feedback: {info}")
         idx += 1
