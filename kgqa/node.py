@@ -27,7 +27,7 @@ def select_node_softmax(node, temperature=1.0):
 
 
 class Node:
-    def __init__(self, state, question, topic_entity={}, env_state=None, parent=None):
+    def __init__(self, state, question, topic_entity={}, true_answer='',env_state=None, parent=None):
         self.state = {'action': '', 'observation': topic_entity} if state is None else state
         self.parent = parent
         self.question = question
@@ -58,6 +58,8 @@ class Node:
         self.next_entity_relations_list=[]
         self.next_entity_list=[]
         self.next_triple_list=[]
+        # 增加问题正确答案
+        self.true_answer = true_answer
 
     def uct(self):
         if self.visits == 0 and self.value >= 0:

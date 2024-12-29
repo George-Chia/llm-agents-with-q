@@ -100,16 +100,19 @@ class HotPotQAWrapper(gym.Wrapper):
     self.env.reset(seed=seed, return_info=return_info, options=options)
     self.data_idx = int(np.random.randint(len(self.data))) if idx is None else idx
     observation = f"Question: {self.data[self.data_idx][0]}"
+    answer = self.data[self.data_idx][1]
     topic_entity = self.data[self.data_idx][2]
     info = self._get_info(answer=None)
     #返回中心词
-    return (observation, info) if return_info else [observation, topic_entity]
+    return (observation, info) if return_info else [observation, topic_entity,answer]
 
   def _get_info(self,answer):
     return {
       "steps": self.steps, 
       "answer": answer,
       "question": self.data[self.data_idx][0],
+      #正确答案
+      "true_answer": self.data[self.data_idx][1],
       # 添加中心词
       "topic_entity": self.data[self.data_idx][2],
       "hotpot_split": self.split

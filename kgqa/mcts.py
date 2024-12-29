@@ -169,7 +169,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         print(idx, x)
 
     # 把中心词传给根节点
-    root = Node(state=None, question=x[0], topic_entity=x[1])
+    root = Node(state=None, question=x[0], topic_entity=x[1],true_answer= x[2])
     #增加observation
     # 扩展的关系
     #next_entity_relations_list = []
@@ -1096,9 +1096,13 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 new_state['observation'] = f"Answer: {obs}"
 
                 # 新节点的topic_entity即父节点的关系剪枝后的entity
-                new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity)
+                new_node = Node(state=new_state, question=node.question, parent=node,topic_entity=node.topic_entity,true_answer=node.true_answer)
                 new_node.is_terminal = True
-                new_node.reward = r
+                #正确答案判断
+                if action_param == node.true_answer:
+                    new_node.reward = r
+                else:
+                    new_node.reward = -1
                 new_node.depth = node.depth + 1
                 if r == 1:
                     new_node.em = info.get('em')
