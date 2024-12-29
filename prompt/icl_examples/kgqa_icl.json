@@ -54,19 +54,45 @@
     [
         {
             "role": "user",
-            "content": "Question: Who has won more Academy Awards, Meryl Streep or Tom Hanks? Here are some candidate knowledge triplets you can choose from: [[Meryl Streep, awards.won, Academy Award for Best Actress], [Tom Hanks, awards.won, Academy Award for Best Actor], [Meryl Streep, awards.count, 3]]"
+            "content": "Question: The inventor of the telephone was born where? Here are some candidate knowledge triplets you can choose from: [[Alexander Graham Bell, people.person.date_of_birth, 1847-03-03], [Alexander Graham Bell, people.person.place_of_birth, Edinburgh, Scotland], [Telephone, invention.inventor, Alexander Graham Bell]]"
         },
         {
             "role": "assistant",
-            "content": "Thought: To determine who has won more Academy Awards, we need to compare the numbers provided in the triples. The most relevant triples show that Meryl Streep has won 3. Action: Choose[Meryl Streep, awards.count, 3]"
+            "content": "Thought: To determine where the inventor of the telephone was born, I need to identify the inventor first. I see that the triple connects the telephone with Alexander Graham Bell as its inventor. \nAction: Choose[Telephone, invention.inventor, Alexander Graham Bell]"
         },
         {
             "role": "user",
-            "content": "Observation: Here are some candidate knowledge triplets you can choose from: [[Tom Hanks, awards.acting, Academy Award for Best Actor], [Tom Hanks, actor.films_starred_in, 'Forrest Gump']]"
+            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Alexander Graham Bell, people.person.date_of_birth, 1847-03-03], [Alexander Graham Bell, people.person.place_of_birth, Edinburgh, Scotland]]"
         },
         {
             "role": "assistant",
-            "content": "Thought: The given triples does not contain sufficient information for me to answer the question. Action: Finish[none]"
+            "content": "Thought: Now that I have identified Alexander Graham Bell as the inventor, I need to find out where he was born. The relevant triple from the observation is the one specifying his place of birth. \nAction: Choose[Alexander Graham Bell, people.person.place_of_birth, Edinburgh, Scotland]"
+        },
+        {
+            "role": "user",
+            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Edinburgh, Scotland, location.in_country, United Kingdom], [Edinburgh, Scotland, location.historic_significance, Capital of Scotland], [Alexander Graham Bell, people.person.date_of_birth, 1847-03-03]]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: With the information that Alexander Graham Bell was born in Edinburgh, Scotland, I can now answer the question regarding the birthplace of the inventor of the telephone. \nAction: Finish[Edinburgh, Scotland]"
+        }
+    ],
+    [
+        {
+            "role": "user",
+            "content": "Question: What is the birthplace of the composer of The Four Seasons? Here are some candidate knowledge triplets you can choose from: [[Antonio Vivaldi, music.composer.composition, The Four Seasons], [The Four Seasons, music.composition.composer, Antonio Vivaldi], [Antonio Vivaldi, music.person.date_of_birth, 1678-03-04]]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: To find out the birthplace of the composer of The Four Seasons, I first need to identify the composer. The relevant triple linking The Four Seasons to Antonio Vivaldi can help me here. \nAction: Choose[The Four Seasons, music.composition.composer, Antonio Vivaldi]"
+        },
+        {
+            "role": "user",
+            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Antonio Vivaldi, music.person.date_of_birth, 1678-03-04], [The Four Seasons, music.composition.genre, Baroque]]"
+        },
+        {
+            "role": "assistant",
+            "content": "Thought: No relevant information were found from the candidate knowledge triplets. Based on previous information and my own knowledge, I know Antonio Vivaldi was born in Venice, Italy. \nAction: Finish[Venice, Italy]"
         }
     ]
 ]
