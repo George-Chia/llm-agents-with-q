@@ -190,14 +190,14 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
         icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"    
     else:
-        instruction_path = "../prompt/instructions/mygraph_inst.txt"
-        icl_path = "../prompt/icl_examples/mygraph_icl.json"
+        instruction_path = "../prompt/instructions/kgqa_inst.txt"
+        icl_path = "../prompt/icl_examples/kgqa_icl.json"
     with open(instruction_path) as f:
         instruction = f.read()
     # 文件编码 utf-8
     raw_icl = json.load(open(icl_path, encoding='utf-8'))
 
-    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
+    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 1)
     assert messages[-1]['role'] == 'user'
     messages[-1]['content'] += ' Observation: '+ root.state['observation']
     # messages[-1].append({
@@ -1063,7 +1063,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     for thought_line, action_line, next_entity_relation, next_entity, next_chain in zip(thought_lines, action_lines,next_entity_relations_list,next_entity_list,next_chain_list):
         idx = 0
         new_state = node.state.copy()  # Make a copy of the parent node's state
-        '''
+
         # Use action to form a unique key
         unique_key = f"{action_line}"
         
@@ -1071,7 +1071,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             continue  # Skip if this state already exists
 
         tried_actions.append(action_line)
-        '''
+
         
         if action_line:
             action_type = action_line.split('[')[0] if '[' in action_line else action_line
@@ -1117,6 +1117,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     failed_trajectories.append(
                         {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
             else:
+                '''
                 #再次判断选择哪个三元组，使用最简单的提示词
                 #重复次数i
                 i =5
@@ -1136,6 +1137,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                         break
                     if i <=0:
                         break
+                
                 # Use action to form a unique key
                 unique_key = f"{action_type}{action_param}"
 
@@ -1143,12 +1145,14 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     continue  # Skip if this state already exists
 
                 tried_actions.append(action_line)
+                '''
                 # try:
                 #     idx = next_chain_list.index(current_chain)
                 #     print('LLM choose a triplet from the candidates')
                 # except ValueError:
                 #     print('LLM did not choose a triplet from the candidates')
                 #     idx = random.randint(0, len(next_chain_list) - 1)
+                generated_chain = string_to_list(action_param)
                 if generated_chain in next_chain_list:
                     idx = next_chain_list.index(generated_chain)
                     next_entity_relation = next_entity_relations_list[idx]
