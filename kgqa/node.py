@@ -222,6 +222,12 @@ def get_conv_from_bottom(node, conv_template):
 
 def get_messages_from_bottom(node):
     messages = []
+    # 修改信息，之传入当前节点的observation,避免选择三元组错误
+    if node.parent:
+        messages.insert(0, {'role': 'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
+        messages.insert(0, {'role': 'assistant', 'content': f"{node.state['action']}"})
+        node = node.parent
+
     while node.parent:
         # if 'regenerate_prompt' in node.state.keys():
         #     critique = f"{node.state['regenerate_prompt']}"

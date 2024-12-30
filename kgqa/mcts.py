@@ -119,6 +119,7 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     task_dict['best child reward'] = best_tree_child.reward
     task_dict['best child em'] = best_tree_child.em
     task_dict['best_trajectory_index_list'] = best_trajectory_index_list
+    task_dict['true_answer'] = node.true_answer
     task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
@@ -523,7 +524,10 @@ def select_node(node, i=0):
             if node.parent:
                 node.parent.children.remove(node)
             node = node.parent
-            continue
+            if node.depth == 0:
+                break
+            else:
+                continue
 
         node_with_reward_1 = next((child for child in terminal_children if child.reward == 1), None)
         if node_with_reward_1:
@@ -1240,6 +1244,8 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                                                                                                                                                                                                                                  '['):] if '[' in original_observation else original_observation
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity,true_answer=node.true_answer)
                     new_node.depth = node.depth + 1
+                    unique_states[unique_key] = new_node
+                    logging.info(f"NEW NODE: {new_node}")
 
                 # 搜索信息
                 '''
@@ -1256,6 +1262,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                 # info = select_relation
                 # logging.info(f"Feedback: {info}")
         idx += 1
+
     return list(unique_states.values())
 
 
