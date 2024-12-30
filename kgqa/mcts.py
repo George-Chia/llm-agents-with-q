@@ -124,6 +124,61 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
 
+
+#生成推理链
+def get_reasoning_chain(node):
+    messages = []
+
+    while node.parent:
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"+critique+node.state['observation']})
+        # else:
+        # 增加 wiki 信息
+        #messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
+        messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # if 'regenerate_prompt' in node.state.keys():
+        #     critique = f"{node.state['regenerate_prompt']}"
+        #     action = f"{node.state['action']}"
+        #     messages.insert(0,{'role':'assistant', 'content': critique+"\n"+action})
+        # else:
+        #     messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        # messages.insert(0, [conv.roles[0], f"{node.state['observation']}"])
+        # messages.insert(0, [conv.roles[1], f"{node.state['action']}"])
+        messages.append(node.triple)
+        node = node.parent
+    return messages
+
+#判断能否回答问题
+def reasoning(reasonging_chain, question):
+    prompt = prompt_evaluate + question
+    chain_prompt = '\n'.join(
+        [', '.join([str(x) for x in chain]) for sublist in reasonging_chain for chain in sublist])
+    prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
+    result = gpt(prompt, n=1, stop=None)[0]
+    result = extract_answer(result)
+    if if_true(result):
+        return True
+    else:
+        return False
+
+#回答问题
+def get_answer(reasonging_chain, question):
+    prompt = answer_prompt + question + '\n'
+    chain_prompt = '\n'.join(
+        [', '.join([str(x) for x in chain]) for sublist in reasonging_chain for chain in sublist])
+    prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
+    result = gpt(prompt, n=1, stop=None)[0]
+    return result
+
+#处理答案
+
+def check_string(string):
+    if string is None:
+        return False
+    return "{" in string
+
+
 # 对三元组打分，没有用这个
 def triple_scores(triples, question, thought):
     scores = []
@@ -199,14 +254,14 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
         icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"
     else:
-        instruction_path = "../prompt/instructions/kgqa_inst.txt"
-        icl_path = "../prompt/icl_examples/kgqa_icl.json"
+        instruction_path = "../prompt/instructions/mygraph_inst_new.txt"
+        icl_path = "../prompt/icl_examples/mygraph_inst_new.json"
     with open(instruction_path) as f:
         instruction = f.read()
     # 文件编码 utf-8
     raw_icl = json.load(open(icl_path, encoding='utf-8'))
 
-    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 4)
+    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
     assert messages[-1]['role'] == 'user'
     messages[-1]['content'] += ' Observation: ' + root.state['observation']
     # messages[-1].append({
@@ -730,7 +785,25 @@ def rollout_random(node, args, task, idx, max_depth=7):
         node = new_states[max_value_index]
         depth += 1
         if depth == max_depth:
-            node.reward = -1
+            reasoning_chain = get_reasoning_chain(node)
+            if len(reasoning_chain) == 0:
+                node.is_terminal = False
+            else:
+                answer = reasoning(reasoning_chain, node.question)
+                if answer:
+                    answer = get_answer(reasoning_chain, node.question)
+                    if check_string(answer):
+                        response = clean_results(answer)
+                        if response == "NULL":
+                            node.is_terminal = False
+                        else:
+                            if exact_match(response, node.true_answer):
+                                node.is_terminal = True
+                                node.reward = 1
+                                node.answer = response
+                            else:
+                                node.is_terminal = False
+                                node.reward = -1
     return node.reward, node
 
 
@@ -1220,8 +1293,27 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     new_state['action'] = f"Thought: {thought_line} Action: Choose{action_param}"
                     # new_state['observation'] = f"Here are some candidate knowledge triplets you can choose from: {obs}"
                     new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity,true_answer=node.true_answer)
-                    new_node.is_terminal = False
                     new_node.triple = str(next_chain)
+                    #判断能否回答，
+                    reasoning_chain = get_reasoning_chain(new_node)
+                    if len(reasoning_chain) == 0:
+                        new_node.is_terminal = False
+                    else:
+                        answer = reasoning(reasoning_chain, node.question)
+                        if answer:
+                            answer = get_answer(reasoning_chain, node.question)
+                            if check_string(answer):
+                                response = clean_results(answer)
+                                if response == "NULL":
+                                    new_node.is_terminal = False
+                                else:
+                                    if exact_match(response, new_node.true_answer):
+                                        new_node.is_terminal = True
+                                        new_node.reward = 1
+                                        new_node.answer = response
+
+                                    else:
+                                        new_node.is_terminal = False
                     new_node.depth = node.depth + 1
                     # 找到节点的下一跳
                     new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(
