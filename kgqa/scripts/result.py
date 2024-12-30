@@ -85,7 +85,7 @@ for file in os.listdir(trajectories_save_path):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
-    if result['best child reward'] == 1:
+    if result['best reward'] == 1:
         correct_num +=1
 print("Sample number: ", total_num)
 print("correct_num: ", correct_num)
