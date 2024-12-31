@@ -16,7 +16,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 1 \
-        --save_path trajectories-simple-policyI1 \
+        --save_path trajectories-simple-policyIter2Epoch3 \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm simple \

@@ -444,7 +444,10 @@ def select_node(node):
             if node.parent:  
                 node.parent.children.remove(node)
             node = node.parent  
-            continue  
+            if node.depth == 0:
+                break
+            else:
+                continue  
         
         node_with_reward_1 = next((child for child in terminal_children if child.reward == 1), None)
         if node_with_reward_1:
