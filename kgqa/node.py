@@ -61,7 +61,7 @@ class Node:
         # 增加问题正确答案
         self.true_answer = true_answer
         #记录回答的答案
-        self.anser = ""
+        self.answer = ""
 
     def uct(self):
         if self.visits == 0 and self.value >= 0:
