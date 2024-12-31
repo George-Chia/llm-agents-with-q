@@ -16,7 +16,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --prompt_sample cot \
         --temperature 1 \
         --iterations 30 \
-        --save_path trajectories-Critique-MCTS-3n-policy-critique-Iter2Epoch3-huan \
+        --save_path trajectories-Critique-MCTS-3n-policy-I1E3-critique-I2E1-huan \
         --log logs/llama31.log \
         --max_depth 7 \
         --algorithm mcts \
