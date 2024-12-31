@@ -37,13 +37,34 @@ def step(env, action):
         except requests.exceptions.Timeout:
             attempts += 1
 
+# 对三元组打分，没有用这个
+def triple_scores(triples, question, thought):
+    scores = []
+    prompt = f"Question: {question}\nThought: {thought}\n"
+    for i, triple in enumerate(triples):
+        prompt += f"Triple {i + 1}: {triple}\n"
+    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.9, 0.8, 0.2]"
 
+    # 调用 GPT 模型获取评分
+    score_output = gpt(prompt, n=1, stop=None)[0].strip()
+
+    # 解析评分
+    try:
+        # 提取方括号中的分数列表
+        score_str = score_output.split('[')[1].split(']')[0]
+        scores = list(map(float, score_str.split(',')))
+        # 确保分数在有效范围内
+        scores = [score if 0 <= score <= 0.9 else 0.0 for score in scores]
+    except (IndexError, ValueError):
+        scores = [0.0] * len(triples)  # 如果无法解析为浮点数，设为0.0
+    return scores
 def get_value(task, x, y, n_evaluate_sample, cache_value=True):
     global reflection_map
     global failed_trajectories
 
     unique_trajectories = get_unique_trajectories(failed_trajectories)
-    value_prompt = task.value_prompt_wrap(x, y, unique_trajectories, reflection_map)
+    #修改提示词
+    value_prompt = y+ "Please evaluate how much the triplet helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nAction: Choose[France, capital, Paris]\nScores: [0.8]"
     logging.info(f"Current: {x}")
     logging.info(f"Current: {y}")
     if cache_value and value_prompt in task.value_cache:
@@ -115,6 +136,7 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     all_tree_nodes_list.extend(terminal_nodes)
     best_child = max(all_tree_nodes_list, key=lambda x: x.reward)
     task_dict['best reward'] = best_child.reward  # contain nodes during rollout
+    task_dict['answer'] = best_child.answer
     task_dict['best em'] = best_child.em
     task_dict['best child reward'] = best_tree_child.reward
     task_dict['best child em'] = best_tree_child.em
@@ -136,7 +158,7 @@ def get_reasoning_chain(node):
         # else:
         # 增加 wiki 信息
         #messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
-        messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
+        messages.insert(0,node.triple)
         # if 'regenerate_prompt' in node.state.keys():
         #     critique = f"{node.state['regenerate_prompt']}"
         #     action = f"{node.state['action']}"
@@ -150,11 +172,21 @@ def get_reasoning_chain(node):
     return messages
 
 #判断能否回答问题
-def reasoning(reasonging_chain, question):
+def reasoning(reasoning_chain, question):
     prompt = prompt_evaluate + question
-    chain_prompt = '\n'.join(
-        [', '.join([str(x) for x in chain]) for sublist in reasonging_chain for chain in sublist])
+    chain_prompt = ''
+    for sublist in reasoning_chain:
+        chain_prompt += str(sublist)  # 确保正确拼接字符串
     prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
+    context = [{"role": "user", "content": prompt},
+               {'role': 'assistant', 'content': f""}
+               ]
+    context = {
+        "model": "gpt-4o-mini",
+        "prompt": context,
+        "max_tokens": 100
+    }
+
     result = gpt(prompt, n=1, stop=None)[0]
     result = extract_answer(result)
     if if_true(result):
@@ -179,27 +211,7 @@ def check_string(string):
     return "{" in string
 
 
-# 对三元组打分，没有用这个
-def triple_scores(triples, question, thought):
-    scores = []
-    prompt = f"Question: {question}\nThought: {thought}\n"
-    for i, triple in enumerate(triples):
-        prompt += f"Triple {i + 1}: {triple}\n"
-    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.9, 0.8, 0.2]"
 
-    # 调用 GPT 模型获取评分
-    score_output = gpt(prompt, n=1, stop=None)[0].strip()
-
-    # 解析评分
-    try:
-        # 提取方括号中的分数列表
-        score_str = score_output.split('[')[1].split(']')[0]
-        scores = list(map(float, score_str.split(',')))
-        # 确保分数在有效范围内
-        scores = [score if 0 <= score <= 0.9 else 0.0 for score in scores]
-    except (IndexError, ValueError):
-        scores = [0.0] * len(triples)  # 如果无法解析为浮点数，设为0.0
-    return scores
 
 
 def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None,
@@ -804,6 +816,7 @@ def rollout_random(node, args, task, idx, max_depth=7):
                             else:
                                 node.is_terminal = False
                                 node.reward = -1
+                                node.answer = response
     return node.reward, node
 
 
@@ -1640,8 +1653,6 @@ def generate_prompt(node):
     question = node.question
     while node:
         new_segment = []
-        if node.state['thought']:
-            new_segment.append(f"Thought {node.depth}: {node.state['thought']}")
         if node.state['action']:
             new_segment.append(f"Action {node.depth}: {node.state['action']}")
         if node.state['observation'] and node.depth != 0:  # Exclude the observation from the root node
