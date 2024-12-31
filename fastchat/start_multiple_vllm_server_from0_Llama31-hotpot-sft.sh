@@ -3,7 +3,7 @@
 num_workers=3
 node_num=9
 
-model_path=/home/zhaiyuanzhao/LLM-Agents-with-Q/hotpot/trained_models/policy/policy-iteration1-checkpoint-51-3epoch/merged_model
+model_path=/home/zhaiyuanzhao/LLM-Agents-with-Q/hotpot/trained_models/iteration2/hotpot-policy-huan/checkpoint-60-epoch3/merged_model
 explore_model_name=llama31-hotpot
 exp_name=llama31-hotpot-collect-MCTS
 

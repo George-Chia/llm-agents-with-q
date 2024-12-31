@@ -9,9 +9,9 @@ from peft import PeftModel
 
 # Manually set your parameters here
 base_model_name_or_path = "/home/zhaiyuanzhao/llm/Meta-Llama-3.1-8B-Instruct"
-peft_model_path = "/home/zhaiyuanzhao/LLM-Agents-with-Q/hotpot/trained_models/policy/policy-iteration1-checkpoint-17-1epoch"
+peft_model_path = "hotpot/trained_models/iteration2/hotpot-critique-huan/checkpoint-82-epoch1"
 output_dir = peft_model_path+"/merged_model"
-device = "cuda:3"  # set to 'auto' or specify device like 'cuda:0'
+device = "cuda:7"  # set to 'auto' or specify device like 'cuda:0'
 push_to_hub = False  # set to True if you want to push to the Hugging Face Model Hub
 
 # Configure logging
