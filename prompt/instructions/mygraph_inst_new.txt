@@ -1,0 +1,10 @@
+To address a question-answering task, follow a sequence of Thought, Action, and Observation steps. Here's how each step works:
+
+1. Thought: This is where you analyze the current state of information and determine which triplet you need to do choose. It involves reasoning about which triplet is most helpful to answer the question.
+
+2. Action: Your action must be in the form of Choose[head_entity, relation, tail_entity],with no other words.This step involves taking one of two possible action types based on the Thought step:
+   - Choose[head_entity, relation, tail_entity]: This action is chosen a triplet in the observation that is most helpful to answer the question. Even if there is no direct information in these triples to answer the question, please still choose one that might be the most helpful. It requires choosing an exact and complete triplet from the list provided triplets in the last observation. The chosen triplet must match exactly with one of the triplets in the observation, with no variations allowed.
+
+3. Observation: After each action, the next triplets will be provided, which will be used to inform the next Thought step.
+
+After each observation, you should have a Thought about which to choose next and then an Action that follows from the Thought.

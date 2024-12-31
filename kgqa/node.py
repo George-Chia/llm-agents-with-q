@@ -60,6 +60,8 @@ class Node:
         self.next_triple_list=[]
         # 增加问题正确答案
         self.true_answer = true_answer
+        #记录回答的答案
+        self.anser = ""
 
     def uct(self):
         if self.visits == 0 and self.value >= 0:
@@ -222,13 +224,19 @@ def get_conv_from_bottom(node, conv_template):
 
 def get_messages_from_bottom(node):
     messages = []
+    # 修改信息，之传入当前节点的observation,避免选择三元组错误
+    if node.parent:
+        messages.insert(0, {'role': 'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
+        messages.insert(0, {'role': 'assistant', 'content': f"{node.state['action']}"})
+        node = node.parent
+
     while node.parent:
         # if 'regenerate_prompt' in node.state.keys():
         #     critique = f"{node.state['regenerate_prompt']}"
         #     messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}"+critique+node.state['observation']})
         # else:
         # 增加 wiki 信息
-        messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
+        #messages.insert(0,{'role':'user', 'content': f"{node.state['observation']}" + f"  {node.wikiinformation}"})
         messages.insert(0,{'role':'assistant', 'content': f"{node.state['action']}"})
         # if 'regenerate_prompt' in node.state.keys():
         #     critique = f"{node.state['regenerate_prompt']}"

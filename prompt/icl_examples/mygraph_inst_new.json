@@ -15,40 +15,6 @@
         {
             "role": "assistant",
             "content": "Thought: Now that I know Rift Valley Province is in Kenya, I need to find out what form of currency Kenya uses. The most relevant triple from the previous observation is the one that specifies Kenya's currency. \nAction: Choose[Kenya, location.country.currency_used, Kenyan shilling]"
-        },
-        {
-            "role": "user",
-            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Kenyan shilling, used_year, 1966],[Kenyan shilling, used.country, Kenyan]]"
-        },
-        {
-            "role": "assistant",
-            "content": "Thought: With the information that Kenya uses the Kenyan shilling as its currency, I can now answer the original question about the currency used in the nation where Rift Valley Province is located. \nAction: Finish[Kenyan shilling]"
-        }
-    ],
-    [
-        {
-            "role": "user",
-            "content": "Question: The artist nominated for The Long Winter lived where? Here are some candidate knowledge triplets you can choose from: [[The Long Winter, book.written_work.author, Laura Ingalls Wilder], [Laura Ingalls Wilder, people.person.date_of_birth, 1867-02-07], [Laura Ingalls Wilder, people.person.place_of_birth, Pepin, Wisconsin]]"
-        },
-        {
-            "role": "assistant",
-            "content": "Thought: To find out where the artist nominated for The Long Winter lived, I first need to identify the author of the book. The most relevant triple here is the one that connects The Long Winter to its author. \nAction: Choose[The Long Winter, book.written_work.author, Laura Ingalls Wilder]"
-        },
-        {
-            "role": "user",
-            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Laura Ingalls Wilder, people.person.date_of_birth, 1867-02-07], [Laura Ingalls Wilder, people.person.place_of_birth, Pepin, Wisconsin], [Laura Ingalls Wilder, people.place_lived.location, De Smet, South Dakota]]"
-        },
-        {
-            "role": "assistant",
-            "content": "Thought: Now that I know Laura Ingalls Wilder is the author of The Long Winter, I need to find out where she lived. The most relevant triple from the previous observation is the one that specifies her place of residence. \nAction: Choose[Laura Ingalls Wilder, people.place_lived.location, De Smet, South Dakota]"
-        },
-        {
-            "role": "user",
-            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[De Smet, South Dakota, location.in_country, United States], [De Smet, South Dakota, location.historic_significance, Little House on the Prairie series], [Laura Ingalls Wilder, people.place_lived.location, De Smet, South Dakota]]"
-        },
-        {
-            "role": "assistant",
-            "content": "Thought: With the information that Laura Ingalls Wilder lived in De Smet, South Dakota, I can now answer the original question about where the artist nominated for The Long Winter lived. \nAction: Finish[De Smet, South Dakota]"
         }
     ],
     [
@@ -67,14 +33,6 @@
         {
             "role": "assistant",
             "content": "Thought: Now that I have identified Alexander Graham Bell as the inventor, I need to find out where he was born. The relevant triple from the observation is the one specifying his place of birth. \nAction: Choose[Alexander Graham Bell, people.person.place_of_birth, Edinburgh, Scotland]"
-        },
-        {
-            "role": "user",
-            "content": "\nObservation: Here are some candidate knowledge triplets you can choose from: [[Edinburgh, Scotland, location.in_country, United Kingdom], [Edinburgh, Scotland, location.historic_significance, Capital of Scotland], [Alexander Graham Bell, people.person.date_of_birth, 1847-03-03]]"
-        },
-        {
-            "role": "assistant",
-            "content": "Thought: With the information that Alexander Graham Bell was born in Edinburgh, Scotland, I can now answer the question regarding the birthplace of the inventor of the telephone. \nAction: Finish[Edinburgh, Scotland]"
         }
     ],
     [
@@ -92,7 +50,7 @@
         },
         {
             "role": "assistant",
-            "content": "Thought: No relevant information were found from the candidate knowledge triplets. Based on previous information and my own knowledge, I know Antonio Vivaldi was born in Venice, Italy. \nAction: Finish[Venice, Italy]"
+            "content": "Thought: No relevant information were found from the candidate knowledge triplets. Based on previous information and my own knowledge, I think the most helpful triplet is [Antonio Vivaldi, music.person.date_of_birth, 1678-03-04]. \nAction: Choose[Antonio Vivaldi, music.person.date_of_birth, 1678-03-04]"
         }
     ]
 ]
