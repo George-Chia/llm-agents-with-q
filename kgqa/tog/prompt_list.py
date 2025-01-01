@@ -19,7 +19,7 @@ Q: {}
 Relation: {}
 Entites: """
 
-answer_prompt = """Given a question and the associated retrieved knowledge graph triplets (entity, relation, entity) and information, you are asked to answer the question with these triplets, information and your knowledge. If there are not enough information,please answer the question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.
+answer_prompt = """You are asked to answer a question with your knowledge. If there are not enough information,please answer the question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.
 Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
 Knowledge Triplets: Taste cannot be controlled by law., media_common.quotation.author, Thomas Jefferson
 retrivainfo: Thomas Jefferson, the third President of the United States, is known for his contributions to American democracy and his advocacy for individual freedoms. He passed away on July 4, 1826, at the age of 83 due to natural causes, specifically a combination of respiratory failure and heart failure, which were complications from a severe case of laryngitis and pneumonia.
@@ -58,6 +58,24 @@ A: Based on the given knowledge triplets and information, we can infer that the 
 
 Q: {}
 """
+
+answer_directly = """You are asked to answer a question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.
+Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
+A: According to my own knowledge,Thomas Jefferson {died of natural causes, specifically a combination of respiratory failure and heart failure, at the age of 83 on July 4, 1826}.
+
+Q: The artist nominated for The Long Winter lived where?
+A: According to my own knowledge, the author of The Long Winter, Laura Ingalls Wilder, lived in De Smet. Therefore, the answer to the question is {De Smet}.
+
+Q: Who is the coach of the team owned by Steve Bisciotti?
+A: According to my own knowledge,the coach of the team owned by Steve Bisciotti, the Baltimore Ravens, is {John Harbaugh}.
+
+Q: Rift Valley Province is located in a nation that uses which form of currency?
+A: According to my own knowledge,the answer to the question is {Kenyan shilling}.
+
+Q: The country with the National Anthem of Bolivia borders which nations?
+A: According to my own knowledge,Bolivia, the country with the National Anthem "Himno Nacional de Bolivia," borders five nations: {Argentina, Brazil, Chile, Paraguay, and Peru}.
+
+Q: """
 
 prompt_evaluate="""Given a question ,some information about the question and the associated retrieved knowledge graph triplets (entity, relation, entity), you are asked to answer whether it's sufficient for you to answer the question with these triplets and your knowledge (Yes or No).
 Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
