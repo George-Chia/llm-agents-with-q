@@ -12,12 +12,10 @@ def parse_action(llm_output: str) -> str:
     assert action is not None
     return action
 
-
+# 16370
 # 加载JSON文件
-with open('hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations/89.json', 'r') as f:
-    root = json.load(f)
 
-with open('hotpot/trajectories-MCTS-critique-disable_early_stop_train_llama31_mcts_20iterations/89.json', 'r') as f:
+with open('hotpot/trajectories_SIGIR/Iteration1/test/trajectories-Critique-MCTS-3n-policy-critique-iter1Epoch3-huan_test_llama31_mcts_30iterations/16370.json', 'r') as f:
     root = json.load(f)
 
 

@@ -260,19 +260,19 @@ def process_search(question, cluster_chain_of_entities, obs, args):
         #obsi, r, done, info = myenv.step(action)
         #obs += obsi
     return obs
-def reasoning(question, cluster_chain_of_entities, args,retrivainfo):
-    obs = retrivainfo
-    prompt = prompt_evaluate + question
-    chain_prompt = '\n'.join([', '.join([str(x) for x in chain]) for sublist in cluster_chain_of_entities for chain in sublist])
-    prompt += "\nKnowledge Triplets: " + chain_prompt + '\nretrivainfo: ' + retrivainfo + 'A: '
+# def reasoning(question, cluster_chain_of_entities, args,retrivainfo):
+#     obs = retrivainfo
+#     prompt = prompt_evaluate + question
+#     chain_prompt = '\n'.join([', '.join([str(x) for x in chain]) for sublist in cluster_chain_of_entities for chain in sublist])
+#     prompt += "\nKnowledge Triplets: " + chain_prompt + '\nretrivainfo: ' + retrivainfo + 'A: '
 
-    response = run_llm(prompt, args.temperature_reasoning, args.max_length, args.opeani_api_keys, args.LLM_type)
+#     response = run_llm(prompt, args.temperature_reasoning, args.max_length, args.opeani_api_keys, args.LLM_type)
     
-    result = extract_answer(response)
-    if if_true(result):
-        return True, response
-    else:
-        return False, response
+#     result = extract_answer(response)
+#     if if_true(result):
+#         return True, response
+#     else:
+#         return False, response
     
 
 
