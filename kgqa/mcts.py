@@ -595,6 +595,8 @@ def select_node(node, args, i=0):
             if node.parent:
                 node.parent.children.remove(node)
             node = node.parent
+            if node == None:
+                break
             if node.depth == 0:
                 break
             else:
