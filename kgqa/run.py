@@ -103,7 +103,7 @@ def run(args):
     info = []
 
     # 设置索引
-    idx = [1,5,10,15,20,25,30,35,40,45,50,51,60,65,70,75,80,85,90,95,100]
+    # idx = [1,5,10,15,20,25,30,35,40,45,50,51,60,65,70,75,80,85,90,95,100]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve

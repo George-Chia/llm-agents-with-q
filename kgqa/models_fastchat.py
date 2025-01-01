@@ -84,6 +84,32 @@ def phi3_instruct(prompt, model, temperature, max_new_tokens, n, stop)  -> list 
         response_list.append(response)
     return response_list
 
+def llama31_instruct(prompt, model, n)  -> list :
+    worker_addr = get_worker_address(model)
+    conv = get_conv_template('llama-3')
+    conv.append_message(conv.roles[0], prompt)
+    conv.append_message(conv.roles[1], None)
+    prompt = conv.get_prompt()
+    
+    gen_params = {
+        "model": model,
+        "prompt": prompt,
+        "temperature": 1,
+        "top_p": 0.9,
+        "max_new_tokens": 128,
+        "stop": None,
+        "stop_token_ids": conv.stop_token_ids,
+        "echo": False,
+    }
+    response_list = []
+    for _ in range(n):
+        response = get_response(worker_addr, gen_params)
+        response = response.replace('\nAction: ', "")
+        response = response.replace('Action: ', "")
+        response = response.replace('\n', "")
+        response_list.append(response)
+    return response_list
+
 
 def fschat_instruct_conv(conv, model, temperature, max_new_tokens, n, stop)  -> list :
     try:
