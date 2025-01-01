@@ -773,6 +773,7 @@ def rollout_random(node, args, task, idx, max_depth=7):
         while len(new_states) == 0:
             if args.enable_fastchat_conv:
                 new_states = generate_new_states_fastchat_conv(node, args, task, n)
+
                 '''
                 for state in new_states:
                     if state.is_terminal and state.reward != 1:
@@ -794,7 +795,10 @@ def rollout_random(node, args, task, idx, max_depth=7):
         # max_value_index = values.index(max(values))
         # max_value_index=random.randint(0,len(new_states)-1)
         max_value_index = random.randint(0, len(new_states) - 1)
+        node.children = [new_states[max_value_index]]
         node = new_states[max_value_index]
+
+        evaluate_node(node.parent, args, task)
         depth += 1
         if depth == max_depth:
             reasoning_chain = get_reasoning_chain(node)
