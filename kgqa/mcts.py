@@ -581,7 +581,7 @@ def select_node(node, args, i=0):
             node_children_relation.append(child.triple)
         score_relation = triple_scores(node_children_relation, node.question, wiki_explored, args)
         max_score_index = score_relation.index(max(score_relation))
-        selected_child = node.children[max_score_index]
+        selected_child = node.children[max_score_index]   # list index error
         return selected_child
 
     while node and node.children:

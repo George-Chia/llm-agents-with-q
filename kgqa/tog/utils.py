@@ -7,6 +7,7 @@ from tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer
+from models_fastchat import llama31_instruct
 
 openai.api_base = "https://api.huiyan.chat/v1"
 
@@ -231,7 +232,13 @@ def generate_without_explored_paths(question,cluster_chain_of_entities, args, re
     prompt = answer_prompt + question + '\n'
     chain_prompt = '\n'.join([', '.join([str(x) for x in chain]) for sublist in cluster_chain_of_entities for chain in sublist])
     prompt += "\nKnowledge Triplets: " + chain_prompt + '\nthe associated retrieved knowledge: ' + retrivainfo + 'A: '
-    result = run_llm(prompt, args.temperature_reasoning, args.max_length, args.opeani_api_keys, args.LLM_type)
+    if args.enable_fastchat_conv and 'lama' in args.backend:
+        result = llama31_instruct(prompt, model=args.backend, n=1)[0]
+    else:
+    # 调用 GPT 模型获取评分
+        # result = gpt(prompt, n=1, stop=None)[0].strip()
+        result = run_llm(prompt, args.temperature_reasoning, args.max_length, args.opeani_api_keys, args.LLM_type)
+    # result = run_llm(prompt, args.temperature_reasoning, args.max_length, args.opeani_api_keys, args.LLM_type)
     return result
 
 
