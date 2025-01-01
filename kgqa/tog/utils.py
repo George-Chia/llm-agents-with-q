@@ -228,10 +228,10 @@ def if_true(prompt):
     return False
 
 
-def generate_without_explored_paths(question,cluster_chain_of_entities, args, retrivainfo):
-    prompt = answer_prompt + question + '\n'
-    chain_prompt = '\n'.join([', '.join([str(x) for x in chain]) for sublist in cluster_chain_of_entities for chain in sublist])
-    prompt += "\nKnowledge Triplets: " + chain_prompt + '\nthe associated retrieved knowledge: ' + retrivainfo + 'A: '
+def generate_without_explored_paths(question, cluster_chain_of_entities, args, retrivainfo):
+    prompt = answer_directly + question + '\n'
+    # chain_prompt = '\n'.join([', '.join([str(x) for x in chain]) for sublist in cluster_chain_of_entities for chain in sublist])
+    prompt += 'A: '
     if args.enable_fastchat_conv and 'lama' in args.backend:
         result = llama31_instruct(prompt, model=args.backend, n=1)[0]
     else:
