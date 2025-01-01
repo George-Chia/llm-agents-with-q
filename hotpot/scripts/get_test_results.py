@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'hotpot/trajectories-simple-policyIter2Epoch3_test_llama31_simple_1iterations'
+trajectories_save_path = 'hotpot/trajectories_SIGIR/Iteration0/test/trajectories-simple_test_llama31_simple_1iterations'
 
 # T06: 0.36
 # T06: 0.37
