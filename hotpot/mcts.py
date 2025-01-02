@@ -268,7 +268,7 @@ def _generate_reflection_query(log_str: str, memory, FEW_SHOT_EXAMPLES):
         tmp_memory += '\n\nReflection from past attempts:\n'
         for i, m in enumerate(memory):
             tmp_memory += f'Trial #{i}: {m}\n'
-    tmp_memory += "\n\nNew plan:"
+    tmp_memory += "\nReflection:"
     query.append(['user', tmp_memory])
     query.append(['assistant', None])
     return query
@@ -308,11 +308,11 @@ def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajecto
         logging.info(f"Iteration {i + 1}")
         trials = []
         memory = []
-        for trial_idx in range(refine_num+1):
+        for trial_idx in range(refine_num):
             if break_flag:
                 break
             node = root  # Always start from the root node
-            depth = 0
+            depth = 0def select_node(node, args, i=0)
             # Perform a simulation from the root
             while not node.is_terminal and depth < args.max_depth:
                 expand_node(node, args, task, args.max_depth, memory=memory)  # Expand current node
@@ -339,16 +339,14 @@ def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajecto
                 raise KeyError
             # todo: debug
             this_messages = collect_trajectory_nodes(node)
-            inst = this_messages[0].replace('WebShop [SEP] ', '').replace(' [SEP] Search', '')
+            inst = this_messages[0]
             this_trajectory = inst + '\n'
             for item in this_messages[2:]:
-                new_observation = item['observation'].replace(f'Observation: \n{inst} [SEP] ', '')
+                new_observation = item['observation']
                 this_trajectory += f"{item['action']}\n{new_observation}\n"
-            if 'Observation: \nThank you for shopping with us!' in this_trajectory:
-                this_trajectory = this_trajectory.rsplit('Observation: \nThank you for shopping with us!', 1)[0]
             trials.append([this_trajectory, this_messages[-1]['observation']])
             plan_query = _generate_reflection_query(this_trajectory, memory, reflexion_few_shot)
-            reflexion_context = copy.deepcopy(get_context(node, args, args.backend))
+            reflexion_context = copy.deepcopy(get_context(node, args.conv_template, args.backend))
             reflexion_context.messages = plan_query
             next_plan = gpt(reflexion_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
             memory.append(next_plan)
@@ -360,10 +358,10 @@ def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajecto
     task_dict['memory'] = memory
     task_dict['trials'] = trials
     # task_dict['best_trajectory_index_list'] = best_trajectory_index_list
-    if args.add_fixed_prefix:
-        task_id = idx.replace("fixed_", "")
-    else:
-        task_id = idx
+    # if args.add_fixed_prefix:
+    #     task_id = idx.replace("fixed_", "")
+    # else:
+    task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
     # Post-process: select the best trajectory
     if successful_trajectories:

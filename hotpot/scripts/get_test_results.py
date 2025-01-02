@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'hotpot/trajectories_SIGIR/Iteration0/test/trajectories-simple_test_llama31_simple_1iterations'
+trajectories_save_path = 'hotpot/trajectories-reflexion_test_llama31_refine_4trial_1iterations'
 
 # T06: 0.36
 # T06: 0.37
@@ -30,10 +30,10 @@ for file in os.listdir(trajectories_save_path):
     # best_reward.append(result['best reward'])
     # best_em.append(result['best em'] if result['best em']  is not None else 0)
     best_child_reward.append(result['best child reward'])
-    best_child_em.append(result['best child em'] if result['best child em']  is not None else 0)
+    # best_child_em.append(result['best child em'] if result['best child em']  is not None else 0)
 print("Sample number: ", len(best_child_reward))
 # print("average best reward: ", sum(best_reward)/len(best_reward))
 # print("average best em: ", sum(best_em)/len(best_reward))
 # print("average success length: ", sum(success_length_list)/len(success_length_list))
 print("average best child reward: ", sum(best_child_reward)/len(best_child_reward))
-print("average best child em: ", sum(best_child_em)/len(best_child_em))
+# print("average best child em: ", sum(best_child_em)/len(best_child_em))

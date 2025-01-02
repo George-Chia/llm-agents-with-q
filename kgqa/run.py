@@ -258,6 +258,10 @@ def parse_args():
     args.add_argument('--critique_temperature', type=float)
     args.add_argument('--enable_rollout_with_critique', action='store_true')
 
+    # for dataset
+    args.add_argument('--kgqa_dataset', choices=['cwq', 'web_qsp', 'grail_qa'], default='cwq')
+    args.add_argument('--enable_wiki_search', action='store_true')
+
     args = args.parse_args()
     return args
 

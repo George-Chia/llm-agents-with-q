@@ -9,7 +9,7 @@ from collections import Counter
     
 DATA_DIR = "data"
 HOTPOTQA_SPLIT_FILE = {
-  "train": "WebQuestions.json",
+  "train": "cwq.json",
   "dev": "hotpot_dev_v1_simplified.json",
   "test": "hotpot_test_v1_simplified.json",
 }
@@ -87,11 +87,11 @@ class HotPotQAWrapper(gym.Wrapper):
     # WebQuestions
     #self.data = [(d['RawQuestion'], d['answers'],d['topic_entity']) for d in self.data]
     # cwq
-    #self.data = [(d['Question'], d['answer'], d['topic_entity']) for d in self.data]
+    self.data = [(d['question'], d['answer'],d['topic_entity']) for d in self.data]
     #webqsp(这个没改完)
     #self.data = [(d['RawQuestion'], d['answer'], d['topic_entity']) for d in self.data]
     # gailqa
-    self.data = [(d['question'], d['answer'][0]["entity_name"], d['topic_entity']) for d in self.data]
+    # self.data = [(d['question'], d['answer'][0]["entity_name"], d['topic_entity']) for d in self.data]
     self.data_idx = 0
     self.split = split
 
