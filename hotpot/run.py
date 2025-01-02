@@ -4,7 +4,7 @@ import argparse
 
 from hotpotqa import HotPotQATask
 from models import gpt_usage
-from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search
+from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_refine_search
 import logging
 
 from typing import List, Tuple, Any
@@ -118,6 +118,14 @@ def run(args):
                 state, value, reward, em = fschat_mcts_search(args, task, i, args.iterations, True, trajectories_save_path,
                                                               dpo_policy_model, dpo_reference_model, tokenizer, 
                                                               enable_reflection=args.enable_reflection)
+            elif args.algorithm == 'refine':
+                state, value, reward, em = fschat_refine_search(args, task, i, args.iterations, True,
+                                                                trajectories_save_path, args.refine_num)
+            elif args.algorithm == 'lats':
+                state, value, reward, em = fschat_lats_search(args, task, i, args.iterations, True,
+                                                              trajectories_save_path)
+
+
         else:
             if args.algorithm == 'mcts':
                 state, value, all_nodes, reward, em = mcts_search(args, task, i, args.iterations, True)
@@ -159,12 +167,13 @@ def parse_args():
     )
     # args.add_argument('--task_start_index', type=int, default=900)
     # args.add_argument('--task_end_index', type=int, default=1000)
+    args.add_argument('--refine_num', type=int, default=1)
     args.add_argument('--prompt_sample', type=str, choices=['standard', 'cot'])
     args.add_argument('--n_generate_sample', type=int, default=1)  
     args.add_argument('--n_evaluate_sample', type=int, default=1)
     args.add_argument('--iterations', type=int, default=50)
     args.add_argument('--log', type=str)
-    args.add_argument('--algorithm', type=str, choices=['mcts', 'rap', 'tot', 'simple', 'beam'])
+    args.add_argument('--algorithm', type=str, choices=['mcts', 'simple', 'fschat_simple', 'beam', 'refine', 'lats'], default='mcts')
 
     args.add_argument('--max_depth', type=int, default=7)
     args.add_argument('--rollout_width', type=int, default=1)
@@ -218,7 +227,7 @@ def parse_args():
     args.add_argument('--enable_rollout_with_q', action='store_true')
 
     # various expansion_sampling_method for MCTS
-    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla'], default='vanilla')
+    args.add_argument('--expansion_sampling_method', choices=['conditional', 'critique', 'vanilla', 'memory', 'lats'], default='vanilla')
 
     # for Critique
     args.add_argument('--critique_backend', type=str,  default=None)

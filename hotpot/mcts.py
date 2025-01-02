@@ -256,6 +256,125 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     return best_child.state, best_child.value, best_child.reward, best_child.em
 
 
+def _generate_reflection_query(log_str: str, memory, FEW_SHOT_EXAMPLES):
+    """Allows the Agent to reflect upon a past experience."""
+    scenario: str = log_str
+    query = []
+    query.append(['system', 'You are an advanced reasoning agent that can improve based on self refection. You will be given a previous reasoning trial in which you were given access to an Docstore API environment and a question to answer. You were unsuccessful in answering the question either because you guessed the wrong answer with Finish[<answer>], or you used up your set number of reasoning steps. In a few sentences, Diagnose a possible reason for failure and devise a new, concise, high level plan that aims to mitigate the same failure. Use complete sentences.\nHere are some examples:'])
+    for item in FEW_SHOT_EXAMPLES:
+        query.append([item['role'], item['content']])
+    tmp_memory = f'{scenario}'
+    if len(memory) > 0:
+        tmp_memory += '\n\nReflection from past attempts:\n'
+        for i, m in enumerate(memory):
+            tmp_memory += f'Trial #{i}: {m}\n'
+    tmp_memory += "\n\nNew plan:"
+    query.append(['user', tmp_memory])
+    query.append(['assistant', None])
+    return query
+
+def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None, refine_num=1):
+    global gpt
+    global failed_trajectories
+    global reflection_map
+    gpt = partial(gpt, model=args.backend, temperature=args.temperature)
+    x = env.reset(idx=idx)
+    if to_print:
+        print(idx, x)
+
+    root = Node(state=None, question=x)
+    cur_task = x
+    instruction_path = "../prompt/instructions/hotpot_inst.txt"
+    icl_path = "../prompt/icl_examples/hotpot_icl.json"
+    with open(instruction_path) as f:
+        instruction = f.read()
+    raw_icl = json.load(open(icl_path))
+    reflexion_icl_path = "../prompt/reflexion_icl_examples/hotpot.json"
+    reflexion_few_shot = json.load(open(reflexion_icl_path))
+    observation, messages = prompt_with_icl(instruction, raw_icl, cur_task, 3)
+    root.messages = messages
+
+    failed_trajectories = []
+    reflection_map = []
+    successful_trajectories = []
+    unsuccessful_trajectories = []
+    not_finished_trajectories = []
+
+    break_flag = False
+    # Main Loop
+    for i in range(iterations):
+        if break_flag:
+            break
+        logging.info(f"Iteration {i + 1}")
+        trials = []
+        memory = []
+        for trial_idx in range(refine_num+1):
+            if break_flag:
+                break
+            node = root  # Always start from the root node
+            depth = 0
+            # Perform a simulation from the root
+            while not node.is_terminal and depth < args.max_depth:
+                expand_node(node, args, task, args.max_depth, memory=memory)  # Expand current node
+                if not node.children:
+                    break  # If no child can be generated, break
+                if args.expansion_sampling_method == "critique":
+                    node = node.children[-1]
+                else:
+                    node = random.choice(node.children)  # Randomly select a child node
+                depth += 1
+
+            # Check the terminal condition
+            if node.is_terminal and node.reward == 1:
+                logging.info(f"Successful trajectory found in iteration {i + 1}")
+                successful_trajectories.append(node)
+                break_flag = True
+            elif node.is_terminal and node.reward < 1:
+                logging.info(f"Unsuccessful trajectory found in iteration {i + 1}")
+                unsuccessful_trajectories.append(node)
+            elif not node.is_terminal:
+                logging.info(f"Not finished trajectory found in iteration {i + 1}")
+                not_finished_trajectories.append(node)
+            else:
+                raise KeyError
+            # todo: debug
+            this_messages = collect_trajectory_nodes(node)
+            inst = this_messages[0].replace('WebShop [SEP] ', '').replace(' [SEP] Search', '')
+            this_trajectory = inst + '\n'
+            for item in this_messages[2:]:
+                new_observation = item['observation'].replace(f'Observation: \n{inst} [SEP] ', '')
+                this_trajectory += f"{item['action']}\n{new_observation}\n"
+            if 'Observation: \nThank you for shopping with us!' in this_trajectory:
+                this_trajectory = this_trajectory.rsplit('Observation: \nThank you for shopping with us!', 1)[0]
+            trials.append([this_trajectory, this_messages[-1]['observation']])
+            plan_query = _generate_reflection_query(this_trajectory, memory, reflexion_few_shot)
+            reflexion_context = copy.deepcopy(get_context(node, args, args.backend))
+            reflexion_context.messages = plan_query
+            next_plan = gpt(reflexion_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+            memory.append(next_plan)
+
+    best_tree_child = node
+    # best_trajectory_index_list = collect_trajectory_index(best_tree_child)
+    task_dict = root.to_dict()
+    task_dict['best child reward'] = best_tree_child.reward
+    task_dict['memory'] = memory
+    task_dict['trials'] = trials
+    # task_dict['best_trajectory_index_list'] = best_trajectory_index_list
+    if args.add_fixed_prefix:
+        task_id = idx.replace("fixed_", "")
+    else:
+        task_id = idx
+    json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
+    # Post-process: select the best trajectory
+    if successful_trajectories:
+        best_node = max(successful_trajectories, key=lambda x: x.reward)
+        return best_node.state, best_node.value, best_node.reward, best_node.em
+    elif unsuccessful_trajectories:
+        best_node = max(unsuccessful_trajectories, key=lambda x: x.reward)
+        return best_node.state, best_node.value, best_node.reward, best_node.em
+    elif not_finished_trajectories:
+        return 0, 0, 0, 0
+
 def fschat_simple_search(args, task, idx, iterations=30, to_print=True, trajectories_save_path=None, enable_reflection=False):
     global gpt
     global failed_trajectories
@@ -463,7 +582,7 @@ def select_node(node):
         
     return node  # This will return None if all paths from the root are exhausted
 
-def expand_node(node, args, task, max_depth):
+def expand_node(node, args, task, max_depth, memory=None):
     n = args.n_generate_sample
     if node.depth >= max_depth:
         logging.info("Depth limit reached")
@@ -488,6 +607,8 @@ def expand_node(node, args, task, max_depth):
             else:
                 raise NotImplementedError
             new_nodes = generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template)
+        elif args.expansion_sampling_method == 'memory':
+            new_nodes = generate_new_states_memory_fastchat_conv(node, args, task, n, memory)
         elif args.expansion_sampling_method == 'vanilla':
             new_nodes = generate_new_states_fastchat_conv(node, args, task, n)
     else:
@@ -682,6 +803,68 @@ def get_context(node, conv_template, backend):
     else:
         raise NotImplementedError
     return context
+
+def generate_new_states_memory_fastchat_conv(node, args, task, n, memory):
+    global failed_trajectories
+
+    context = get_context(node, args.conv_template, args.backend)
+    if len(context.messages) == 26 and len(memory) > 0:
+        query = '\nYour memory for the task below:'
+        for i, m in enumerate(memory):
+            query += f'\nTrial {i}:\n{m.strip()}'
+        query += f"\nHere is the task:\n{context.messages[24][1]}"
+        context.messages[24][1] = query
+    response_list = gpt(context, n=n, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)
+
+    thought_lines = [parse_thought(response) for response in copy.deepcopy(response_list)]
+    action_lines = [parse_action(response) for response in copy.deepcopy(response_list)]
+    # sampled_actions = response_list
+
+    logging.info(f"SAMPLED ACTION: {action_lines}")
+    tried_actions = []
+
+    unique_states = {}  # Store unique states here
+    for thought_line, action_line in zip(thought_lines, action_lines):
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+
+        # Use thought and action to form a unique key
+        unique_key = f"{thought_line}::{action_line}"
+
+        if unique_key in unique_states:
+            continue  # Skip if this state already exists
+
+        tried_actions.append(action_line)
+
+        if action_line:
+            action_type = action_line.split('[')[0] if '[' in action_line else action_line
+            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
+
+            obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+
+            # Update the new state dictionary
+            # new_state['thought'] = thought_line
+            new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+            new_state['observation'] = f"Observation: {obs}"
+
+            new_node = Node(state=new_state, question=node.question, parent=node)
+            new_node.is_terminal = r == 1 or done
+            new_node.reward = r
+            new_node.depth = node.depth + 1
+            if r == 1:
+                new_node.em = info.get('em')
+            unique_states[unique_key] = new_node  # Add this state to unique_states
+            logging.info(f"NEW NODE: {new_node}")
+            logging.info(f"Feedback: {info}")
+
+            if new_node.is_terminal and r == 0:
+                trajectory = collect_trajectory_from_bottom(new_node)
+                # print(trajectory)
+                # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
+                failed_trajectories.append(
+                    {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+
+    return list(unique_states.values())  # Return unique nodes as a list
+
 
 def generate_new_states_fastchat_conv(node, args, task, n):
     global failed_trajectories
