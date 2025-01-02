@@ -298,7 +298,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         while node is None or (node.is_terminal and node.reward != 1):
             logging.info(f"Need to backtrack or terminal node with reward 0 found at iteration {i + 1}, reselecting...")
-            node = select_node(root)
+            node = select_node(root, args)
 
         if node is None:
             logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
