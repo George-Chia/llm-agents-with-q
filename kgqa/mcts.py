@@ -272,8 +272,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
     cur_task = x[0]
     if enable_reflection:
-        instruction_path = "../prompt/instructions/hotpot_inst_reflection.txt"
-        icl_path = "../prompt/icl_examples/hotpot_icl_reflection.json"
+        instruction_path = "../prompt/instructions/mygraph_inst_reflection.txt"
+        icl_path = "../prompt/icl_examples/mygraph_icl_reflection.json"
     else:
         instruction_path = "../prompt/instructions/mygraph_inst_new.txt"
         icl_path = "../prompt/icl_examples/mygraph_inst_new.json"
@@ -304,6 +304,9 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         while node is None or (node.is_terminal and node.reward != 1):
             logging.info(f"Need to backtrack or terminal node with reward 0 found at iteration {i + 1}, reselecting...")
             node = select_node(root, args, i)
+            last_selected_node = copy.deepcopy(node)
+            if node == last_selected_node:
+                break
 
         if node is None:
             logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
@@ -1214,10 +1217,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     # Store unique states here
 
     # 处理图谱扩展
-    for thought_line, action_line, next_entity_relation, next_entity, next_chain in zip(thought_lines, action_lines,
-                                                                                        next_entity_relations_list,
-                                                                                        next_entity_list,
-                                                                                        next_chain_list):
+    for thought_line, action_line in zip(thought_lines, action_lines):
         idx = 0
         new_state = node.state.copy()  # Make a copy of the parent node's state
 
@@ -1362,7 +1362,7 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                         'observation'] = f'Observation: Invalid action! You chose a triplet that does not match any of the candidate knowledge triplets. Please remember to choosing an exact and complete triplet from: ' + original_observation[
                                                                                                                                                                                                                              original_observation.find(
                                                                                                                                                                                                                                  '['):] if '[' in original_observation else original_observation
-                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=next_entity,true_answer=node.true_answer)
+                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,true_answer=node.true_answer)
                     new_node.depth = node.depth + 1
                     unique_states[unique_key] = new_node
                     logging.info(f"NEW NODE: {new_node}")
@@ -1386,77 +1386,6 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     return list(unique_states.values())
 
 
-def generate_new_states_conditional_fastchat_conv(node, args, task, n):
-    global failed_trajectories
-    assert args.enable_fastchat_conv
-
-    sampled_response_list = []
-    sampled_obs_list = []
-
-    unique_states = {}  # Store unique states here
-
-    for sampling_index in range(n):
-        context = get_context(node, args.conv_template, args.backend)
-        if len(sampled_response_list) > 0:
-            original_observation = context.messages[-2][1]
-            conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
-            for sampled_response, sampled_obs in zip(sampled_response_list, sampled_obs_list):
-                conditional_context += sampled_response + "\n"
-                conditional_context += 'Observation:' + '\n' + sampled_obs + "\n\n"
-            conditional_context += 'Please summarize insights from the potential actions and feedback, and generate a new response with as much distinctiveness as possible for the Observation: \n'
-            conditional_context += original_observation
-            context.messages[-2][1] += conditional_context + "\n"
-        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
-        sampled_response_list.append(response)
-
-        thought_line = parse_thought(response)
-        action_line = parse_action(response)
-        # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
-
-        new_state = node.state.copy()  # Make a copy of the parent node's state
-
-        # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
-
-        if unique_key in unique_states:
-            continue  # Skip if this state already exists
-
-        # tried_actions.append(action_line)
-
-        if action_line:
-            action_type = action_line.split('[')[0] if '[' in action_line else action_line
-            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
-
-            obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
-
-            # Update the new state dictionary
-            # new_state['thought'] = thought_line
-            new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-            new_state['observation'] = f"Observation: {obs}"
-
-            sampled_obs_list.append(f"Observation: {obs}")
-
-            new_node = Node(state=new_state, question=node.question, parent=node)
-            new_node.is_terminal = r == 1 or done
-            new_node.reward = r
-            new_node.depth = node.depth + 1
-            if r == 1:
-                new_node.em = info.get('em')
-            unique_states[unique_key] = new_node  # Add this state to unique_states
-            logging.info(f"NEW NODE: {new_node}")
-            logging.info(f"Feedback: {info}")
-
-            if new_node.is_terminal and r == 0:
-                trajectory = collect_trajectory_from_bottom(new_node)
-                # print(trajectory)
-                # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
-                failed_trajectories.append(
-                    {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
-
-    return list(unique_states.values())  # Return unique nodes as a list
-
-
 def get_raw_observation(text):
     keyword = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation:'
     index = text.find(keyword)
@@ -1474,128 +1403,40 @@ def get_historical_context(context):
     return prompt
 
 
+# 直接生成所有的新状态
 def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_prompt_template):
     global failed_trajectories
-    assert args.enable_fastchat_conv
 
-    previous_response = None
-    previous_obs = None
+    unique_states = {}
 
-    unique_states = {}  # Store unique states here
-
-    for sampling_index in range(n):
-        context = copy.deepcopy(get_context(node, args.conv_template, args.backend))
-        critique = None
-        regenerate_prompt = None
-        if previous_response:
-            # generating critique
-            if not args.critique_backend:
-                args.critique_backend = args.backend
-            if not args.critique_conv_template:
-                args.critique_conv_template = args.conv_template
-            critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
-            # generating critique
-            if args.critique_prompt_template == 'template_huan':
-                original_observation = get_raw_observation(context.messages[-2][1])
-                critique_prompt_templat = critique_prompt_template.format(
-                    user_inst=critique_context.messages[-2][1],
-                    historical_context=get_historical_context(critique_context),
-                    current_state=previous_response + '\n' + previous_obs
-                )
-                if 'gpt' in args.critique_backend:
-                    raise NotImplementedError
-                else:
-                    critique_context.messages = [['system', critique_prompt_templat.split('</system>')[0]],
-                                                 ['user', critique_prompt_templat.split('</system>')[-1]],
-                                                 ['assistant', None]]
-                critique = \
-                critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[
-                    0]
-                if critique.startswith('Critique:'):
-                    critique = critique[9:]
-                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-                regenerate_prompt += previous_response + "\n"
-                regenerate_prompt += previous_obs + "\n"
-                regenerate_prompt += 'Critique: ' + critique + "\n\n"
-                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
-                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
-            else:
-                critique_prompt = critique_prompt_template.format(previous_response=previous_response,
-                                                                  previous_obs=previous_obs)
-                if isinstance(critique_context, list):  # for openai GPT
-                    original_observation = get_raw_observation(critique_context[-1]['content'])
-                    critique_context[-1]['content'] += critique_prompt + "\n"
-                else:  # for fastchat
-                    original_observation = get_raw_observation(critique_context.messages[-2][1])
-                    critique_context.messages[-2][1] += critique_prompt + "\n"
-                critique = \
-                critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[
-                    0]
-                # generating thought and action
-                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-                regenerate_prompt += previous_response + "\n"
-                regenerate_prompt += previous_obs + "\n"
-                regenerate_prompt += 'Critique: ' + critique + "\n\n"
-                regenerate_prompt += 'Based on the feedback, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
-                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
-            # critique_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
-            # critique_prompt += previous_response + "\n"
-            # critique_prompt += previous_obs + "\n\n"
-            # critique_prompt += 'Review the previous Thought, Action, and Observation. Your role is to determine whether the action is effective for completing the task, and provide specific and constructive feedback. Please output feedback directly. \nFormat\nFeedback:[[Feedback]]'
-
-            # if 'auto-j' in args.critique_backend:
-            #     critique_prompt = auto_j_single_template.format(previous_response=previous_response, previous_obs=previous_obs)
-            # else:
-
-        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
-        previous_response = response
-
-        # if len(sampled_response_list) > 0:
-        #     original_observation = context.messages[-2][1]
-        #     conditional_context = '\n\nBelow are the potential actions you might generate along with their corresponding environmental feedback: \n\n'
-        #     for sampled_response,sampled_obs in zip(sampled_response_list, sampled_obs_list):
-        #         conditional_context += sampled_response + "\n"
-        #         conditional_context += 'Observation:'+'\n'+sampled_obs + "\n\n"
-        #     conditional_context += 'Please summarize insights from the potential actions and feedback, and generate a new response with as much distinctiveness as possible for the Observation: \n'
-        #     conditional_context += original_observation
-        #     context.messages[-2][1] += conditional_context + "\n"
-        # response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
-        # sampled_response_list.append(response)
-
-        thought_line = parse_thought(response)
-        action_line = parse_action(response)
-        # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
-
-        new_state = node.state.copy()  # Make a copy of the parent node's state
-
-        # Use thought and action to form a unique key
-        unique_key = f"{thought_line}::{action_line}"
-
-        if unique_key in unique_states:
-            continue  # Skip if this state already exists
-
-        # tried_actions.append(action_line)
-
-        if action_line:
-            action_type = action_line.split('[')[0] if '[' in action_line else action_line
-            action_param = action_line.split('[')[1].split(']')[0] if '[' in action_line else ""
-
+    next_entity_relations_list, next_entity_list, next_chain_list = find_next_triples(n, node, args)
+    # 扩展的节点数
+    i = len(next_entity_relations_list)
+    # 图谱中没找到信息
+    if i == 0:
+        # 直接回答
+        results = generate_without_explored_paths(node.question, [], args, '')
+        action_type = "Finish[]"
+        action_param = clean_results(results)
+        new_state = node.state.copy()
+        if action_type.startswith("Finish[") and action_type.endswith("]"):
+            # 把当前节点传进环境
+            env.env.env.node = node
             obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
-
             # Update the new state dictionary
             # new_state['thought'] = thought_line
-            new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
-            new_state['observation'] = f"Observation: {obs}"
+            new_state['action'] = f"Thought: {action_param} Action: {action_type}"
+            new_state['observation'] = f"Observation: {results}"
+            unique_key = f"{action_param}::{action_type}::none"
 
-            new_state['critique'] = critique
-            new_state['regenerate_prompt'] = regenerate_prompt
-
-            previous_obs = f"Observation: {obs}"
-
-            new_node = Node(state=new_state, question=node.question, parent=node)
-            new_node.is_terminal = r == 1 or done
-            new_node.reward = r
+            # 新节点的topic_entity即父节点的关系剪枝后的entity
+            new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,true_answer=node.true_answer)
+            new_node.is_terminal = True
+            # 正确答案判断
+            if exact_match(action_param, node.true_answer):
+                new_node.reward = r
+            else:
+                new_node.reward = -1
             new_node.depth = node.depth + 1
             if r == 1:
                 new_node.em = info.get('em')
@@ -1609,8 +1450,191 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
                 # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
                 failed_trajectories.append(
                     {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+        return list(unique_states.values())
+    
+    context = get_context(node, args.conv_template, args.backend)
+    tried_actions = []
+    previous_response = None
+    previous_obs = None
+    
+    for sampling_index in range(n):
+        context = copy.deepcopy(get_context(node, args.conv_template, args.backend))
 
-    return list(unique_states.values())  # Return unique nodes as a list
+        critique = None
+        regenerate_prompt = None
+
+        if previous_response:
+            # generating critique
+            if not args.critique_backend:
+                args.critique_backend = args.backend
+            if not args.critique_conv_template:
+                args.critique_conv_template = args.conv_template
+            critique_context = copy.deepcopy(get_context(node, args.critique_conv_template, args.critique_backend))
+            # generating critique
+            if args.critique_prompt_template == 'template_huan':
+                original_observation = get_raw_observation(context.messages[-2][1])
+                critique_prompt_template = critique_prompt_template.format(
+                    user_inst=critique_context.messages[-2][1],
+                    historical_context=get_historical_context(critique_context),
+                    current_state=previous_response + '\n' + previous_obs
+                )
+                if 'gpt' in args.critique_backend:
+                    raise NotImplementedError
+                else:
+                    critique_context.messages = [['system', critique_prompt_template.split('</system>')[0]],
+                                                 ['user', critique_prompt_template.split('</system>')[-1]],
+                                                 ['assistant', None]]
+                critique = \
+                critique_gpt(critique_context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[
+                    0]
+                if critique.startswith('Critique:'):
+                    critique = critique[9:]
+                regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'
+                regenerate_prompt += previous_response + "\n"
+                regenerate_prompt += previous_obs + "\n"
+                regenerate_prompt += 'Critique: ' + critique + "\n\n"
+                regenerate_prompt += 'Based on the critique, generate a new Thought and Action with as much distinctiveness as possible for the Observation:' + "\n"
+                context.messages[-2][1] += regenerate_prompt + "\n" + original_observation
+            else:
+                raise NotImplementedError
+            
+
+            
+        response = gpt(context, n=1, stop="Observation", enable_fastchat_conv=args.enable_fastchat_conv)[0]
+        previous_response = response
+        thought_line = parse_thought(response) 
+        action_line = parse_action(response) 
+
+        idx = 0
+        new_state = node.state.copy()  # Make a copy of the parent node's state
+
+        # Use action to form a unique key
+        unique_key = f"{action_line}"
+
+        if unique_key in unique_states:
+            continue  # Skip if this state already exists
+
+        tried_actions.append(action_line)
+
+        if action_line:
+            action_type = action_line.split('[')[0] if '[' in action_line else action_line
+            action_param = '[' + action_line.split('[')[1].split(']')[0] + ']' if '[' in action_line else ""
+            # action_param_match = re.search(r'\[\[(.*)\]\]', action_line)
+            # action_param = f"[{action_param_match.group(1)}]" if action_param_match else ""
+
+            if action_type.startswith("Finish"):
+                # Use action to form a unique key
+                unique_key = f"{action_line}"
+
+                if unique_key in unique_states:
+                    continue  # Skip if this state already exists
+
+                tried_actions.append(action_line)
+                # 把当前节点传进环境
+                env.env.env.node = node
+                obs, r, done, info = step(env, f"{action_type.lower()}[{action_param}]")
+                # Update the new state dictionary
+                # new_state['thought'] = thought_line
+                new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                new_state['observation'] = f"Answer: {obs}"
+                new_state['critique'] = critique
+                new_state['regenerate_prompt'] = regenerate_prompt
+
+                previous_obs = f"Answer: {obs}"
+
+                # 新节点的topic_entity即父节点的关系剪枝后的entity
+                new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,
+                                true_answer=node.true_answer)
+                new_node.is_terminal = True
+                # 正确答案判断
+                if exact_match(action_param ,node.true_answer):
+                    new_node.reward = r
+                else:
+                    new_node.reward = -1
+                new_node.depth = node.depth + 1
+                if r == 1:
+                    new_node.em = info.get('em')
+                unique_states[unique_key] = new_node  # Add this state to unique_states
+                logging.info(f"NEW NODE: {new_node}")
+                logging.info(f"Feedback: {info}")
+
+                if new_node.is_terminal and r == 0:
+                    trajectory = collect_trajectory_from_bottom(new_node)
+                    # print(trajectory)
+                    # if f"{action_type.lower()}[{action_param}]" not in failed_trajectories.values():
+                    failed_trajectories.append(
+                        {'trajectory': trajectory, 'final_answer': f"{action_type.lower()}[{action_param}]"})
+            else:
+                generated_chain = string_to_list(action_param)
+                if generated_chain in next_chain_list:
+                    idx = next_chain_list.index(generated_chain)
+                    next_entity_relation = next_entity_relations_list[idx]
+                    next_entity = next_entity_list[idx]
+                    next_chain = next_chain_list[idx]
+
+                    select_relation = next_entity_relation
+                    # obs = f"Knowledge Triplets:  {next_chain}\n"
+                    new_state['action'] = f"Thought: {thought_line} Action: Choose{action_param}"
+                    new_state['critique'] = critique
+                    new_state['regenerate_prompt'] = regenerate_prompt
+                    # new_state['observation'] = f"Here are some candidate knowledge triplets you can choose from: {obs}"
+                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,true_answer=node.true_answer)
+                    new_node.triple = str(next_chain)
+                    #判断能否回答，
+                    reasoning_chain = get_reasoning_chain(new_node)
+                    if len(reasoning_chain) == 0:
+                        new_node.is_terminal = False
+                    else:
+                        answer = reasoning(reasoning_chain, node.question, args)
+                        if answer:
+                            answer = get_answer(reasoning_chain, node.question, args)
+                            if check_string(answer):
+                                response = clean_results(answer)
+                                if response == "NULL":
+                                    new_node.is_terminal = False
+                                else:
+                                    if exact_match(response, new_node.true_answer):
+                                        new_node.is_terminal = True
+                                        new_node.reward = 1
+                                        new_node.answer = response
+
+                                    else:
+                                        new_node.is_terminal = False
+                    new_node.depth = node.depth + 1
+                    # 找到节点的下一跳
+                    new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(
+                        n, new_node, args)
+                    new_node.state[
+                        'observation'] = f"Observation: Here are some candidate knowledge triplets you can choose from: " + str(
+                        new_node.next_triple_list)
+                    previous_obs = f"Observation: Here are some candidate knowledge triplets you can choose from: " + str(
+                        new_node.next_triple_list)
+                    unique_states[unique_key] = new_node
+                    logging.info(f"NEW NODE: {new_node}")
+
+                else:
+                    # 如果生成不在next_chain_list候选三元组，告诉他，让他重新生成
+                    # obs =
+
+                    new_state['action'] = f"Thought: {thought_line} Action: {action_line}"
+                    original_observation = new_state['observation']
+                    new_state[
+                        'observation'] = f'Observation: Invalid action! You chose a triplet that does not match any of the candidate knowledge triplets. Please remember to choosing an exact and complete triplet from: ' + original_observation[
+                                                                                                                                                                                 original_observation.find('['):] if '[' in original_observation else original_observation
+                    previous_obs = f'Observation: Invalid action! You chose a triplet that does not match any of the candidate knowledge triplets. Please remember to choosing an exact and complete triplet from: ' + original_observation[
+                                                                                                                                                                                 original_observation.find('['):] if '[' in original_observation else original_observation
+                    
+                    new_state['critique'] = critique
+                    new_state['regenerate_prompt'] = regenerate_prompt
+                    new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,true_answer=node.true_answer)
+                    new_node.depth = node.depth + 1
+                    unique_states[unique_key] = new_node
+                    logging.info(f"NEW NODE: {new_node}")
+
+        idx += 1
+
+    return list(unique_states.values())
+
 
 
 def evaluate_node(node, args, task):
