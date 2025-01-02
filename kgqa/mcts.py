@@ -3,7 +3,8 @@ import numpy as np
 from functools import partial
 
 from torch.ao.quantization.backend_config.onednn import observation_type
-
+from kgqa.tog.utils import *
+from kgqa.tog.freebase_func import *
 from models import gpt
 import wikienv, wrappers
 import requests
@@ -14,7 +15,6 @@ import os
 import json
 import copy
 from fschat_templates import prompt_with_icl
-from models_fastchat import llama31_instruct
 import re
 from node import *
 
@@ -39,17 +39,15 @@ def step(env, action):
             attempts += 1
 
 # 对三元组打分，没有用这个
-def triple_scores(triples, question, thought, args):
+def triple_scores(triples, question, thought):
     scores = []
     prompt = f"Question: {question}\nThought: {thought}\n"
     for i, triple in enumerate(triples):
         prompt += f"Triple {i + 1}: {triple}\n"
     prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.9, 0.8, 0.2]"
-    if args.enable_fastchat_conv and 'lama' in args.backend:
-        score_output = llama31_instruct(prompt, model=args.backend, n=1)[0]
-    else:
+
     # 调用 GPT 模型获取评分
-        score_output = gpt(prompt, n=1, stop=None)[0].strip()
+    score_output = gpt(prompt, n=1, stop=None)[0].strip()
 
     # 解析评分
     try:
@@ -61,7 +59,7 @@ def triple_scores(triples, question, thought, args):
     except (IndexError, ValueError):
         scores = [0.0] * len(triples)  # 如果无法解析为浮点数，设为0.0
     return scores
-def get_value(task, x, y, n_evaluate_sample, args, cache_value=True):
+def get_value(task, x, y, n_evaluate_sample, cache_value=True):
     global reflection_map
     global failed_trajectories
 
@@ -73,11 +71,7 @@ def get_value(task, x, y, n_evaluate_sample, args, cache_value=True):
     if cache_value and value_prompt in task.value_cache:
         return task.value_cache[value_prompt]
     logging.info(f"VALUE PROMPT: {value_prompt}")
-    
-    if args.enable_fastchat_conv and 'lama' in args.backend:
-        value_outputs = llama31_instruct(value_prompt, model=args.backend, n=n_evaluate_sample)
-    else:
-        value_outputs = gpt(value_prompt, n=n_evaluate_sample, stop=None)
+    value_outputs = gpt(value_prompt, n=n_evaluate_sample, stop=None)
     logging.info(f"VALUE OUTPUTS: {value_outputs}")
     value = task.value_outputs_unwrap(value_outputs)
     logging.info(f"VALUES: {value}")
@@ -86,14 +80,14 @@ def get_value(task, x, y, n_evaluate_sample, args, cache_value=True):
     return value
 
 
-def get_values(task, x, ys, n_evaluate_sample, args, cache_value=True):
+def get_values(task, x, ys, n_evaluate_sample, cache_value=True):
     values = []
     local_value_cache = {}
     for y in ys:  # each partial output
         if y in local_value_cache:  # avoid duplicate candidates
             value = 0
         else:
-            value = get_value(task, x, y, n_evaluate_sample, args, cache_value=cache_value)
+            value = get_value(task, x, y, n_evaluate_sample, cache_value=cache_value)
             local_value_cache[y] = value
         values.append(value)
     return values
@@ -179,32 +173,35 @@ def get_reasoning_chain(node):
     return messages
 
 #判断能否回答问题
-def reasoning(reasoning_chain, question, args):
+def reasoning(reasoning_chain, question):
     prompt = prompt_evaluate + question
     chain_prompt = ''
     for sublist in reasoning_chain:
         chain_prompt += str(sublist)  # 确保正确拼接字符串
     prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
-    if args.enable_fastchat_conv and 'lama' in args.backend:
-        result = llama31_instruct(prompt, model=args.backend, n=1)[0]
-    else:
-        result = gpt(prompt, n=1)[0]
+    context = [{"role": "user", "content": prompt},
+               {'role': 'assistant', 'content': f""}
+               ]
+    context = {
+        "model": "gpt-4o-mini",
+        "prompt": context,
+        "max_tokens": 100
+    }
+
+    result = gpt(prompt, n=1, stop=None)[0]
     result = extract_answer(result)
     if if_true(result):
         return True
     else:
         return False
-    
+
 #回答问题
-def get_answer(reasonging_chain, question, args):
+def get_answer(reasonging_chain, question):
     prompt = answer_prompt + question + '\n'
     chain_prompt = '\n'.join(
         [', '.join([str(x) for x in chain]) for sublist in reasonging_chain for chain in sublist])
     prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
-    if args.enable_fastchat_conv and 'lama' in args.backend:
-        result = llama31_instruct(prompt, model=args.backend, n=1)[0]
-    else:
-        result = gpt(prompt, n=1)[0]
+    result = gpt(prompt, n=1, stop=None)[0]
     return result
 
 #处理答案
@@ -294,7 +291,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
     for i in range(iterations):
         # print(f"Iteration {i + 1}...")
-        node = select_node(root, args)
+        node = select_node(root)
 
         while node is None or (node.is_terminal and node.reward != 1):
             logging.info(f"Need to backtrack or terminal node with reward 0 found at iteration {i + 1}, reselecting...")
@@ -322,7 +319,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         while node.is_terminal or not node.children:
             logging.info(f"Depth limit node found at iteration {i + 1}, reselecting...")
-            node = select_node(root, args, i)
+            node = select_node(root, i)
             expand_node(node, args, task, args.max_depth)
 
         if args.enable_value_evaluation:
@@ -573,15 +570,15 @@ def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=No
         return 0, 0, 0, 0
 
 
-def select_node(node, args, i=0):
+def select_node(node, i=0):
     # 根据wiki选择初始节点
     if node.depth == 0 and i != 0:
         node_children_relation = []
         for child in node.children:
             node_children_relation.append(child.triple)
-        score_relation = triple_scores(node_children_relation, node.question, wiki_explored, args)
+        score_relation = triple_scores(node_children_relation, node.question, wiki_explored)
         max_score_index = score_relation.index(max(score_relation))
-        selected_child = node.children[max_score_index]   # list index error
+        selected_child = node.children[max_score_index]
         return selected_child
 
     while node and node.children:
@@ -804,16 +801,16 @@ def rollout_random(node, args, task, idx, max_depth=7):
         node.children = [new_states[max_value_index]]
         node = new_states[max_value_index]
 
-        # evaluate_node(node.parent, args, task)
+        #evaluate_node(node.parent, args, task)
         depth += 1
         if depth == max_depth:
             reasoning_chain = get_reasoning_chain(node)
             if len(reasoning_chain) == 0:
                 node.is_terminal = False
             else:
-                answer = reasoning(reasoning_chain, node.question, args)
+                answer = reasoning(reasoning_chain, node.question)
                 if answer:
-                    answer = get_answer(reasoning_chain, node.question, args)
+                    answer = get_answer(reasoning_chain, node.question)
                     if check_string(answer):
                         response = clean_results(answer)
                         if response == "NULL":
@@ -1322,9 +1319,9 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                     if len(reasoning_chain) == 0:
                         new_node.is_terminal = False
                     else:
-                        answer = reasoning(reasoning_chain, node.question, args)
+                        answer = reasoning(reasoning_chain, node.question)
                         if answer:
-                            answer = get_answer(reasoning_chain, node.question, args)
+                            answer = get_answer(reasoning_chain, node.question)
                             if check_string(answer):
                                 response = clean_results(answer)
                                 if response == "NULL":
@@ -1610,7 +1607,7 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
 
 def evaluate_node(node, args, task):
     child_prompts = [generate_prompt(child) for child in node.children if not child.is_terminal]
-    votes = get_values(task, node.question, child_prompts, args.n_evaluate_sample, args)
+    votes = get_values(task, node.question, child_prompts, args.n_evaluate_sample)
 
     logging.info(f"Length of votes: {len(votes)}")
     logging.info(f"Length of node.children: {len(node.children)}")
