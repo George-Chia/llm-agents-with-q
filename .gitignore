@@ -26,7 +26,5 @@ model_worker_*
 webshop/hotpot_traj*
 webshop/webshop_traj*
 math/
-kgqa_george/kg/
-kgqa_george/trajectories*
-kgqa_lintong/kg/
-kgqa_lintong/trajectories*
+kgqa/kg/
+kgqa/trajectories*
