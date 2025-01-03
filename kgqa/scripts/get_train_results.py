@@ -1,8 +1,8 @@
 import os
 import json
 
-trajectories_save_path = 'kgqa/trajectories-CritiqueMCTS_test_llama31_mcts_30iterations'
-
+trajectories_save_path = 'kgqa/trajectories-CritiqueMCTS_train_llama31_mcts_30iterations'
+# trajectories_save_path = 'kgqa/trajectories-CritiqueMCTS-disable_early_stop_train_llama31_mcts_20iterations'
 
 done_task_id = []
 

@@ -15,8 +15,9 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 30 \
-        --save_path trajectories-CritiqueMCTS \
+        --iterations 20 \
+        --disable_early_stop \
+        --save_path trajectories-CritiqueMCTS-disable_early_stop \
         --log logs/llama31.log \
         --max_depth 5 \
         --algorithm mcts \
