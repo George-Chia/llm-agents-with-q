@@ -2,7 +2,7 @@
 num_workers=7
 
 explore_model_name=llama31
-exp_name=llama31-collection
+exp_name=llama31-eval
 
 for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
@@ -15,7 +15,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 5 \
+        --iterations 30 \
         --save_path trajectories-CritiqueMCTS \
         --log logs/llama31.log \
         --max_depth 5 \
@@ -25,7 +25,7 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --conv_template llama-3 \
         --enable_value_evaluation \
         --expansion_sampling_method critique \
-        --critique_backend llama31-0 \
+        --critique_backend ${explore_model_name}-${j} \
         --critique_prompt_template template_huan &
     echo $! >> logs/${exp_name}-eval_pid.txt
 done

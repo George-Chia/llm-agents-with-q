@@ -322,16 +322,23 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
                 return node.state, node.value, all_nodes, node.reward, node.em
 
         # 设置终止
-        if node.is_terminal and node.reward != 1:
+        if node.is_terminal:
             logging.info(f"There is not enough information in the knowledge graph.")
             break
 
         expand_node(node, args, task, args.max_depth)
 
+        reach_max_depth=False
         while node.is_terminal or not node.children:
             logging.info(f"Depth limit node found at iteration {i + 1}, reselecting...")
             node = select_node(root, args, i)
-            expand_node(node, args, task, args.max_depth)
+
+            last_selected_node = copy.deepcopy(node)
+            reach_max_depth = expand_node(node, args, task, args.max_depth)
+            if reach_max_depth and node==last_selected_node:
+                break
+        if reach_max_depth and node==last_selected_node:
+            break        
 
         if args.enable_value_evaluation:
             # TODO
@@ -689,7 +696,7 @@ def expand_node(node, args, task, max_depth):
             #只保留当前的wiki检索信息,增加长度限制
             wiki_explored = this_time_imformation[:1000]
             '''
-        return
+        return True
 
     assert args.expansion_sampling_method == 'vanilla' or args.enable_fastchat_conv  # only fastchat api supports various expansion_sampling_method yet
 

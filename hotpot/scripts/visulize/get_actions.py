@@ -20,7 +20,7 @@ def parse_action(llm_output: str) -> str:
 #     root = json.load(f)
 
 # SLSC-MCTS
-with open('hotpot/trajectories_SIGIR/Iteration1/test/trajectories-Critique-MCTS-3n-policy-critique-iter1Epoch3-huan_test_llama31_mcts_30iterations/16370.json', 'r') as f:
+with open('hotpot/trajectories-17307/17307_CritiqueMCTS_utf8.json', 'r') as f:
     root = json.load(f)
 
 

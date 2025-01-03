@@ -312,7 +312,7 @@ def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajecto
             if break_flag:
                 break
             node = root  # Always start from the root node
-            depth = 0def select_node(node, args, i=0)
+            depth = 0
             # Perform a simulation from the root
             while not node.is_terminal and depth < args.max_depth:
                 expand_node(node, args, task, args.max_depth, memory=memory)  # Expand current node
@@ -379,6 +379,15 @@ def fschat_simple_search(args, task, idx, iterations=30, to_print=True, trajecto
     global reflection_map
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
 
+    global critique_gpt
+    if args.expansion_sampling_method == "critique":
+        if args.critique_backend:
+            if args.critique_temperature == None:
+                args.critique_temperature = args.temperature
+            critique_gpt = partial(gpt, model=args.critique_backend, temperature=args.critique_temperature)
+        else:
+            critique_gpt = gpt
+
     logging.basicConfig(filename=args.log, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
     #env.sessions[idx] = {'session': idx, 'page_type': 'init'}
     x = env.reset(idx=idx)
@@ -419,7 +428,10 @@ def fschat_simple_search(args, task, idx, iterations=30, to_print=True, trajecto
             expand_node(node, args, task, max_depth=args.max_depth)  # Expand current node
             if not node.children:
                 break  # If no child can be generated, break
-            node = random.choice(node.children)  # Randomly select a child node
+            if args.expansion_sampling_method == "critique":
+                node = node.children[-1]
+            else:
+                node = random.choice(node.children)  # Randomly select a child node
             depth += 1
         # Check the terminal condition
         if node.is_terminal and node.reward == 1:

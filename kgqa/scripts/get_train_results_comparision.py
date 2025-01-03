@@ -2,16 +2,9 @@ import os
 import json
 
 # Critique-MCTS-iteration1-epoch3
-trajectories_save_path = 'kgqa/trajectories-MCTS_test_llama31_mcts_5iterations'
-# Critique-MCTS-iteration1-epoch1
-trajectories_save_path_comparision = 'kgqa/trajectories-CritiqueMCTS_test_llama31_mcts_5iterations'
-# trajectories_save_path_comparision = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-Iter2Epoch3-huan_test_llama31_mcts_30iterations'
+trajectories_save_path = 'kgqa/trajectories-MCTS_test_llama31_mcts_30iterations'
 
-# # Critique-MCTS-iteration0-training-set
-# trajectories_save_path = 'hotpot/trajectories_SIGIR/Iteration0/train/trajectories-Critique-MCTS-template_huan-critique-disable_early_stop_train_llama31_mcts_20iterations'
-# # Critique-MCTS-iteration1-epoch3-training-set
-# trajectories_save_path_comparision = 'hotpot/trajectories-MCTS-n3-critique-disable_early_stop_train_llama31_mcts_20iterations'
-
+trajectories_save_path_comparision = 'kgqa/trajectories-CritiqueMCTS_test_llama31_mcts_30iterations'
 
 
 best_reward = []
