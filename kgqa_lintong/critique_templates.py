@@ -62,5 +62,15 @@ Current Step:
 Critique:
 """
 
-hotpot_description = """Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be three types: \n(1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.\n(2) Lookup[keyword], which returns the next sentence containing keyword in the current passage.\n(3) Finish[answer], which returns the answer and finishes the task.\nAfter each observation, provide the next Thought and next Action.
+hotpot_description = """
+To address a question-answering task, follow a sequence of Thought, Action, and Observation steps. Here's how each step works:
+
+1. Thought: This is where you analyze the current state of information and determine which triplet you need to choose. It involves reasoning about which triplet is most helpful to answer the question.
+
+2. Action: Your action must be in the form of Choose[head_entity, relation, tail_entity], with no other words. This step involves taking an action based on the Thought step:
+   - Choose[head_entity, relation, tail_entity]: This action is choosing a triplet in the observation that is most helpful to answer the question. Even if there is no direct information in these triples to answer the question, please still choose one that might be the most helpful. It requires choosing an exact and complete triplet from the list provided in the last observation. The chosen triplet must match exactly with one of the triplets in the observation, with no variations allowed.
+
+3. Observation: After each action, the next triplets will be provided, which will be used to inform the next Thought step.
+
+After each observation, you should have a Thought about which to choose next and then an Action that follows from the Thought.
 """
