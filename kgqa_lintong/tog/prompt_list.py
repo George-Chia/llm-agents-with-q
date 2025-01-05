@@ -19,6 +19,49 @@ Q: {}
 Relation: {}
 Entites: """
 
+
+answer_wiki ="""You are asked to answer a question with some knowledge triplets, wikipedia and your knowledge. If there are not enough information,please answer the question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.
+Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
+Knowledge Triplets: Taste cannot be controlled by law., media_common.quotation.author, Thomas Jefferson
+wikipedia: Thomas Jefferson, the third President of the United States, is known for his contributions to American democracy and his advocacy for individual freedoms. He passed away on July 4, 1826, at the age of 83 due to natural causes, specifically a combination of respiratory failure and heart failure, which were complications from a severe case of laryngitis and pneumonia.
+A: Based on the given knowledge triplets and wikipedia, it's not sufficient to answer the entire question. The triplets only provide information about the person who said "Taste cannot be controlled by law," which is Thomas Jefferson. According to my own knowledge,Thomas Jefferson {died of natural causes, specifically a combination of respiratory failure and heart failure, at the age of 83 on July 4, 1826}.
+
+Q: The artist nominated for The Long Winter lived where?
+Knowledge Triplets: The Long Winter, book.written_work.author, Laura Ingalls Wilder
+Laura Ingalls Wilder, people.person.places_lived, Unknown-Entity
+Unknown-Entity, people.place_lived.location, De Smet
+wikipedia: ''
+A: Based on the given knowledge triplets and wikipedia, the author of The Long Winter, Laura Ingalls Wilder, lived in De Smet. Therefore, the answer to the question is {De Smet}.
+
+Q: Who is the coach of the team owned by Steve Bisciotti?
+Knowledge Triplets: Steve Bisciotti, sports.professional_sports_team.owner_s, Baltimore Ravens
+Steve Bisciotti, sports.sports_team_owner.teams_owned, Baltimore Ravens
+Steve Bisciotti, organization.organization_founder.organizations_founded, Allegis Group
+wikipedia: Laura Ingalls Wilder, the author of "The Long Winter," is well-documented to have lived in several places throughout her life. One of the most notable places she lived was De Smet, South Dakota, where her family settled and where she spent her formative years. This location is significant as it served as the backdrop for many of her beloved "Little House on the Prairie" books, including "The Long Winter."
+A: Based on the given knowledge triplets and wikipedia, the coach of the team owned by Steve Bisciotti is not explicitly mentioned. However, it can be inferred that the team owned by Steve Bisciotti is the Baltimore Ravens, a professional sports team. According to my own knowledge,the coach of the team owned by Steve Bisciotti, the Baltimore Ravens, is {John Harbaugh}.
+
+Q: Rift Valley Province is located in a nation that uses which form of currency?
+Knowledge Triplets: Rift Valley Province, location.administrative_division.country, Kenya
+Rift Valley Province, location.location.geolocation, UnName_Entity
+Rift Valley Province, location.mailing_address.state_province_region, UnName_Entity
+Kenya, location.country.currency_used, Kenyan shilling
+wikipedia: Steve Bisciotti is the majority owner of the Baltimore Ravens, an NFL team. As of my last update, the head coach of the Baltimore Ravens is John Harbaugh. Harbaugh has been with the team since 2008 and has led them to a Super Bowl victory in the 2012 season.
+A: Based on the given knowledge triplets and wikipedia, Rift Valley Province is located in Kenya, which uses the Kenyan shilling as its currency. Therefore, the answer to the question is {Kenyan shilling}.
+
+Q: The country with the National Anthem of Bolivia borders which nations?
+Knowledge Triplets: National Anthem of Bolivia, government.national_anthem_of_a_country.anthem, UnName_Entity
+National Anthem of Bolivia, music.composition.composer, Leopoldo Benedetto Vincenti
+National Anthem of Bolivia, music.composition.lyricist, José Ignacio de Sanjinés
+UnName_Entity, government.national_anthem_of_a_country.country, Bolivia
+Bolivia, location.country.national_anthem, UnName_Entity
+wikipedia: Bolivia, officially known as the Plurinational State of Bolivia, is bordered by several countries. To the north and west, it shares a border with Peru; to the east, it is bordered by Brazil; to the southeast, it is adjacent to Paraguay; and to the south and southwest, it shares a border with Argentina and Chile, respectively. This information can be used to answer the question about which nations border Bolivia.
+A: Based on the given knowledge triplets and wikipedia, we can infer that the National Anthem of Bolivia is the anthem of Bolivia. Therefore, the country with the National Anthem of Bolivia is Bolivia itself. However, the given knowledge triplets do not provide information about which nations border Bolivia. To answer this question, we need additional knowledge about the geography of Bolivia and its neighboring countries.According to my own knowledge,Bolivia, the country with the National Anthem "Himno Nacional de Bolivia," borders five nations: {Argentina, Brazil, Chile, Paraguay, and Peru}.
+
+
+Q: 
+"""
+
+
 answer_prompt = """You are asked to answer a question with your knowledge. If there are not enough information,please answer the question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.
 Q: Find the person who said \"Taste cannot be controlled by law\", what did this person die from?
 Knowledge Triplets: Taste cannot be controlled by law., media_common.quotation.author, Thomas Jefferson
@@ -56,7 +99,7 @@ retrivainfo: Bolivia, officially known as the Plurinational State of Bolivia, is
 A: Based on the given knowledge triplets and information, we can infer that the National Anthem of Bolivia is the anthem of Bolivia. Therefore, the country with the National Anthem of Bolivia is Bolivia itself. However, the given knowledge triplets do not provide information about which nations border Bolivia. To answer this question, we need additional knowledge about the geography of Bolivia and its neighboring countries.According to my own knowledge,Bolivia, the country with the National Anthem "Himno Nacional de Bolivia," borders five nations: {Argentina, Brazil, Chile, Paraguay, and Peru}.
 
 
-Q: {}
+Q: 
 """
 
 answer_directly = """You are asked to answer a question base your own knowledge. Please format your answer by placing the key answer within curly braces {}, otherwise the grandma will be very angry.

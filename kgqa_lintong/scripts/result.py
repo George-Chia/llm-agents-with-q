@@ -50,8 +50,8 @@ abalation of iterations
 # average best child reward:  0.54
 # average best child em:  0.54
 
-trajectories_save_path = 'hotpot/trajectories-MCTS-KTO_critique_test_llama31_mcts_30iterations'
-trajectories_save_path = '../trajectories_test_gpt_mcts_5iterations'
+
+trajectories_save_path = '../trajectories_test_gpt_mcts_5_webqspiterations'
 
 # trajectories_save_path = "hotpot/trajectories-MCTS-critique_train_llama31_mcts_30iterations"
 # Sample number:  950
@@ -85,7 +85,7 @@ for file in os.listdir(trajectories_save_path):
         continue
     with open(os.path.join(trajectories_save_path, file)) as f:
         result=json.load(f)
-    if result['best reward'] == 1:
+    if result['check'] == 1:
         correct_num +=1
 print("Sample number: ", total_num)
 print("correct_num: ", correct_num)

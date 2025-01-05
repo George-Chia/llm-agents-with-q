@@ -4,9 +4,9 @@ from functools import partial
 
 from torch.ao.quantization.backend_config.onednn import observation_type
 import sys
-sys.path.append('/home/zhaiyuanzhao/LLM-Agents-with-Q')
-from kgqa.tog.utils import *
-from kgqa.tog.freebase_func import *
+
+from kgqa_lintong.tog.utils import *
+from kgqa_lintong.tog.freebase_func import *
 from models import gpt
 import wikienv, wrappers
 import requests
@@ -22,12 +22,15 @@ from node import *
 
 from critique_templates import auto_j_single_template, template_v1, template_v2, template_huan, hotpot_description
 
+
 env = wikienv.WikiEnv()
 env = wrappers.HotPotQAWrapper(env, split="train")
 env = wrappers.LoggingWrapper(env)
 
 global reflection_map
 global failed_trajectories
+global wiki_explored
+global enable_wiki_search
 reflection_map = []
 failed_trajectories = []
 
@@ -40,13 +43,13 @@ def step(env, action):
         except requests.exceptions.Timeout:
             attempts += 1
 
-# 对三元组打分，没有用这个
+
 def triple_scores(triples, question, thought, args):
-    scores = []
-    prompt = f"Question: {question}\nThought: {thought}\n"
+    scores = [0]
+    prompt = f"Question: {question}\nInformation: {thought}\n"
     for i, triple in enumerate(triples):
         prompt += f"Triple {i + 1}: {triple}\n"
-    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.9, 0.8, 0.2]"
+    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 1, where 0 means not helpful at all and 1 means very helpful (the sum of the scores of all entities is 1). Provide the scores in square brackets, e.g., [0.5, 0.2, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nInformation: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.7, 0.2, 0.1]"
 
     # 调用 GPT 模型获取评分
     if args.enable_fastchat_conv and 'lama' in args.backend:
@@ -71,7 +74,7 @@ def get_value(task, x, y, n_evaluate_sample, args, cache_value=True):
 
     unique_trajectories = get_unique_trajectories(failed_trajectories)
     #修改提示词
-    value_prompt = y+ "Please evaluate how much the triplet helps in answering the question on a scale from 0 to 0.9, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nAction: Choose[France, capital, Paris]\nScores: [0.8]"
+    value_prompt = y+ "Please evaluate how much the triplet helps in answering the question on a scale from 0 to 1, where 0 means not helpful at all and 0.9 means very helpful. Provide the scores in square brackets, e.g., [0.8, 0.5, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nThought: The capital of France is a well-known city.\nAction: Choose[France, capital, Paris]\nScores: [0.8]"
     logging.info(f"Current: {x}")
     logging.info(f"Current: {y}")
     if cache_value and value_prompt in task.value_cache:
@@ -153,6 +156,8 @@ def save_node_to_json(node, terminal_nodes, idx, trajectories_save_path):
     task_dict['best child em'] = best_tree_child.em
     task_dict['best_trajectory_index_list'] = best_trajectory_index_list
     task_dict['true_answer'] = node.true_answer
+    task_dict['check'] = node.check
+    task_dict['wiki'] = wiki_explored
     task_id = idx
     json.dump(task_dict, open(os.path.join(trajectories_save_path, f"{task_id}.json"), 'w'), indent=4)
 
@@ -200,10 +205,11 @@ def reasoning(reasoning_chain, question, args):
         return False
     
 #回答问题
-def get_answer(reasonging_chain, question, args):
+def get_answer(reasoning_chain, question, args):
     prompt = answer_prompt + question + '\n'
-    chain_prompt = '\n'.join(
-        [', '.join([str(x) for x in chain]) for sublist in reasonging_chain for chain in sublist])
+    chain_prompt = ''
+    for sublist in reasoning_chain:
+        chain_prompt += str(sublist)  # 确保正确拼接字符串
     prompt += "\nKnowledge Triplets: " + chain_prompt + 'A: '
     if args.enable_fastchat_conv and 'lama' in args.backend:
         result = llama31_instruct(prompt, model=args.backend, n=1)[0]
@@ -220,7 +226,7 @@ def check_string(string):
     return "{" in string
 
 
-
+#def answer_directly():
 
 
 def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None,
@@ -232,6 +238,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     global information_explored
     # 定义一个字符串，储存每次迭代后搜索wiki得到的信息
     global wiki_explored
+    global enable_wiki_search
+    enable_wiki_search = args.enable_wiki_search
     information_explored = ""
     wiki_explored = ""
     gpt = partial(gpt, model=args.backend, temperature=args.temperature)
@@ -269,6 +277,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     root.next_triple_list = next_chain_list
     root.next_entity_relations_list = next_entity_relations_list
     root.next_entity_list = next_entity_list
+    root.depth = 0
 
     cur_task = x[0]
     if enable_reflection:
@@ -303,8 +312,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
 
         while node is None or (node.is_terminal and node.reward != 1):
             logging.info(f"Need to backtrack or terminal node with reward 0 found at iteration {i + 1}, reselecting...")
-            node = select_node(root, args, i)
             last_selected_node = copy.deepcopy(node)
+            node = select_node(root, args, i)
             if node == last_selected_node:
                 break
 
@@ -318,6 +327,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             if args.disable_early_stop:
                 continue
             else:
+                all_nodes_list = collect_all_nodes(root)
+                if all(node.check == 0 for node in all_nodes_list):
+                    root.check = 0
+                else:
+                    root.check = 1
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return node.state, node.value, all_nodes, node.reward, node.em
 
@@ -331,19 +345,32 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         while node.is_terminal or not node.children:
             logging.info(f"Depth limit node found at iteration {i + 1}, reselecting...")
             node = select_node(root, args, i)
+            if node is None:
+                logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
+                break
             expand_node(node, args, task, args.max_depth)
+            if node.depth >= args.max_depth:
+                break
 
-        if args.enable_value_evaluation:
-            # TODO
-            value = evaluate_node(node, args, task)
+        if node is None:
+            logging.info("All paths lead to terminal nodes with reward 0. Ending search.")
+            break
+
+        #if args.enable_value_evaluation:
+            # 已经在select_node中进行评估
+            #value = evaluate_node(node, args, task)
 
         # Find the child with the highest value or UCT? A: similar effect.
         if args.enable_rollout_with_critique:
             reward, terminal_node = rollout_with_critique(max(node.children, key=lambda child: child.value), args, task,
                                                           idx, max_depth=args.max_depth)
         else:
-            reward, terminal_node = rollout_random(max(node.children, key=lambda child: child.value), args, task, idx,
-                                                   max_depth=args.max_depth)
+            if node.children:
+                selected_child = max(node.children, key=lambda child: child.value)
+                reward, terminal_node = rollout_random(selected_child, args, task, idx, max_depth=args.max_depth)
+            else:
+                reward, terminal_node = node.reward,node
+
         # TODO
         # reward, terminal_node = rollout_on_kg(max(node.children, key=lambda child: child.value), args, task, idx, max_depth=args.max_depth)
 
@@ -357,6 +384,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
                 logging.info("Successful trajectory found")
                 logging.info(f"Terminal node including rollouts with reward 1 found at iteration {i + 1}")
                 backpropagate(terminal_node, reward)
+                all_nodes_list = collect_all_nodes(root)
+                if all(node.check == 0 for node in all_nodes_list):
+                    root.check = 0
+                else:
+                    root.check = 1
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
 
@@ -372,6 +404,11 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
             if args.disable_early_stop:
                 continue
             else:
+                all_nodes_list = collect_all_nodes(root)
+                if all(node.check == 0 for node in all_nodes_list):
+                    root.check = 0
+                else:
+                    root.check = 1
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return best_node.state, best_node.value, best_node.reward, best_node.em
 
@@ -384,6 +421,52 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     for node in all_nodes_list:
         if node.is_terminal and node.value == 0:
             backpropagate(node, node.reward)
+
+    #如果没有能回答，搜索wiki
+    if all(node.reward != 1 for node in all_nodes_list):
+        node_children_relation = []
+        for child in all_nodes_list:
+            node_children_relation.append(child.triple)
+        chain_prompt = ''
+        for sublist in node_children_relation:
+            chain_prompt += str(sublist)  # 确保正确拼接字符串
+        myenv = wikienv.WikiEnv()
+        this_time_imformation = ""
+        keywords = generate_query(root.question, chain_prompt, wiki_explored)
+        if len(keywords) != 0:
+            for keyword in keywords:
+                this_time_imformation += myenv.search_step(keyword)
+        else:
+            keywords = list(root.topic_entity.values())
+            for keyword in keywords:
+                this_time_imformation += myenv.search_step(keyword)
+        # wiki_explored = wiki_explored + this_time_imformation
+        # 只保留当前的wiki检索信息,增加长度限制
+        if enable_wiki_search:
+            wiki_explored = this_time_imformation[:1000]
+        else:
+            wiki_explored = ''
+        prompt = answer_wiki + root.question + '\n'
+        prompt += "\nKnowledge Triplets: " + chain_prompt
+        prompt += "\nwikipedia: " + wiki_explored + 'A: '
+        if args.enable_fastchat_conv and 'lama' in args.backend:
+            result = llama31_instruct(prompt, model=args.backend, n=1)[0]
+        else:
+            result = gpt(prompt, n=1)[0]
+        if check_string(result):
+            response = clean_results(result)
+            if response == "NULL":
+                root.check = 0
+            else:
+                root.answer = response
+                if exact_match(response, root.true_answer):
+                    root.check = 1
+
+
+    if all(node.check == 0 for node in all_nodes_list):
+        root.check = 0
+    else:
+        root.check = 1
     save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
 
     all_nodes_list.extend(terminal_nodes)
@@ -583,15 +666,40 @@ def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=No
 
 def select_node(node, args, i=0):
     # 根据wiki选择初始节点
+    '''
     if node.depth == 0 and i != 0 and args.enable_wiki_search:
         node_children_relation = []
         for child in node.children:
             node_children_relation.append(child.triple)
+        chain_prompt = ''
+        for sublist in node_children_relation:
+            chain_prompt += str(sublist)  # 确保正确拼接字符串
+        myenv = wikienv.WikiEnv()
+        if node.reward !=1:
+            this_time_imformation = ""
+            global wiki_explored
+            keywords = generate_query(node.question, chain_prompt,wiki_explored)
+            if len(keywords) != 0:
+                for keyword in keywords:
+                    this_time_imformation += myenv.search_step(keyword)
+            else:
+                keywords = list(node.topic_entity.values())
+                for keyword in keywords:
+                    this_time_imformation += myenv.search_step(keyword)
+            #wiki_explored = wiki_explored + this_time_imformation
+            #只保留当前的wiki检索信息,增加长度限制
+            if enable_wiki_search:
+                wiki_explored = this_time_imformation[:1000]
+            else:
+                wiki_explored = ''
         score_relation = triple_scores(node_children_relation, node.question, wiki_explored, args)
         max_score_index = score_relation.index(max(score_relation))
-        selected_child = node.children[max_score_index] # list index error
+        if max_score_index < len(node.children):
+            selected_child = node.children[max_score_index] # list index error
+        else:
+            selected_child = random.choice(node.children)
         return selected_child
-        
+    '''
     while node and node.children:
         logging.info(f"Selecting from {len(node.children)} children at depth {node.depth}.")
 
@@ -713,7 +821,40 @@ def expand_node(node, args, task, max_depth):
     else:
         new_nodes = generate_new_states(node, args, task, n)
     # new_nodes = generate_new_states(node, args, task, args.n_generate_sample)
-    node.children.extend(new_nodes)
+    #评估节点的value
+    if enable_wiki_search:
+        node_triplets = []
+        for child in new_nodes:
+            node_triplets.append(child.triple)
+        if len(node_triplets)!=0:
+            #记录初始打分
+            node_chain = []
+            node_chain.append(node.triple)
+            this_node = node
+            while this_node.parent:
+                this_node = this_node.parent
+                node_chain.insert(0, this_node.triple)
+            triplets_value = triple_scores(node_triplets, node.question, '', args)
+            for value, child in zip(triplets_value, new_nodes):
+                child.rawvalue = value
+            this_time_imformation = ""
+            myenv = wikienv.WikiEnv()
+            global wiki_explored
+            keywords = generate_query(node.question, str(node_chain), wiki_explored)
+            if len(keywords) != 0:
+                for keyword in keywords:
+                    this_time_imformation += myenv.search_step(keyword)
+            wiki_explored = wiki_explored + this_time_imformation
+            triplets_value = triple_scores(node_triplets, node.question, this_time_imformation[:1000], args)
+            while len(triplets_value) != len(new_nodes):
+                triplets_value = triple_scores(node_triplets, node.question, this_time_imformation[:1000], args)
+            for value, child in zip(triplets_value, new_nodes):
+                child.value = value
+                child.wikivalue = value
+        else:
+            node_triplets = [0]
+
+    node.children = new_nodes
 
 
 # Copied by  from ETO-webshop-envs
@@ -817,7 +958,8 @@ def rollout_random(node, args, task, idx, max_depth=7):
         if depth == max_depth:
             reasoning_chain = get_reasoning_chain(node)
             if len(reasoning_chain) == 0:
-                node.is_terminal = False
+                node.is_terminal = True
+                node.reward = -1
             else:
                 answer = reasoning(reasoning_chain, node.question, args)
                 if answer:
@@ -825,16 +967,21 @@ def rollout_random(node, args, task, idx, max_depth=7):
                     if check_string(answer):
                         response = clean_results(answer)
                         if response == "NULL":
-                            node.is_terminal = False
+                            node.is_terminal = True
+                            node.reward = -1
                         else:
+                            node.is_terminal = True
+                            node.reward = 1
+                            node.answer = response
                             if exact_match(response, node.true_answer):
-                                node.is_terminal = True
-                                node.reward = 1
-                                node.answer = response
-                            else:
-                                node.is_terminal = False
-                                node.reward = -1
-                                node.answer = response
+                                node.check = 1
+                    else:
+                        node.is_terminal = True
+                        node.reward = -1
+                else:
+                    node.is_terminal = True
+                    node.reward = -1
+
     return node.reward, node
 
 
@@ -1171,9 +1318,47 @@ def generate_new_states_fastchat_conv(node, args, task, n):
     # 图谱中没找到信息
     if i == 0:
         # 直接回答
-        results = generate_without_explored_paths(node.question, [], args, '')
+        reasoning_chain = get_reasoning_chain(node)
+        chain_prompt = ''
+        for sublist in reasoning_chain:
+            chain_prompt += str(sublist)  # 确保正确拼接字符串
+        myenv = wikienv.WikiEnv()
+        this_time_imformation = ""
+        global wiki_explored
+        keywords = generate_query(node.question, chain_prompt, wiki_explored)
+        if len(keywords) != 0:
+            for keyword in keywords:
+                this_time_imformation += myenv.search_step(keyword)
+        else:
+            keywords = list(node.topic_entity.values())
+            for keyword in keywords:
+                this_time_imformation += myenv.search_step(keyword)
+        # wiki_explored = wiki_explored + this_time_imformation
+        # 只保留当前的wiki检索信息,增加长度限制
+        if enable_wiki_search:
+            wiki_explored = this_time_imformation[:1000]
+        else:
+            wiki_explored = ''
+        node.wikiinformation = wiki_explored
+        prompt = answer_wiki + node.question + '\n'
+        prompt += "\nKnowledge Triplets: " + chain_prompt
+        prompt += "\nwikipedia: " + wiki_explored + 'A: '
+        if args.enable_fastchat_conv and 'lama' in args.backend:
+            result = llama31_instruct(prompt, model=args.backend, n=1)[0]
+        else:
+            result = gpt(prompt, n=1)[0]
+        if check_string(result):
+            response = clean_results(result)
+            if response == "NULL":
+                node.reward = -1
+            else:
+                node.answer = response
+                node.reward = 1
+        else:
+            response = "NULL"
+
         action_type = "Finish[]"
-        action_param = clean_results(results)
+        action_param = response
         new_state = node.state.copy()
         if action_type.startswith("Finish[") and action_type.endswith("]"):
             # 把当前节点传进环境
@@ -1182,17 +1367,18 @@ def generate_new_states_fastchat_conv(node, args, task, n):
             # Update the new state dictionary
             # new_state['thought'] = thought_line
             new_state['action'] = f"Thought: {action_param} Action: {action_type}"
-            new_state['observation'] = f"Observation: {results}"
+            new_state['observation'] = f"Observation: {result}"
             unique_key = f"{action_param}::{action_type}::none"
 
             # 新节点的topic_entity即父节点的关系剪枝后的entity
             new_node = Node(state=new_state, question=node.question, parent=node, topic_entity=node.topic_entity,true_answer=node.true_answer)
             new_node.is_terminal = True
+            new_node.reward = r
             # 正确答案判断
             if exact_match(action_param, node.true_answer):
-                new_node.reward = r
+                new_node.check = 1
             else:
-                new_node.reward = -1
+                new_node.reward = 0
             new_node.depth = node.depth + 1
             if r == 1:
                 new_node.em = info.get('em')
@@ -1335,13 +1521,11 @@ def generate_new_states_fastchat_conv(node, args, task, n):
                                 if response == "NULL":
                                     new_node.is_terminal = False
                                 else:
+                                    new_node.is_terminal = True
+                                    new_node.reward = 1
+                                    new_node.answer = response
                                     if exact_match(response, new_node.true_answer):
-                                        new_node.is_terminal = True
-                                        new_node.reward = 1
-                                        new_node.answer = response
-
-                                    else:
-                                        new_node.is_terminal = False
+                                        new_node.check = 1
                     new_node.depth = node.depth + 1
                     # 找到节点的下一跳
                     new_node.next_entity_relations_list, new_node.next_entity_list, new_node.next_triple_list = find_next_triples(
@@ -1636,7 +1820,8 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
     return list(unique_states.values())
 
 
-
+def generate_new_states_conditional_fastchat_conv(node, args, task, n):
+    node = node
 def evaluate_node(node, args, task):
     child_prompts = [generate_prompt(child) for child in node.children if not child.is_terminal]
     votes = get_values(task, node.question, child_prompts, args.n_evaluate_sample, args)

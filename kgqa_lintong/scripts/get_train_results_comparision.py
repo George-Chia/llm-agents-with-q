@@ -2,9 +2,9 @@ import os
 import json
 
 # Critique-MCTS-iteration1-epoch3
-trajectories_save_path = 'kgqa/trajectories-MCTS_test_llama31_mcts_5iterations'
+trajectories_save_path = 'kgqa_lintong/trajectories-MCTS_test_llama31_mcts_5iterations'
 # Critique-MCTS-iteration1-epoch1
-trajectories_save_path_comparision = 'kgqa/trajectories-CritiqueMCTS_test_llama31_mcts_5iterations'
+trajectories_save_path_comparision = 'kgqa_lintong/trajectories-CritiqueMCTS_test_llama31_mcts_5iterations'
 # trajectories_save_path_comparision = 'hotpot/trajectories-Critique-MCTS-3n-policy-critique-Iter2Epoch3-huan_test_llama31_mcts_30iterations'
 
 # # Critique-MCTS-iteration0-training-set

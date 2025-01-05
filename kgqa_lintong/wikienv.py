@@ -119,11 +119,13 @@ class WikiEnv(gym.Env):
     search_url = f"https://en.wikipedia.org/w/index.php?search={entity_}"
     old_time = time.time()
 
-    os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-    os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
-    response_text = requests.get(search_url).text
-    del os.environ['https_proxy']
-    del os.environ['HTTPS_PROXY']
+
+    proxies = {
+      "http": "http://127.0.0.1:7897",
+      "https": "http://127.0.0.1:7897",
+    }
+    response_text = requests.get(search_url,proxies=proxies).text
+
 
     self.search_time += time.time() - old_time
     self.num_searches += 1
@@ -145,6 +147,7 @@ class WikiEnv(gym.Env):
               self.page += "\n"
         self.obs = self.get_page_obs(self.page)
         self.lookup_keyword = self.lookup_list = self.lookup_cnt = None
+    return self.obs
   
   def select(self,node):
     parser = argparse.ArgumentParser()

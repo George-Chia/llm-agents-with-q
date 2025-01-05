@@ -3,11 +3,11 @@ import json
 import time
 import openai
 import re
-from tog.prompt_list import *
+from kgqa_lintong.tog.prompt_list import *
 from rank_bm25 import BM25Okapi
 from sentence_transformers import util
 from sentence_transformers import SentenceTransformer
-from models_fastchat import llama31_instruct
+from kgqa_lintong.models_fastchat import llama31_instruct
 
 openai.api_base = "https://api.huiyan.chat/v1"
 

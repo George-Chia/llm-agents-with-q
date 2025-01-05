@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'kgqa/trajectories-MCTS_test_llama31_mcts_5iterations'
+trajectories_save_path = 'kgqa_lintong/trajectories_20241230'
 
 
 done_task_id = []

@@ -14,7 +14,7 @@ def parse_action(llm_output: str) -> str:
 
 
 # 加载JSON文件
-with open('kgqa/trajectories_20241230/1.json', 'r') as f:
+with open('kgqa_lintong/trajectories_20241230/1.json', 'r') as f:
     root = json.load(f)
 
 

@@ -21,7 +21,7 @@ def tokens_in_text(text):
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
-        tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
+        tokenizer = GPT2Tokenizer.from_pretrained('gpt2-medium')
         tokens = tokenizer.encode(text)
     return len(tokens)
 
@@ -36,7 +36,7 @@ if api_base != "":
     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
     openai.api_base = api_base
 # key 读取失败，显式设置
-api_key= "sk-nPQVAFBDhZoMmYEnPPxYKk0p86jfCMxyQaqnCLV5qKq0XHxK"
+api_key= "sk-sWtiCQni9ZuDezwF863aC4C42b6a461884Fe54B9Ee8dD3Fa"
 openai.api_base= "https://api.huiyan-ai.cn/v1"
 @backoff.on_exception(backoff.expo, openai.error.OpenAIError)
 def completions_with_backoff(**kwargs):

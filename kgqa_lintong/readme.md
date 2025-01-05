@@ -24,5 +24,3 @@
 ## 3 运行说明
 1. 测试的数据集是 data/cwq.json, trajectories_test_gpt_simple_1iterations/51.json 是一个运行结果示例
 2. run.py 中的 --max_depth为图谱的搜索深度
-3. 其余关于图谱搜索设置在 wikienv.py 的 prune 方法中，包括需要设置的各种参数，如搜索深度、剪枝后保留的关系数、实体数，用的大模型。
-4. prune 方法使用的提示词在 tog/prompt_list 中

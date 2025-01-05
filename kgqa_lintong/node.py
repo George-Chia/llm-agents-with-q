@@ -34,7 +34,11 @@ class Node:
         self.children = []
         self.visits = 0
         self.value = 0
-        self.depth = 0 if parent is None else parent.depth + 1
+        #无wiki打分
+        self.rawvalue = 0
+        #wiki打分
+        self.wikivalue = 0
+        self.depth = 0 if self.parent is None else parent.depth + 1
         self.is_terminal = False
         self.reward = 0
         self.exhausted = False # If all children are terminal
@@ -62,6 +66,8 @@ class Node:
         self.true_answer = true_answer
         #记录回答的答案
         self.answer = ""
+        #是否正确回答了问题
+        self.check = 0
 
     def uct(self):
         if self.visits == 0 and self.value >= 0:
@@ -104,11 +110,14 @@ class Node:
             'children': [child.to_dict() for child in self.children] if len(self.children)>0 else None,
             'visits': self.visits,
             'value': self.value,
+            'rawvalue': self.rawvalue,
+            'wikivalue': self.wikivalue,
             'depth': self.depth,
             'is_terminal': self.is_terminal,
             'reward': self.reward,
             'em': self.em,
             'messages': self.messages,
+            'answer':self.answer
         }
     # def to_dict(self):
     #     if len(self.children)>0:

@@ -9,7 +9,7 @@ from collections import Counter
     
 DATA_DIR = "data"
 HOTPOTQA_SPLIT_FILE = {
-  "train": "cwq.json",
+  "train": "grailqa.json",
   "dev": "hotpot_dev_v1_simplified.json",
   "test": "hotpot_test_v1_simplified.json",
 }
@@ -19,6 +19,27 @@ FEVER_SPLIT_FILE = {
   "dev": "paper_dev.jsonl",
 }
 
+# webqsp
+def extract_webqsp_answers(d):
+  answer_list = []
+  answers = d["Parses"]
+  for answer in answers:
+    for name in answer['Answers']:
+      if name['EntityName'] is None:
+        answer_list.append(name['AnswerArgument'])
+      else:
+        answer_list.append(name['EntityName'])
+  return answer_list
+#grailqa
+def extract_grailqa_answers(d):
+  answer_list = []
+  answers = d["answer"]
+  for answer in answers:
+    if "entity_name" in answer:
+      answer_list.append(answer['entity_name'])
+    else:
+      answer_list.append(answer['answer_argument'])
+  return answer_list
 
 class HistoryWrapper(gym.ObservationWrapper):
   def __init__(self, env, obs_format, prompt=None):
@@ -84,14 +105,24 @@ class HotPotQAWrapper(gym.Wrapper):
     # 使用utf-8
     self.data = json.load(open(data_file, encoding='utf-8'))
     # 根据图谱问答数据集，添加相关项
-    # WebQuestions
-    #self.data = [(d['RawQuestion'], d['answers'],d['topic_entity']) for d in self.data]
-    # cwq
-    self.data = [(d['question'], d['answer'],d['topic_entity']) for d in self.data]
-    #webqsp(这个没改完)
-    #self.data = [(d['RawQuestion'], d['answer'], d['topic_entity']) for d in self.data]
-    # gailqa
-    # self.data = [(d['question'], d['answer'][0]["entity_name"], d['topic_entity']) for d in self.data]
+    self.dataset_name = HOTPOTQA_SPLIT_FILE['train']
+
+    # 定义不同数据集的处理方式
+    dataset_config = {
+      'WebQuestions.json': lambda d: (d['question'], d['answers'], d['topic_entity']),
+      'cwq.json': lambda d: (d['question'], d['answer'], d['topic_entity']),
+      'WebQSP.json': lambda d: (d['RawQuestion'], extract_webqsp_answers(d), d['topic_entity']),
+      'grailqa.json': lambda d: (d['question'], extract_grailqa_answers(d), d['topic_entity']),
+      # 可以继续添加其他数据集的处理方式
+    }
+
+    # 获取相应的处理方式
+    data_processor = dataset_config.get(self.dataset_name)
+    if data_processor is None:
+      raise ValueError(f"Unsupported dataset: {self.dataset_name}")
+
+    # 处理数据
+    self.data = [data_processor(d) for d in self.data]
     self.data_idx = 0
     self.split = split
 
