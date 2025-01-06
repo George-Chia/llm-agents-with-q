@@ -54,20 +54,20 @@ def compute_bm25_similarity(query, corpus, width=3):
     """
 
     tokenized_corpus = [doc.split(" ") for doc in corpus]
-    bm25 = BM25Okapi(tokenized_corpus)
+    if len(tokenized_corpus) != 0:
+        bm25 = BM25Okapi(tokenized_corpus)
+    else:
+        return [], []
     tokenized_query = query.split(" ")
 
     doc_scores = bm25.get_scores(tokenized_query)
-    # 修改打分，直接返回全部结构
-    '''
-    relations = bm25.get_top_n(tokenized_query, corpus, n=width)
-    doc_scores = sorted(doc_scores, reverse=True)[:width]
+
+    n = len(corpus)
+
+    relations = bm25.get_top_n(tokenized_query, corpus, n)
+    doc_scores = sorted(doc_scores, reverse=True)[:len(corpus)]
+
     return relations, doc_scores
-    '''
-    scored_relations = list(zip(corpus, doc_scores))
-    scored_relations.sort(key=lambda x: x[1], reverse=True)
-    relations, scores = zip(*scored_relations)
-    return list(relations), list(scores)
 
 
 def clean_relations(string, entity_id, head_relations):

@@ -49,7 +49,7 @@ def triple_scores(triples, question, thought, args):
     prompt = f"Question: {question}\nInformation: {thought}\n"
     for i, triple in enumerate(triples):
         prompt += f"Triple {i + 1}: {triple}\n"
-    prompt += "Please evaluate how much each triple helps in answering the question on a scale from 0 to 1, where 0 means not helpful at all and 1 means very helpful (the sum of the scores of all entities is 1). Provide the scores in square brackets, e.g., [0.5, 0.2, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nInformation: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.7, 0.2, 0.1]"
+    prompt += "Please evaluate how much each triplet helps in answering the question on a scale from 0 to 1, where 0 means not helpful at all and 1 means very helpful (the sum of the scores of all triplets is 1). Provide the scores in square brackets, e.g., [0.5, 0.2, 0.3].\n\nExamples:\n1. Question: What is the capital of France?\nInformation: The capital of France is a well-known city.\nTriple 1: (France, capital, Paris)\nTriple 2: (France, largest city, Paris)\nTriple 3: (France, language, French)\nScores: [0.7, 0.2, 0.1]"
 
     # 调用 GPT 模型获取评分
     if args.enable_fastchat_conv and 'lama' in args.backend:
@@ -64,10 +64,36 @@ def triple_scores(triples, question, thought, args):
         score_str = score_output.split('[')[1].split(']')[0]
         scores = list(map(float, score_str.split(',')))
         # 确保分数在有效范围内
-        scores = [score if 0 <= score <= 0.9 else 0.0 for score in scores]
+        scores = [score if 0 <= score <= 1 else 0.0 for score in scores]
     except (IndexError, ValueError):
         scores = [0.0] * len(triples)  # 如果无法解析为浮点数，设为0.0
     return scores
+
+def path_score(node, args):
+    score = 0
+    node_path = []
+    node_path.append(node.triple)
+    this_node = node
+    while this_node.parent:
+        this_node = this_node.parent
+        node_path.insert(0, this_node.triple)
+    node_path = str(node_path)
+    # 构建提示
+    prompt =  f"Question: {node.question}\nPath: {node_path}\nPlease evaluate how much the path helps in answering the question on a scale from 0 to 1, where 0 means not helpful at all and 1 means very helpful. Provide the score in square brackets, e.g., [0.5]\n\nExamples:\n1. Question: What is the capital of France?\nPath: [[France, located_in, Europe], [Europe, capital_of_country, Paris]]\nScore: [0.9]\n\n2. Question: Who wrote 'To Kill a Mockingbird'?\nPath: [[To Kill a Mockingbird, genre, Novel], [Novel, written_by, Harper Lee]]\nScore: [0.8]\n\n3. Question: What is the tallest mountain in the world?\nPath: [[Earth, has_feature, Mount Everest], [Mount Everest, height, 8,848 meters]]\nScore: [0.7]"
+    # 调用 GPT 模型获取评分
+    if args.enable_fastchat_conv and 'lama' in args.backend:
+        score_output = llama31_instruct(prompt, model=args.backend, n=1)[0]
+    else:
+    # 调用 GPT 模型获取评分
+        score_output = gpt(prompt, n=1, stop=None)[0].strip()
+    # 解析评分
+    try:
+        # 提取方括号中的分数列表
+        score_str = score_output.split('[')[1].split(']')[0]
+        scores = float(score_str)
+    except (IndexError, ValueError):
+        scores = 0
+    return score
 def get_value(task, x, y, n_evaluate_sample, args, cache_value=True):
     global reflection_map
     global failed_trajectories
@@ -392,6 +418,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
                 return terminal_node.state, terminal_node.value, terminal_node.reward, terminal_node.em
 
+        #对路径评估
+        reward = path_score(terminal_node, args)
         backpropagate(terminal_node, reward)
         all_nodes = [(node, node.value) for node in collect_all_nodes(root)]
 
@@ -443,12 +471,13 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         # wiki_explored = wiki_explored + this_time_imformation
         # 只保留当前的wiki检索信息,增加长度限制
         if enable_wiki_search:
-            wiki_explored = this_time_imformation[:1000]
+            wiki_explored += this_time_imformation[:1000]+'\n'
+            this_time_imformation = this_time_imformation[:1000]
         else:
             wiki_explored = ''
         prompt = answer_wiki + root.question + '\n'
         prompt += "\nKnowledge Triplets: " + chain_prompt
-        prompt += "\nwikipedia: " + wiki_explored + 'A: '
+        prompt += "\nwikipedia: " + this_time_imformation + 'A: '
         if args.enable_fastchat_conv and 'lama' in args.backend:
             result = llama31_instruct(prompt, model=args.backend, n=1)[0]
         else:
@@ -844,7 +873,11 @@ def expand_node(node, args, task, max_depth):
             if len(keywords) != 0:
                 for keyword in keywords:
                     this_time_imformation += myenv.search_step(keyword)
-            wiki_explored = wiki_explored + this_time_imformation
+            else:
+                keywords = list(node.topic_entity.values())
+                for keyword in keywords:
+                    this_time_imformation += myenv.search_step(keyword)
+            wiki_explored += this_time_imformation[:1000] + '\n'
             triplets_value = triple_scores(node_triplets, node.question, this_time_imformation[:1000], args)
             while len(triplets_value) != len(new_nodes):
                 triplets_value = triple_scores(node_triplets, node.question, this_time_imformation[:1000], args)
@@ -1296,9 +1329,9 @@ def find_next_triples(n, node, args):
 def exact_match(response, answers):
     if response is None:
         return False
-    clean_result = response.strip().replace(" ","").lower()
+    clean_result = str(response).strip().replace(" ","").lower()
     for answer in answers:
-        clean_answer = answer.strip().replace(" ","").lower()
+        clean_answer = str(answer).strip().replace(" ","").lower()
         if clean_result == clean_answer or clean_result in clean_answer or clean_answer in clean_result:
             return True
     return False
@@ -1336,13 +1369,13 @@ def generate_new_states_fastchat_conv(node, args, task, n):
         # wiki_explored = wiki_explored + this_time_imformation
         # 只保留当前的wiki检索信息,增加长度限制
         if enable_wiki_search:
-            wiki_explored = this_time_imformation[:1000]
+            wiki_explored += this_time_imformation[:1000]+'\n'
         else:
             wiki_explored = ''
         node.wikiinformation = wiki_explored
         prompt = answer_wiki + node.question + '\n'
         prompt += "\nKnowledge Triplets: " + chain_prompt
-        prompt += "\nwikipedia: " + wiki_explored + 'A: '
+        prompt += "\nwikipedia: " + this_time_imformation[:1000] + 'A: '
         if args.enable_fastchat_conv and 'lama' in args.backend:
             result = llama31_instruct(prompt, model=args.backend, n=1)[0]
         else:

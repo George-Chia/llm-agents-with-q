@@ -88,7 +88,8 @@ def if_all_zero(topn_scores):
 def clean_relations_bm25_sent(topn_relations, topn_scores, entity_id, head_relations):
     relations = []
     if if_all_zero(topn_scores):
-        topn_scores = [float(1/len(topn_scores))] * len(topn_scores)
+        if len(topn_scores)!=0:
+            topn_scores = [float(1/len(topn_scores))] * len(topn_scores)
     i=0
     for relation in topn_relations:
         if relation in head_relations:
