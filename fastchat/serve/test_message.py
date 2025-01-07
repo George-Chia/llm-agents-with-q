@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-new-tokens", type=int, default=5120)
     parser.add_argument("--conv_template", type=str, default=None)
     parser.add_argument(
-        "--message", type=str, default="How may S's are there in Mississippi"
+        "--message", type=str, default="What stop motion films was Adam Sandler in?"
     )
     args = parser.parse_args()
 

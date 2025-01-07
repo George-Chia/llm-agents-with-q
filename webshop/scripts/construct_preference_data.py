@@ -19,7 +19,7 @@ def get_max_min_children_index(node: list) -> tuple:
 # trajectories_save_path = "webshop/trajectories_fixed/trajectories_forbid-double-search/trajectories_train_phi3_mcts_30iterations"
 # trajectories_save_path = "webshop/trajectories_train_gpt-4o-mini_mcts_30iterations"
 # trajectories_save_path = "webshop/trajectories_test_Phi-3_mcts_30iterations"
-trajectories_save_path = "webshop/trajectories-Phi3/trajectories_train_phi3_mcts_30iterations"
+trajectories_save_path = "webshop/trajectories_iteration0/trajectories-MCTS-critique-disable_early_stop_train_train_llama31_T1.0_mcts_20iterations"
 
 preference_data = []
 sample_num = 0
@@ -81,5 +81,5 @@ for file in os.listdir(trajectories_save_path):
             )
     
     # print(preference_data)
-json.dump(preference_data, open("webshop/webshop-Phi3-mcts_pm_data-test-llama31.json", "w"), indent=4)
+json.dump(preference_data, open("webshop/webshop-Llama31-CritiqueMCTS.json", "w"), indent=4)
 
