@@ -1,0 +1,130 @@
+  0%|                                                           | 0/104 [00:00<?, ?it/s]/opt/conda/envs/py311/lib/python3.11/site-packages/torch/utils/checkpoint.py:464: UserWarning: torch.utils.checkpoint: the use_reentrant parameter should be passed explicitly. In version 2.4 we will raise an exception if use_reentrant is not passed. use_reentrant=False is recommended, but if you need to preserve the current default behavior, you can pass use_reentrant=True. Refer to docs for more details on the differences between the two variants.
+  warnings.warn(
+Could not estimate the number of tokens of the input, floating-point operations will not be computed
+
+
+
+
+  5%|██▍                                                | 5/104 [02:57<56:56, 34.51s/it]
+
+
+
+
+
+ 10%|████▊                                             | 10/104 [05:49<53:36, 34.22s/it]
+
+
+
+
+ 13%|██████▋                                           | 14/104 [08:01<50:24, 33.61s/it]
+
+
+
+
+
+
+ 19%|█████████▌                                        | 20/104 [11:23<47:06, 33.65s/it]
+
+
+
+
+
+ 24%|████████████                                      | 25/104 [14:24<47:09, 35.82s/it]
+
+
+
+
+
+ 29%|██████████████▍                                   | 30/104 [17:19<44:02, 35.71s/it]
+
+
+
+
+
+ 34%|████████████████▊                                 | 35/104 [20:06<38:58, 33.90s/it]
+
+
+
+
+
+ 38%|███████████████████▏                              | 40/104 [22:56<35:57, 33.71s/it]
+
+
+
+
+
+ 43%|█████████████████████▋                            | 45/104 [25:49<33:29, 34.06s/it]
+
+
+
+
+ 47%|███████████████████████▌                          | 49/104 [28:03<31:00, 33.82s/it]
+
+
+
+ 50%|█████████████████████████                         | 52/104 [29:50<30:24, 35.08s/it]/opt/conda/envs/py311/lib/python3.11/site-packages/torch/utils/checkpoint.py:464: UserWarning: torch.utils.checkpoint: the use_reentrant parameter should be passed explicitly. In version 2.4 we will raise an exception if use_reentrant is not passed. use_reentrant=False is recommended, but if you need to preserve the current default behavior, you can pass use_reentrant=True. Refer to docs for more details on the differences between the two variants.
+  warnings.warn(
+
+
+ 53%|██████████████████████████▍                       | 55/104 [32:59<38:38, 47.31s/it]
+
+
+
+
+
+ 58%|████████████████████████████▊                     | 60/104 [35:55<27:52, 38.01s/it]
+
+
+
+
+
+ 62%|███████████████████████████████▎                  | 65/104 [38:43<22:22, 34.41s/it]
+
+
+
+
+
+ 67%|█████████████████████████████████▋                | 70/104 [41:27<19:12, 33.88s/it]
+
+
+
+
+
+ 72%|████████████████████████████████████              | 75/104 [44:15<16:02, 33.19s/it]
+
+
+
+
+
+ 77%|██████████████████████████████████████▍           | 80/104 [47:05<13:42, 34.29s/it]
+
+
+
+
+
+ 82%|████████████████████████████████████████▊         | 85/104 [50:04<11:27, 36.18s/it]
+
+
+
+
+
+ 87%|███████████████████████████████████████████▎      | 90/104 [52:54<08:02, 34.46s/it]
+
+
+
+
+
+ 91%|█████████████████████████████████████████████▋    | 95/104 [55:36<04:58, 33.13s/it]
+
+
+
+
+ 95%|███████████████████████████████████████████████▌  | 99/104 [58:01<02:56, 35.33s/it]
+
+
+
+
+
+
+100%|███████████████████████████████████████████████| 104/104 [1:03:56<00:00, 36.89s/it]
+{'train_runtime': 3855.682, 'train_samples_per_second': 1.746, 'train_steps_per_second': 0.027, 'train_loss': 0.3837075944130237, 'epoch': 1.98}

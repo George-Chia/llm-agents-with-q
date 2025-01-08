@@ -9,7 +9,7 @@ from peft import PeftModel
 
 # Manually set your parameters here
 base_model_name_or_path = "/home/zhaiyuanzhao/llm/Meta-Llama-3.1-8B-Instruct"
-peft_model_path = "hotpot/trained_models/iteration2/hotpot-critique-huan/checkpoint-82-epoch1"
+peft_model_path = "webshop/trained_models/webshop_round1_forQ/policy"
 output_dir = peft_model_path+"/merged_model"
 device = "cuda:7"  # set to 'auto' or specify device like 'cuda:0'
 push_to_hub = False  # set to True if you want to push to the Hugging Face Model Hub

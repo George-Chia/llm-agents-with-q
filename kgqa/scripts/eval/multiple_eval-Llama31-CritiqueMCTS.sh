@@ -2,22 +2,21 @@
 num_workers=7
 
 explore_model_name=llama31
-exp_name=llama31-collection-CritiqueMCTS
+exp_name=llama31-eval
 
 for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
     python run.py \
         --backend ${explore_model_name}-${j} \
-        --data_split train \
+        --data_split test \
         --part_num ${num_workers} \
         --part_idx ${part_idx} \
         --n_generate_sample 3 \
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 20 \
-        --disable_early_stop \
-        --save_path trajectories-CritiqueMCTS-disable_early_stop \
+        --iterations 30 \
+        --save_path trajectories-CritiqueMCTS \
         --log logs/llama31.log \
         --max_depth 5 \
         --algorithm mcts \
