@@ -10,7 +10,7 @@ completion_tokens = prompt_tokens = 0
 MAX_TOKENS = 4000
 
 LOCAL_LLM_PATH = os.environ.get('LOCAL_LLM_PATH')
-tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
+# tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
 
 def tokens_in_text(text):
     """

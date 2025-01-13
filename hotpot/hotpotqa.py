@@ -5,12 +5,14 @@ from models import gpt
 import logging
 from transformers import GPT2Tokenizer
 import random
+from prompt import *
 
 LOCAL_LLM_PATH = os.environ.get('LOCAL_LLM_PATH')
-tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
+# tokenizer = GPT2Tokenizer.from_pretrained(LOCAL_LLM_PATH+'/gpt2-medium')
 
 def get_token_length(text):
-    return len(tokenizer.encode(text))
+    return False
+    # return len(tokenizer.encode(text))
 
 max_token_length = 4000
 
@@ -63,12 +65,11 @@ class HotPotQATask(Task):
         return standard_prompt.format(input=x) + y
 
     @staticmethod
-    def generate_self_reflection(z, question):
+    def generate_self_reflection(z):
         reflection_mapping = []
         trajectories = ""
 
-        sampled_items = random.sample(z, min(3, len(z)))
-        failed_trajectories = "\n".join([f"{question}\n{traj}\n" for traj in z])
+        failed_trajectories = "\n".join([f"{traj['trajectory']}\n" for traj in z])
         failed_trajectories = [f"Question: {traj}" for traj in failed_trajectories.split("Question: ")[1:]]
         
         for traj in failed_trajectories:
@@ -81,7 +82,6 @@ class HotPotQATask(Task):
             trajectories += "Reflection: " + reflection[0] + "\n"
             
             reflection_mapping.append({
-                'question': question,
                 'trajectory': traj,
                 'reflection': reflection[0]
             })
@@ -169,43 +169,28 @@ class HotPotQATask(Task):
         else:
             print(f'-----------------compare no match: {[compare_output]}')
             return -1
-    
+
     @staticmethod
     def value_prompt_wrap(x: str, y: str, z: list = [], reflections: list = []) -> str:
         question = x.split('\n')[0]
-        #z = []
+        # z = []
         if len(z) != 0:
             failed_trajectories = ""
-            
             # Combine the trajectories with their corresponding reflections
             for traj, ref in zip(z, reflections):
                 failed_trajectories += f"{question}\n{traj}\nThis trajectory is incorrect as {ref['reflection']}\nThus the correctness score is 1\n"
-            
             inp = x + y + "\nThis trajectory is "
-            
             prompt = value_prompt_reasoning_feedback.format(s="", trajectories=failed_trajectories, input=inp)
-            
             if get_token_length(prompt) > max_token_length:
                 prompt = value_prompt_reasoning_feedback_short.format(s="", trajectories=failed_trajectories, input=inp)
-        if len(z) != 0 and False:
-            failed_trajectories = "\n".join([f"{question}\n{traj}\nThus the correctness score is 1\n" for traj in z])
-            inp = x + y + "\nThus the correctness score is "
-            prompt = value_prompt_feedback.format(s="", trajectories=failed_trajectories, input=inp)
-            if get_token_length(prompt) > max_token_length:
-                print("Token length exceeded", get_token_length(prompt))
-                failed_trajectories = "\n".join([f"{question}\n{traj}\nThus the correctness score is 1\n" for traj in z[:2]])
-                inp = y + "\nThus the correctness score is "
-                prompt = value_prompt_feedback.format(s="", trajectories=failed_trajectories, input=inp)
-                print("New length", get_token_length(prompt))
         else:
             inp = y + "\nThis trajectory is "
-            #inp = y + "\nThus the correctess score is "
-            #prompt = value_prompt.format(s="", input=inp)
+            # inp = y + "\nThus the correctess score is "
+            # prompt = value_prompt.format(s="", input=inp)
             prompt = value_prompt_reasoning.format(s="", input=inp)
-            
+
         return prompt
 
-    
     @staticmethod
     def value_outputs_unwrap(evaluate_prompt: str):
         evaluate_prompt = evaluate_prompt[0]
