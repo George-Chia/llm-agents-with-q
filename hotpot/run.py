@@ -4,7 +4,7 @@ import argparse
 
 from hotpotqa import HotPotQATask
 from models import gpt_usage
-from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_refine_search
+from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_refine_search, fschat_lats_search
 import logging
 
 from typing import List, Tuple, Any
@@ -102,7 +102,6 @@ def run(args):
     task_accs = []
     info = []
 
-    idx = [17307]
     for i in tqdm(idx):
     # for i in range(args.task_start_index, args.task_end_index):
         # solve
@@ -124,7 +123,6 @@ def run(args):
             elif args.algorithm == 'lats':
                 state, value, reward, em = fschat_lats_search(args, task, i, args.iterations, True,
                                                               trajectories_save_path)
-
 
         else:
             if args.algorithm == 'mcts':
