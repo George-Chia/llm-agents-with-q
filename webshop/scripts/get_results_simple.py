@@ -81,7 +81,7 @@ def get_high_value_traj(trajectories_save_path):
             traceback.print_exc()
     return pointwise_data
 
-trajectories_save_path = 'webshop/webshop_trajectories-MCTS-3n-gpt4o_critique_test_llama31_T1.0_mcts_20iterations'
+trajectories_save_path = 'webshop/trajectories-StepLevelCritique-2n_test_webshop_T1.0_simple_1iterations'
 my_data = get_high_value_traj(trajectories_save_path)
 # for item in my_data:
 #     if len(item['critique_prompt']) <= 4:

@@ -226,7 +226,7 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
         if terminal_nodes_with_reward_1:
             logging.info(f"Terminal node with reward 1 found at iteration {i + 1}")
             best_node = max(terminal_nodes_with_reward_1, key=lambda x: x.value)
-            if args.disable_early_stop:
+            if args.disable_early_stop:      # 这里会有问题
                 continue
             else:
                 save_node_to_json(root, terminal_nodes, idx, trajectories_save_path)
@@ -273,7 +273,7 @@ def _generate_reflection_query(log_str: str, memory, FEW_SHOT_EXAMPLES):
     query.append(['assistant', None])
     return query
 
-def fschat_refine_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None, refine_num=1):
+def fschat_reflexion_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None, refine_num=1):
     global gpt
     global failed_trajectories
     global reflection_map
@@ -585,8 +585,8 @@ def select_node(node):
         
         node = max((child for child in node.children if not child.is_terminal), key=lambda child: child.uct(), default=None)
 
-        while node.is_terminal and node.reward != 1:
-            node = max((child for child in node.parent.children if not child.is_terminal), key=lambda child: child.uct(), default=None)
+        # while node.is_terminal and node.reward != 1: # TODO:
+        #     node = max((child for child in node.parent.children if not child.is_terminal), key=lambda child: child.uct(), default=None)
             
         logging.info(f"Selected node at depth {node.depth} with UCT {node.uct()}.")
         

@@ -417,7 +417,7 @@ def get_node_children_q_value_list(node,children, policy_model, reference_model,
 def beam_search(node, policy_model, reference_model, conv_template, tokenizer):
     q_value_list = get_child_q_value_list(node, policy_model, reference_model, conv_template, tokenizer)
     max_q_value_index = q_value_list.index(max(q_value_list))
-    return node.children[max_q_value_index]
+    return node.children[max_q_value_index],max_q_value_index
 
 
 

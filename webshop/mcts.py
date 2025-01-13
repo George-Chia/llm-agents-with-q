@@ -220,7 +220,8 @@ def fschat_mcts_search(args, task, idx, iterations=50, to_print=True, trajectori
     return best_child.state, best_child.value, best_child.reward, best_child.em
 
 
-def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None):
+def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajectories_save_path=None, 
+                       dpo_policy_model=None, dpo_reference_model=None, tokenizer=None):
     global gpt
     global failed_trajectories
     global reflection_map
@@ -267,13 +268,21 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
         node = root  # Always start from the root node
         depth = 0
 
+        if args.expansion_sampling_method == "critique":
+            if args.enable_Q_value_model_for_critique:
+                max_q_value_index_list = []
+
         # Perform a simulation from the root
         while not node.is_terminal and depth < args.max_depth:
             expand_node(node, args, task, idx, max_depth=args.max_depth)  # Expand current node
             if not node.children:
                 break  # If no child can be generated, break
             if args.expansion_sampling_method == "critique":
-                node = node.children[-1]
+                if args.enable_Q_value_model_for_critique:
+                    node, max_q_value_index = beam_search(node, dpo_policy_model, dpo_reference_model, args.q_model_conv_template, tokenizer)
+                    max_q_value_index_list.append(max_q_value_index)
+                else:
+                    node = node.children[-1]
             else:
                 node = random.choice(node.children)  # Randomly select a child node
             depth += 1
@@ -295,6 +304,9 @@ def fschat_simple_search(args, task, idx, iterations=50, to_print=True, trajecto
     # best_trajectory_index_list = collect_trajectory_index(best_tree_child)
     task_dict = root.to_dict()
     task_dict['best child reward'] = best_tree_child.reward
+    if args.expansion_sampling_method == "critique":
+        if args.enable_Q_value_model_for_critique:
+            task_dict['max_q_value_index_list'] = max_q_value_index_list
     # task_dict['best_trajectory_index_list'] = best_trajectory_index_list
     if args.add_fixed_prefix:
         task_id = idx.replace("fixed_","")
@@ -358,7 +370,7 @@ def fschat_beam_search(args, task, idx, to_print=True, trajectories_save_path=No
         if not node.children:
             break  # If no child can be generated, break
         # node = random.choice(node.children)  # Randomly select a child node
-        node = beam_search(node, dpo_policy_model, dpo_reference_model, args.q_value_conv_template, tokenizer)
+        node = beam_search(node, dpo_policy_model, dpo_reference_model, args.q_model_conv_template, tokenizer)
         depth += 1
 
     # Check the terminal condition
@@ -919,6 +931,7 @@ def generate_new_states_critique_fastchat_conv(node, args, task, idx, n, critiqu
                 else: # for fastchat
                     original_observation = get_raw_observation(critique_context.messages[-2][1])
                     critique_context.messages[-2][1] += critique_prompt + "\n"
+                critique = critique_gpt(critique_context, n=1, stop=["Observation:",], enable_fastchat_conv=args.enable_fastchat_conv)[0]
             if critique.startswith('Critique:'):
                 critique = critique[9:]
             regenerate_prompt = '\n\nBelow are the previous Thought and Action you generated along with their corresponding Observation: \n\n'

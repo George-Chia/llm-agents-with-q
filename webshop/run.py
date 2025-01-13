@@ -58,8 +58,8 @@ def run(args):
         logging.info(f"Existing trajectories_save_path file found. {len(done_task_id)} tasks done.")
     idx = [x for x in idx if x not in done_task_id]
 
-    if args.algorithm == 'beam' or args.using_puct:
-        device = 'cuda'
+    if args.algorithm == 'beam' or args.using_puct or args.enable_Q_value_model_for_critique:
+        device = 'cuda:6'
 
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.policy_model_name_or_path,
@@ -111,14 +111,18 @@ def run(args):
             idx = i
 
         if args.algorithm == 'simple':
-            state, value, reward, em = fschat_simple_search(args, task, idx, args.iterations, True, trajectories_save_path)
+            state, value, reward, em = fschat_simple_search(args, task, idx, args.iterations, True, trajectories_save_path,
+                                                            dpo_policy_model, dpo_reference_model, tokenizer)
         elif args.algorithm == 'beam':
             state, value, reward, em = fschat_beam_search(args, task, idx, True, trajectories_save_path,
                                                             dpo_policy_model, dpo_reference_model, tokenizer)
         elif args.algorithm == 'mcts':
             state, value, reward, em = fschat_mcts_search(args, task, idx, args.iterations, True, trajectories_save_path,
                                                             dpo_policy_model, dpo_reference_model, tokenizer)
-           
+        elif args.algorithm == 'critique':  # step_level_critique
+            state, value, reward, em = fschat_critique_search(args, task, idx, args.iterations, True, trajectories_save_path,
+                                                            dpo_policy_model, dpo_reference_model, tokenizer)
+            
          # log main metric
         # task_accs.append(em)
         print("best reward", reward)
@@ -220,6 +224,7 @@ def parse_args():
     args.add_argument('--critique_prompt_template', type=str,  default=None)
     args.add_argument('--critique_temperature', type=float)
     args.add_argument('--enable_rollout_with_critique', action='store_true')
+    args.add_argument('--enable_Q_value_model_for_critique', action='store_true')
 
     # webshop env
     args.add_argument('--add_fixed_prefix', action='store_true')

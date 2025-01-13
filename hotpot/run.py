@@ -4,7 +4,7 @@ import argparse
 
 from hotpotqa import HotPotQATask
 from models import gpt_usage
-from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_refine_search
+from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_reflexion_search
 import logging
 
 from typing import List, Tuple, Any
@@ -118,8 +118,8 @@ def run(args):
                 state, value, reward, em = fschat_mcts_search(args, task, i, args.iterations, True, trajectories_save_path,
                                                               dpo_policy_model, dpo_reference_model, tokenizer, 
                                                               enable_reflection=args.enable_reflection)
-            elif args.algorithm == 'refine':
-                state, value, reward, em = fschat_refine_search(args, task, i, args.iterations, True,
+            elif args.algorithm == 'reflexion':    # reflexion
+                state, value, reward, em = fschat_reflexion_search(args, task, i, args.iterations, True,
                                                                 trajectories_save_path, args.refine_num)
             elif args.algorithm == 'lats':
                 state, value, reward, em = fschat_lats_search(args, task, i, args.iterations, True,
