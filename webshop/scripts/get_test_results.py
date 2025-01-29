@@ -1,7 +1,7 @@
 import os
 import json
 
-trajectories_save_path = 'webshop/trajectories-temp_test_webshop_T1.0_simple_1iterations'
+trajectories_save_path = 'webshop/trajectories-StepLevelCritique-3n_test_webshop_T1.0_simple_1iterations'
 
 # T06: 0.36
 # T06: 0.37

@@ -706,6 +706,8 @@ def select_node(node):
             if node.parent:  
                 node.parent.children.remove(node)
             node = node.parent  
+            if node == None:
+                break
             if node.depth == 0:
                 break
             else:
@@ -807,11 +809,13 @@ def rollout(node, args, task, idx, max_depth=7):
                 return state.reward, state
                 
         child_prompts = [generate_prompt(child) for child in new_states if not child.is_terminal and child is not None]
+        # TODO George and Huan mute get_values
         #new_state = new_state[0]
-        while len(values) == 0:
-            values = get_values(task, node.question, child_prompts, args.n_evaluate_sample)
-        max_value_index = values.index(max(values))
-        rewards.append(max(values))
+        # while len(values) == 0:
+        #     values = get_values(task, node.question, child_prompts, args.n_evaluate_sample)
+        # max_value_index = values.index(max(values))
+        # rewards.append(max(values))
+        max_value_index = 0
         node = new_states[max_value_index] 
         depth += 1
         if depth == max_depth:
@@ -1017,6 +1021,7 @@ def get_reflection_context(task, context, args):
     global reflection_map
     global failed_trajectories
     new_context = copy.deepcopy(context)
+    # print('new_context.messages[24]:', new_context.messages[24])
     if len(failed_trajectories) > len(reflection_map) and len(failed_trajectories) < 4:
         # print("generating reflections")
         # print("len(failed_trajectories): ",len(failed_trajectories))
@@ -1028,7 +1033,7 @@ def get_reflection_context(task, context, args):
             traj_with_reflection = reflection_mapping['trajectory'] + "FAILED TRAJECTORY\nReflection:" + reflection_mapping['reflection'] + "\n"
             trajectories += traj_with_reflection
         prompt = 'You have attempted to answer the following question before and failed, either because your reasoning for the answer was incorrect or the phrasing of your response did not exactly match the answer. The following reflection(s) give a plan to avoid failing to answer the question in the same way you did previously. Use them to improve your strategy of correctly answering the given question.\n\n{trajectories}\nWhen providing the thought and action for the current trial, that into account these failed trajectories and make sure not to repeat the same mistakes and incorrect answers.'.format(trajectories=trajectories)
-        new_context[24]['content'] = prompt + f"\nHere is the question:\n{context[24]['content']}"
+        new_context.messages[24][1] = prompt + f"\nHere is the question:\n{new_context.messages[24][1]}"
     return new_context
 
 def generate_new_states_lats_fastchat_conv(node, args, task, n):

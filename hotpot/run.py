@@ -4,7 +4,7 @@ import argparse
 
 from hotpotqa import HotPotQATask
 from models import gpt_usage
-from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_reflexion_search
+from mcts import fschat_simple_search, fschat_mcts_search, fschat_beam_search, fschat_reflexion_search, fschat_lats_search
 import logging
 
 from typing import List, Tuple, Any

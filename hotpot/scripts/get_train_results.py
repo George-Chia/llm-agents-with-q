@@ -2,7 +2,7 @@ import os
 import json
 
 
-trajectories_save_path = 'hotpot/trajectories-simple-policyIter2Epoch3_test_llama31_simple_1iterations'
+trajectories_save_path = 'hotpot/trajectories-LATS_test_llama31_lats_30iterations'
 
 
 done_task_id = []
