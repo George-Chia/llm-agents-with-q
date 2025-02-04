@@ -1,8 +1,8 @@
 #!/bin/bash
-num_workers=7
+num_workers=4
 
-explore_model_name=llama31
-exp_name=llama31-eval
+explore_model_name=llama31-R1
+exp_name=llama31-R1-eval
 
 for ((j=0;j<${num_workers};j=j+1)); do
     part_idx=$((j))
@@ -15,9 +15,9 @@ for ((j=0;j<${num_workers};j=j+1)); do
         --n_evaluate_sample 1 \
         --prompt_sample cot \
         --temperature 1 \
-        --iterations 20 \
-        --save_path trajectories-CritiqueMCTS \
-        --log logs/llama31.log \
+        --iterations 30 \
+        --save_path trajectories-R1-CritiqueMCTS \
+        --log logs/llama31-R1.log \
         --max_depth 5 \
         --algorithm mcts \
         --enable_fastchat_conv \

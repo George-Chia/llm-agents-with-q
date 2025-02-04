@@ -1480,6 +1480,7 @@ def generate_new_states_critique_fastchat_conv(node, args, task, n, critique_pro
             # generating critique
             if args.critique_prompt_template == 'template_huan':
                 original_observation = get_raw_observation(context.messages[-2][1])
+                # print(critique_prompt_template)
                 critique_prompt_template = critique_prompt_template.format(
                     user_inst=critique_context.messages[-2][1],
                     historical_context=get_historical_context(critique_context),
