@@ -12,7 +12,7 @@
 [**🤗 Dataset**]() 
 
 
-Official repo for Enhancing Decision-Making for LLM Agents via Step-Level Q-Value Models.
+Official repo for Enhancing Decision-Making for LLM Agents via Step-Level Q-Value Models (AAAI 2025).
 
 We propose training a Q-value model to guide action selection for LLM agents in each decision-making step.
 Our method comprises both training and inference stages. During the training stage, we first use Monte Carlo Tree Search (MCTS) to explore high-quality trajectories, annotating the actions in each step with Q-values. We then construct preference data and train the Q-value model using step-level Direct Policy Optimization (DPO). During inference, the trained Q-value model guides action selection at each decision-making step.
